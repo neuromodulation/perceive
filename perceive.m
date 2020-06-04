@@ -1,14 +1,21 @@
 function perceive(files,subjects,Format)
-% files should be a cell array
-% ADD PATIENT SNAPSHOTS
-% ADD Lead DBS Implementation
+% Percept json filenames as character or cell array
+% subject ID names as character or cell array, leave empty to generate IDs
+% from ImplantDate and Target
+% Time Series export Format can be 'ft' for FieldTrip, 'spm' or
+% 'mne' for MNE-Python
+
+% TODO: 
+% ADD PATIENT SNAPSHOT EVENT READINGS
+% ADD CHRONIC DIAGNOSTIC READINGS
+% ADD Lead DBS Integration for electrode location
 
 if ~exist('files','var')
     files=ffind('*.json');
 end
 
-if ~exist('format','var')
-    Format = 'spm';
+if ~exist('Format','var')
+    Format = 'ft';
 end
 
 
@@ -99,6 +106,7 @@ for a = 1:length(files)
                         
                         d.label=Channel(i);
                         d.trial{1} = raw;
+                        
                         d.time{1} = linspace(seconds(datetime(runs{c})-hdr.d0),seconds(datetime(runs{c})-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         
                         d.fsample = fsample;
@@ -165,7 +173,7 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                     end
                     title({wjn_strrep(hdr.fname),'BrainSenseLfp'})
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp']))
+                    savefig(fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp.fig']))
                     myprint(fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp']))
                     T=table;
                     T.time = bsltime';
@@ -208,6 +216,7 @@ for a = 1:length(files)
                         tmp = [data(i).TimeDomainData]';
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
+                      
                         d.time{1} = linspace(seconds(datetime(runs{c})-hdr.d0),seconds(datetime(runs{c})-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
                         firstsample = 1+round(fsample*seconds(datetime(runs{c})-datetime(FirstPacketDateTime{1})));
@@ -289,6 +298,7 @@ for a = 1:length(files)
                     end
                     legend(wjn_strrep(channels(il)))
                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
+                    pause(2)
                     myprint(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
                     
                     
@@ -332,6 +342,7 @@ for a = 1:length(files)
                             tmp(xchans(4),:)-tmp(xchans(5),:);(tmp(xchans(4),:)-tmp(xchans(5),:))-tmp(xchans(6),:);tmp(xchans(6),:)-tmp(xchans(4),:)];
                         d.trial{1} = [refraw;tmp];
                         d.label=[Channel(i);strcat(hdr.chan,'_',nchans')];
+                        
                         d.time{1} = linspace(seconds(datetime(runs{c})-hdr.d0),seconds(datetime(runs{c})-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
                         firstsample = 1+round(fsample*seconds(datetime(runs{c})-datetime(FirstPacketDateTime{1})));
@@ -349,7 +360,7 @@ for a = 1:length(files)
                     data = js.CalibrationTests;
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
-                    hdr.d0=datetime(FirstPacketDateTime{1});
+                    hdr.ctd0=datetime(FirstPacketDateTime{1}(1:10));
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
@@ -359,7 +370,7 @@ for a = 1:length(files)
                     for c = 1:length(tmp)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
-                    hdr.d0=datetime(FirstPacketDateTime{1});
+                    hdr.ctd0=datetime(FirstPacketDateTime{1});
                     fsample = data.SampleRateInHz;
                     gain=[data(:).Gain]';
                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
@@ -382,7 +393,8 @@ for a = 1:length(files)
                         
                         d.label=Channel(i);
                          d.trial{1} = raw;
-                        d.time{1} = linspace(seconds(datetime(runs{c})-hdr.d0),seconds(datetime(runs{c})-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                   
+                        d.time{1} = linspace(seconds(datetime(runs{c})-hdr.ctd0),seconds(datetime(runs{c})-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                        
                         d.fsample = fsample;
                         firstsample = 1+round(fsample*seconds(datetime(runs{c})-datetime(FirstPacketDateTime{1})));
@@ -431,7 +443,8 @@ for a = 1:length(files)
                         tmp = raw(i,:);
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
-                        d.time{1} = linspace(seconds(datetime(runs{c})-hdr.d0),seconds(datetime(runs{c})-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        
+                        d.time{1} = linspace(seconds(datetime(runs{c})-hdr.ctd0),seconds(datetime(runs{c})-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
                         firstsample = 1+round(fsample*seconds(datetime(runs{c})-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
@@ -466,7 +479,7 @@ for a = 1:length(files)
                 fieldtrip2fiff([fullname '.fif'],alldata{b})
             case 'ft'
                 data=alldata{b};
-                save([fullname '.mat'],data)
+                save([fullname '.mat'],'data')
         end
     end
     
