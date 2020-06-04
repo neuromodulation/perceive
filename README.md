@@ -1,5 +1,5 @@
 # perceive
-Matlab code for json file import. requires SPM12 and www.github.com/neuromodulation/wjn_toolbox
+Matlab code for json file import. requires FieldTrip and www.github.com/neuromodulation/wjn_toolbox
 
 Future implementations will integrate with www.lead-dbs.org
 
