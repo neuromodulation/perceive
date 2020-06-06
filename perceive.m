@@ -54,8 +54,8 @@ if ~exist('files','var')
     end
 end
 
-if ~exist('output_format','var')
-    output_format = 'ft';
+if ~exist('format','var')
+    format = 'ft';
 end
 
 
@@ -68,13 +68,13 @@ end
 
 for a = 1:length(files)
     filename = files{a};
-    
+    disp(['RUNNING ' filename])
     
     js = jsondecode(fileread(filename));
     
     infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance'};
     for b = 1:length(infofields)
-        hdr.(infofields{b})=js.(infofields{b});
+            hdr.(infofields{b})=js.(infofields{b});
     end
     
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
@@ -88,7 +88,7 @@ for a = 1:length(files)
     else
         hdr.subject = subjectIDs{a};
     end
-    hdr.session = ['ses-' char(datetime(hdr.SessionDate,'output_format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+    hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
@@ -147,16 +147,16 @@ for a = 1:length(files)
                         d.label=Channel(i);
                         d.trial{1} = raw;
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
        
              
-                        d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
                         alldata{length(alldata)+1} = d;
@@ -189,14 +189,14 @@ for a = 1:length(files)
                             d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP]./1000;
                             d.trial{1}(3:4,e) = [cdata.LfpData(e).Left.mA;cdata.LfpData(e).Right.mA];
                             d.time{1}(e) = cdata.LfpData(e).TicksInMs/1000;
-                            d.realtime(e) = datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
+                            d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
                             d.hdr.BSL.seq(e)= cdata.LfpData(e).Seq;
                         end
                         d.trialinfo(1) = c;
                         d.hdr.realtime = d.realtime;
               
       
-                        d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         
                         p=plot(d.realtime,d.trial{1}./1000,'linewidth',2);
                         cc=[1 0 0; 0 0 1; .2 .2 .2; .5 .5 .5];
@@ -257,16 +257,16 @@ for a = 1:length(files)
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
                       
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
       
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                 case 'LFPMontage'
@@ -383,16 +383,16 @@ for a = 1:length(files)
                         d.trial{1} = [refraw;tmp];
                         d.label=[Channel(i);strcat(hdr.chan,'_',nchans')];
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
                         d.hdr.label=d.label;
                         d.hdr.Fs = d.fsample;
 
-                        d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                     
@@ -434,17 +434,17 @@ for a = 1:length(files)
                         d.label=Channel(i);
                          d.trial{1} = raw;
                    
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                        
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
 
-                        d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                 case 'SenseChannelTests'
@@ -484,16 +484,16 @@ for a = 1:length(files)
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
  
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
             end
@@ -507,6 +507,7 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
+        disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data')
     end
 end
