@@ -4,15 +4,15 @@ if ~exist('lim','var')
 end
 
 if size(lim,2) == 4 && size(lim,1)==1
-    frange = [wjn_sc(f,lim(1)):wjn_sc(f,lim(2)) wjn_sc(f,lim(3)):wjn_sc(f,lim(4))];
+    frange = [perceive_sc(f,lim(1)):perceive_sc(f,lim(2)) perceive_sc(f,lim(3)):perceive_sc(f,lim(4))];
 elseif size(lim,1)> 1
     frange = [];
     for a = 1:size(lim,1)
-        frange = [frange wjn_sc(f,lim(a,1)):wjn_sc(f,lim(a,2))];
+        frange = [frange perceive_sc(f,lim(a,1)):perceive_sc(f,lim(a,2))];
     end
 else
     frange = lim;
-end;
+end
 
 if length(size(pow))==2
 for a = 1:size(pow,1)

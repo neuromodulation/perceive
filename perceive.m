@@ -293,7 +293,7 @@ for a = 1:length(files)
                     end
                     xlabel('Frequency [Hz]')
                     ylabel('Power spectral density [uV²/Hz]')
-                    title(strrep({hdr.subject,char(hdr.SessionDate,'_',' '),'RIGHT'}))
+                    title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
                     legend(strrep(channels(ir),'_',' '))
                     il = perceive_ci([hdr.chan '_L'],channels);
                     subplot(1,2,2)
