@@ -27,13 +27,13 @@ ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
 
 
 ## OUTPUT
-The script generates BIDS inspired subject and session folders with the
-ieeg format specifier. All time series data are being exported as
-FieldTrip .mat files, as these require no additional dependencies for creation.
-require dependencies, you can reformat with FieldTrip and SPM to MNE
-python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
 
-## Recoding type output naming
+The script generates BIDS bids.neuroimaging.io/ inspired subject and session folders with the
+ieeg format specifier. 
+All time series data are being exported as FieldTrip '.mat' files, as these require no additional dependencies for creation.
+You can reformat with FieldTrip and SPM to MNE python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
+
+# Recording type output naming
 Each of the FieldTrip data files correspond to a specific aspect of the Recording session: 
 LMTD = LFP Montage Time Domain - BrainSenseSurvey
 IS = Indefinite Streaming - BrainSenseStreaming
