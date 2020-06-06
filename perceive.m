@@ -2,16 +2,31 @@ function perceive(files,subjects,Format)
 % Percept json filenames as character or cell array
 % subject ID names as character or cell array, leave empty to generate IDs
 % from ImplantDate and Target
-% Time Series export Format can be 'ft' for FieldTrip, 'spm' or
+% Time Series export Format can be 'ft' for FieldTrip (Default), 'spm' or
 % 'mne' for MNE-Python
 
+% Neurophysiology data file name extensions:
+% LMTD = LFP Montage Time Domain 
+% IS = Indefinite Streaming
+% CT = Calibration Testing
+% BSL = BrainSense LFP (2 Hz power average + stimulation settings)
+% BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL
+% file)
+% Check times 
+
+
 % TODO: 
+% ADD BATTERY DRAIN
+% ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
 % ADD CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
 if ~exist('files','var')
     files=ffind('*.json');
+    if isempty(files)
+        [files,path] = uigetfile('*.json','Select .json file','C:\');
+    end
 end
 
 if ~exist('Format','var')
