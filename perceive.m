@@ -1,21 +1,45 @@
 function perceive(files,subjectIDs)
-% Percept json filenames as character or cell array
-% subject ID names as character or cell array, leave empty to generate IDs
-% from ImplantDate and Target
-% Time Series export output_format can be 'ft' for FieldTrip (Default), 'spm' or
-% 'mne' for MNE-Python
+% https://github.com/neuromodulation/perceive 
+% v0.1 Contributors Wolf-Julian Neumann, Gerd Tinkhauser
+% This is an open research tool that is not intended for clinical purposes. 
 
-% Neurophysiology data file name extensions:
-% LMTD = LFP Montage Time Domain 
-% IS = Indefinite Streaming
-% CT = Calibration Testing
+%% INPUT
+
+% files:
+% All input is optional, you can specify files as cell or character array
+% (e.g. files = 'Report_Json_Session_Report_20200115T123657.json') 
+% if files isn't specified or remains empty, it will automatically include
+% all files in the current working directory
+% if no files in the current working directory are found, a you can choose
+% files via the MATLAB uigetdir window.
+%
+% subjectIDs:
+% you can specify a subject ID for each file in case you want to follow an
+% IRB approved naming scheme for file export 
+% (e.g. run
+% perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
+% if unspecified or left empy, the subjectID will be created from
+% ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
+
+
+%% OUTPUT
+% The script generates BIDS inspired subject and session folders with the
+% ieeg format specifier. All time series data are being exported as
+% FieldTrip .mat files, as these require no additional dependencies for creation.
+% require dependencies, you can reformat with FieldTrip and SPM to MNE
+% python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
+
+%% Recoding type output naming
+% Each of the FieldTrip data files correspond to a specific aspect of the
+% Recording session: 
+% LMTD = LFP Montage Time Domain - BrainSenseSurvey
+% IS = Indefinite Streaming - BrainSenseStreaming
+% CT = Calibration Testing - Calibration Tests
 % BSL = BrainSense LFP (2 Hz power average + stimulation settings)
 % BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL
 % file)
-% Check times 
 
-
-% TODO: 
+%% TODO: 
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
@@ -482,23 +506,9 @@ for a = 1:length(files)
     
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
-        switch output_format
-            case 'spm'
-                data=ft_preprocessing([],alldata{b});
-                data.hdr.original_time =data.time;
-                data.time{1}=data.time{1}-data.time{1}(1);
-
-                D=spm_eeg_ft2spm(alldata{b},[fullname '.mat']);
-                D=chantype(D,':','LFP');
-                D.percept = hdr;save(D);
-            case 'mne'
-                fieldtrip2fiff([fullname '.fif'],alldata{b})
-            case 'ft'
-                data=alldata{b};
-                save([fullname '.mat'],'data')
-        end
+        data=alldata{b};
+        save([fullname '.mat'],'data')
     end
-    
 end
 
 
