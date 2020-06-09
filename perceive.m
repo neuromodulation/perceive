@@ -40,6 +40,7 @@ function perceive(files,subjectIDs)
 % file)
 
 %% TODO:
+% ADD BUG FIX REGARDING UTC TIMEZONE DIFFERENCES
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
@@ -79,11 +80,16 @@ for a = 1:length(files)
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
     hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
-    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
+    
+    hdr.ImplantDate = strrep(strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'^',''),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     if ~exist('subjectIDs')
-        hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
+        if ~isempty(str2num(hdr.ImplantDate(1)))
+            hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
+        else
+            hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
+        end
     else
         hdr.subject = subjectIDs{a};
     end
@@ -300,14 +306,14 @@ for a = 1:length(files)
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']));
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
-                    
+                  
                     figure
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,1)
                     p=plot(freq,pow(ir,:));
                     set(p(find(bad(ir))),'linestyle','--')
                     hold on
-                    plot(freq,nanmean(pow),'color','k','linewidth',2)
+                    plot(freq,nanmean(pow(ir,:)),'color','k','linewidth',2)
                     xlim([1 35])
                     plot(peaks(ir,1),peaks(ir,2),'LineStyle','none','Marker','.','MarkerSize',12)
                     for c = 1:length(ir)
@@ -324,7 +330,7 @@ for a = 1:length(files)
                     p=plot(freq,pow(il,:));
                     set(p(find(bad(il))),'linestyle','--')
                     hold on
-                    plot(freq,nanmean(pow),'color','k','linewidth',2)
+                    plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
                     xlim([1 35])
                     title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
                     plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)

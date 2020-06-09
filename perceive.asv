@@ -1,13 +1,13 @@
 function perceive(files,subjectIDs)
-% https://github.com/neuromodulation/perceive 
+% https://github.com/neuromodulation/perceive
 % v0.1 Contributors Wolf-Julian Neumann, Gerd Tinkhauser
-% This is an open research tool that is not intended for clinical purposes. 
+% This is an open research tool that is not intended for clinical purposes.
 
 %% INPUT
 
 % files:
 % All input is optional, you can specify files as cell or character array
-% (e.g. files = 'Report_Json_Session_Report_20200115T123657.json') 
+% (e.g. files = 'Report_Json_Session_Report_20200115T123657.json')
 % if files isn't specified or remains empty, it will automatically include
 % all files in the current working directory
 % if no files in the current working directory are found, a you can choose
@@ -15,7 +15,7 @@ function perceive(files,subjectIDs)
 %
 % subjectIDs:
 % you can specify a subject ID for each file in case you want to follow an
-% IRB approved naming scheme for file export 
+% IRB approved naming scheme for file export
 % (e.g. run
 % perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
 % if unspecified or left empy, the subjectID will be created from
@@ -26,39 +26,38 @@ function perceive(files,subjectIDs)
 % The script generates BIDS inspired subject and session folders with the
 % ieeg format specifier. All time series data are being exported as
 % FieldTrip .mat files, as these require no additional dependencies for creation.
-% require dependencies, you can reformat with FieldTrip and SPM to MNE
+% You can reformat with FieldTrip and SPM to MNE
 % python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
 
-% Each of the FieldTrip data files correspond to a specific aspect of 
-% Neurophysiology data file name extensions:
-% LMTD = LFP Montage Time Domain 
-% IS = Indefinite Streaming
-% CT = Calibration Testing
+%% Recording type output naming
+% Each of the FieldTrip data files correspond to a specific aspect of the
+% Recording session:
+% LMTD = LFP Montage Time Domain - BrainSenseSurvey
+% IS = Indefinite Streaming - BrainSenseStreaming
+% CT = Calibration Testing - Calibration Tests
 % BSL = BrainSense LFP (2 Hz power average + stimulation settings)
 % BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL
 % file)
 
-
-
-% TODO: 
+%% TODO:
+% ADD BUG FIX REGARDING UTC TIMEZONE DIFFERENCES
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
 % ADD CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
-if ~exist('files','var')
-    files=perceive_ffind('*.json');
+if ~exist('files','var') || isempty(files)
+    try
+        files=perceive_ffind('*.json');
+    catch
+        files = [];
+    end
     if isempty(files)
         [files,path] = uigetfile('*.json','Select .json file','MultiSelect','on');
         files = strcat(path,files);
     end
 end
-
-if ~exist('output_format','var')
-    output_format = 'ft';
-end
-
 
 if ischar(files)
     files = {files};
@@ -69,7 +68,7 @@ end
 
 for a = 1:length(files)
     filename = files{a};
-    
+    disp(['RUNNING ' filename])
     
     js = jsondecode(fileread(filename));
     
@@ -81,7 +80,8 @@ for a = 1:length(files)
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
     hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
-    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
+    
+    hdr.ImplantDate = strrep(strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'^',''),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     if ~exist('subjectIDs')
@@ -89,7 +89,7 @@ for a = 1:length(files)
     else
         hdr.subject = subjectIDs{a};
     end
-    hdr.session = ['ses-' char(datetime(hdr.SessionDate,'output_format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+    hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
@@ -148,16 +148,16 @@ for a = 1:length(files)
                         d.label=Channel(i);
                         d.trial{1} = raw;
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
-       
-             
-                        d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        
+                        
+                        d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
                         alldata{length(alldata)+1} = d;
@@ -190,14 +190,14 @@ for a = 1:length(files)
                             d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP]./1000;
                             d.trial{1}(3:4,e) = [cdata.LfpData(e).Left.mA;cdata.LfpData(e).Right.mA];
                             d.time{1}(e) = cdata.LfpData(e).TicksInMs/1000;
-                            d.realtime(e) = datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
+                            d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
                             d.hdr.BSL.seq(e)= cdata.LfpData(e).Seq;
                         end
                         d.trialinfo(1) = c;
                         d.hdr.realtime = d.realtime;
-              
-      
-                        d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        
+                        
+                        d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         
                         p=plot(d.realtime,d.trial{1}./1000,'linewidth',2);
                         cc=[1 0 0; 0 0 1; .2 .2 .2; .5 .5 .5];
@@ -257,17 +257,17 @@ for a = 1:length(files)
                         tmp = [data(i).TimeDomainData]';
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
-                      
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
-      
+                        
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                 case 'LFPMontage'
@@ -302,7 +302,7 @@ for a = 1:length(files)
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']));
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
-                    
+                    keyboard
                     figure
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,1)
@@ -384,16 +384,16 @@ for a = 1:length(files)
                         d.trial{1} = [refraw;tmp];
                         d.label=[Channel(i);strcat(hdr.chan,'_',nchans')];
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
                         d.hdr.label=d.label;
                         d.hdr.Fs = d.fsample;
-
-                        d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        
+                        d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                     
@@ -433,19 +433,19 @@ for a = 1:length(files)
                         d.hdr.CT.FirstPacketDateTime = runs{c};
                         
                         d.label=Channel(i);
-                         d.trial{1} = raw;
-                   
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
-                       
+                        d.trial{1} = raw;
+                        
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-
-                        d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        
+                        d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
                 case 'SenseChannelTests'
@@ -485,16 +485,16 @@ for a = 1:length(files)
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
- 
+                        
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputoutput_format','yyyy-MM-dd HH:mm:ss.sss','output_format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
             end
@@ -508,6 +508,7 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
+        disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data')
     end
 end
