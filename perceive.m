@@ -40,6 +40,7 @@ function perceive(files,subjectIDs)
 % file)
 
 %% TODO:
+% ADD DEIDENTIFICATION OF COPIED JSON
 % ADD BUG FIX REGARDING UTC TIMEZONE DIFFERENCES
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
@@ -80,32 +81,34 @@ for a = 1:length(files)
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
     hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
-
+    hdr.OriginalFile = filename;
     hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     if ~exist('subjectIDs')
-        if ~isempty(str2num(hdr.ImplantDate(1)))
+        if ~isempty(hdr.ImplantDate) &&  ~isempty(str2num(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
         else
             hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
         end
-    else
+    elseif iscell(subjectIDs) && length(subjectIDs) == length(files)
         hdr.subject = subjectIDs{a};
+    elseif length(subjectIDs) == 1
+        hdr.subject = subjectIDs{1};
     end
     hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
-    end
-    
+    end    
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
     hdr.events = js.DiagnosticData.EventLogs;
     hdr.fname = [hdr.subject '_' hdr.session];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
-    copyfile(filename,fullfile(hdr.fpath,[hdr.fname '.json']));
+    nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
+    copyfile(filename,nfile);
     datafields = sort({'BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests'});
     
     alldata = {};
@@ -183,7 +186,7 @@ for a = 1:length(files)
                         tmp = d.hdr.BSL.TherapySnapshot.Left;
                         stimchannels = ['STIM_L' num2str(tmp.RateInHertz) 'Hz' num2str(tmp.PulseWidthInMicroSecond) 'us_PEAK' strrep(num2str(tmp.FrequencyInHertz,3),'.','-') 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(tmp.AveragingDurationInMilliSeconds/1000) 's'];
                         tmp = d.hdr.BSL.TherapySnapshot.Right;
-                        stimchannels = {stimchannels,['R' num2str(tmp.RateInHertz) 'Hz' num2str(tmp.PulseWidthInMicroSecond) 'us_' strrep(num2str(tmp.FrequencyInHertz,3),'.','-') '_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(tmp.AveragingDurationInMilliSeconds/1000) 's']};
+                        stimchannels = {stimchannels,['STIM_R' num2str(tmp.RateInHertz) 'Hz' num2str(tmp.PulseWidthInMicroSecond) 'us_' strrep(num2str(tmp.FrequencyInHertz,3),'.','-') '_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(tmp.AveragingDurationInMilliSeconds/1000) 's']};
                         
                         d.label = [lfpchannels stimchannels];
                         d.hdr.label = d.label;
