@@ -109,7 +109,7 @@ for a = 1:length(files)
     hdr.js = js;
     nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
     copyfile(filename,nfile);
-    datafields = sort({'BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests'});
+    datafields = sort({'BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
     
     alldata = {};
     for b = 1:length(datafields)
@@ -117,6 +117,42 @@ for a = 1:length(files)
         if isfield(js,datafields{b})
             
             switch datafields{b}
+                
+                case 'DiagnosticData'
+                    data = js.(datafields{b});
+        keyboard
+        data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
+        data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
+        recordings = fieldnames(data.left);
+        LFP=[];
+        STIM=[];
+        DT=[];
+        for b = 1:length(recordings)
+            ldata = data.left.(recordings{b});
+            rdata = data.right.(recordings{b});
+            LFP=[LFP;[[rdata(:).LFP];[ldata(:).LFP]]'];
+            STIM=[STIM;[[rdata(:).AmplitudeInMilliAmps];[ldata(:).AmplitudeInMilliAmps]]'];
+            DT = [DT datetime(strrep(strrep({ldata(:).DateTime},'T',' '),'Z',''))];
+        end
+        [DT,i]=sort(DT);
+        LFP = LFP(i,:);
+        d.hdr = hdr;
+        d.fsample = 0.00166666666;
+        d.trial{1} = [LFP,STIM]';
+        figure
+        subplot(2,1,1)
+        yyaxis left
+        plot(DT,LFP(:,1),'Linewidth',2)
+        yyaxis right
+        plot(DT,STIM(:,1),'Linewidth',2,'linestyle','--')
+        subplot(2,1,2)
+        yyaxis left
+        plot(DT,LFP(:,2),'Linewidth',2)
+        yyaxis right
+        plot(DT,STIM(:,2),'Linewidth',2,'linestyle','--')
+                        
+                case 'PatientEvents'
+                    keyboard
                 case 'BrainSenseTimeDomain'
                     data = js.(datafields{b});
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
@@ -170,6 +206,7 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseLfp'
+                 
                     data = js.(datafields{b});
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
@@ -179,22 +216,26 @@ for a = 1:length(files)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
                         tmp = strsplit(strrep(strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),',');
-                        lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2)],[hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
+                        lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
+                            [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
                         d=[];
                         d.hdr = hdr;
                         d.hdr.BSL.TherapySnapshot = cdata.TherapySnapshot;
                         tmp = d.hdr.BSL.TherapySnapshot.Left;
-                        stimchannels = ['STIM_L' num2str(tmp.RateInHertz) 'Hz' num2str(tmp.PulseWidthInMicroSecond) 'us_PEAK' strrep(num2str(tmp.FrequencyInHertz,3),'.','-') 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(tmp.AveragingDurationInMilliSeconds/1000) 's'];
+                        lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
+                        stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
                         tmp = d.hdr.BSL.TherapySnapshot.Right;
-                        stimchannels = {stimchannels,['STIM_R' num2str(tmp.RateInHertz) 'Hz' num2str(tmp.PulseWidthInMicroSecond) 'us_' strrep(num2str(tmp.FrequencyInHertz,3),'.','-') '_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(tmp.AveragingDurationInMilliSeconds/1000) 's']};
+                        lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
+                        stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
+                     
                         
-                        d.label = [lfpchannels stimchannels];
+                        d.label = [strcat(lfpchannels','_',lfpsettings)' stimchannels];
                         d.hdr.label = d.label;
                         
                         d.fsample = cdata.SampleRateInHz;
                         d.hdr.Fs = d.fsample;
                         for e =1:length(cdata.LfpData)
-                            d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP]./1000;
+                            d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP];
                             d.trial{1}(3:4,e) = [cdata.LfpData(e).Left.mA;cdata.LfpData(e).Right.mA];
                             d.time{1}(e) = cdata.LfpData(e).TicksInMs/1000;
                             d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
@@ -206,15 +247,30 @@ for a = 1:length(files)
                         
                         d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         
-                        p=plot(d.realtime,d.trial{1}./1000,'linewidth',2);
-                        cc=[1 0 0; 0 0 1; .2 .2 .2; .5 .5 .5];
-                        for e =1:length(p)
-                            set(p(e),'color',cc(e,:));
-                        end
-                        legend(strrep(d.label,'_',' '))
-                        hold on
+                        subplot(2,1,1)
+                        yyaxis left
+                        lp=plot(d.realtime,d.trial{1}(1,:),'linewidth',2);
+                        ylabel('LFP Amplitude')
+                        yyaxis right
+                        sp=plot(d.realtime,d.trial{1}(3,:),'linewidth',2,'linestyle','--');
+                        title(strrep(hdr.fname,'_','-'))
+                        ylabel('Stimulation Amplitude')
+                        legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
                         xlabel('Time')
-                        ylabel('Amplitude')
+                        xlim([d.realtime(1) d.realtime(end)])
+                        subplot(2,1,2)
+                        yyaxis left
+                        lp=plot(d.realtime,d.trial{1}(2,:),'linewidth',2);
+                        ylabel('LFP Amplitude')
+                        yyaxis right
+                        title('RIGHT')
+                        sp=plot(d.realtime,d.trial{1}(4,:),'linewidth',2,'linestyle','--');
+                        ylabel('Stimulation Amplitude')
+                        legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
+                        xlabel('Time')
+                        xlim([d.realtime(1) d.realtime(end)])
+                        
+                        
                         bsldata = [bsldata,d.trial{1}];
                         bsltime = [bsltime,d.realtime];
                         bslchannels = d.label;
@@ -515,6 +571,9 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
+        if data.time{1}(1)<0
+            keyboard
+        end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data')
     end
