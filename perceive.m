@@ -73,9 +73,11 @@ for a = 1:length(files)
     
     js = jsondecode(fileread(filename));
     
-    infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance'};
+    infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
     for b = 1:length(infofields)
-        hdr.(infofields{b})=js.(infofields{b});
+        if isfield(js,infofields{b})
+            hdr.(infofields{b})=js.(infofields{b});
+        end
     end
     
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
@@ -85,8 +87,9 @@ for a = 1:length(files)
     hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
+
     if ~exist('subjectIDs','var')
-        if ~isempty(hdr.ImplantDate) &&  ~isempty(str2double(hdr.ImplantDate(1)))
+        if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
         else
             hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
@@ -102,24 +105,45 @@ for a = 1:length(files)
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
-    if isfield(js,'DiagnosticData')
-        hdr.events = js.DiagnosticData.EventLogs;
-    end
     hdr.fname = [hdr.subject '_' hdr.session];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
     copyfile(filename,nfile);
-    datafields = sort({'MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
+    datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
     
     alldata = {};
     for b = 1:length(datafields)
         if isfield(js,datafields{b})
             data = js.(datafields{b});
             switch datafields{b}
-                case 'PatientEvents'
-                    
+                case 'Impedance'
+                    T=table;
+                    for c = 1:length(data.Hemisphere)
+                        tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
+                        side = tmp{2}(1);
+                        electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
+                        e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;   
+                        e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
+                        imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
+                        
+                        for e = 1:length(imp)
+                            if strcmp(e1{e},'Case')
+                                T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
+                            else
+                                T.([hdr.chan '_' side e2{e}(end) e1{e}(end)]) = imp(e);
+                            end
+                        end
+                    end
+                    figure
+                    barh(table2array(T(1,:))')
+                    set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
+                    xlabel('Impedance')
+                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
+                        
+                case 'PatientEvents' 
                     disp(fieldnames(data));
                     
                 case 'MostRecentInSessionSignalCheck'
@@ -201,13 +225,14 @@ for a = 1:length(files)
                         
                         data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
                         data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-                        recordings = fieldnames(data.left);
+   
+                        runs = fieldnames(data.left);
                         LFP=[];
                         STIM=[];
                         DT=[];
-                        for c = 1:length(recordings)
-                            ldata = data.left.(recordings{c});
-                            rdata = data.right.(recordings{c});
+                        for c = 1:length(runs)
+                            ldata = data.left.(runs{c});
+                            rdata = data.right.(runs{c});
                             LFP=[LFP;[[rdata(:).LFP];[ldata(:).LFP]]'];
                             STIM=[STIM;[[rdata(:).AmplitudeInMilliAmps];[ldata(:).AmplitudeInMilliAmps]]'];
                             DT = [DT datetime(strrep(strrep({ldata(:).DateTime},'T',' '),'Z',''))];
@@ -217,47 +242,8 @@ for a = 1:length(files)
                         d.hdr = hdr;
                         d.fsample = 0.00166666666;
                         d.trial{1} = [LFP,STIM]';
-                        %                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
-                        %                     runs = unique(FirstPacketDateTime);
-                        %                     bsldata=[];bsltime=[];bslchannels=[];
-                        %                     figure
-                        %                     for c=1:length(runs)
-                        %                         cdata = data(c);
-                        %                         tmp = strrep(cdata.Channel,'_AND','');
-                        %                         tmp = strsplit(strrep(strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),',');
-                        %                         lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
-                        %                             [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
-                        %                         d=[];
-                        %                         d.hdr = hdr;
-                        %                         d.hdr.BSL.TherapySnapshot = cdata.TherapySnapshot;
-                        %                         tmp = d.hdr.BSL.TherapySnapshot.Left;
-                        %                         lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
-                        %                         stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
-                        %                         tmp = d.hdr.BSL.TherapySnapshot.Right;
-                        %                         lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
-                        %                         stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
-                        %
-                        %
-                        %                         d.label = [strcat(lfpchannels','_',lfpsettings)' stimchannels];
-                        %                         d.hdr.label = d.label;
-                        %
-                        %                         d.fsample = cdata.SampleRateInHz;
-                        %                         d.hdr.Fs = d.fsample;
-                        %                         for e =1:length(cdata.LfpData)
-                        %                             d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP];
-                        %                             d.trial{1}(3:4,e) = [cdata.LfpData(e).Left.mA;cdata.LfpData(e).Right.mA];
-                        %                             d.time{1}(e) = cdata.LfpData(e).TicksInMs/1000;
-                        %                             d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')+seconds(d.time{1}(e)-d.time{1}(1));
-                        %                             d.hdr.BSL.seq(e)= cdata.LfpData(e).Seq;
-                        %                         end
-                        %                         d.trialinfo(1) = c;
-                        %                         d.hdr.realtime = d.realtime;
-                        %
-                        %
-                        %                         d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        %
                         
-                        
+               
                         
                         
                         figure
@@ -272,7 +258,9 @@ for a = 1:length(files)
                         yyaxis right
                         plot(DT,STIM(:,2),'Linewidth',2,'linestyle','--')
                     end
-                    
+                    if isfield(data,'LfpFrequencySnapshotEvents')
+                        keyboard
+                    end
                     
                 case 'BrainSenseTimeDomain'
                     
