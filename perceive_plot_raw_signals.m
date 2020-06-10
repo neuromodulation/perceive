@@ -9,7 +9,7 @@ end
 
 for a=1:length(files)
     
-    if ischar(files{a})
+    if iscell(files)
         load(files{a})
     end
     
