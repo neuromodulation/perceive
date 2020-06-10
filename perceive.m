@@ -79,6 +79,7 @@ for a = 1:length(files)
             hdr.(infofields{b})=js.(infofields{b});
         end
     end
+    disp(js.DeviceInformation.Initial.NeurostimulatorLocation)
     
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
@@ -110,15 +111,19 @@ for a = 1:length(files)
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
-    copyfile(filename,nfile);
+    
     datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
     
     alldata = {};
     for b = 1:length(datafields)
         if isfield(js,datafields{b})
             data = js.(datafields{b});
+            if isempty(data)
+                continue
+            end
             switch datafields{b}
                 case 'Impedance'
+                   
                     T=table;
                     for c = 1:length(data.Hemisphere)
                         tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
@@ -150,7 +155,7 @@ for a = 1:length(files)
                 case 'MostRecentInSessionSignalCheck'
                     if ~isempty(data)
                         channels={};
-                        pow=[];rpow=[];lfit=[];bad=[];
+                        pow=[];rpow=[];lfit=[];bad=[];peaks=[];
                         for c = 1:length(data)
                             cdata = data(c);
                             if iscell(cdata)
@@ -251,9 +256,7 @@ for a = 1:length(files)
                         firstsample = d.time{1}(1);
                         lastsample = d.time{1}(end);
                         d.sampleinfo(1,:) = [firstsample lastsample];
-                        if firstsample<0
-                            keyboard
-                        end
+                  
                         
                         
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
@@ -335,8 +338,6 @@ for a = 1:length(files)
                             keyboard
                         end
                         d.trialinfo(1) = c;
-                        
-                        
                         d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
@@ -712,16 +713,18 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
-        if data.time{1}(1)<0
-            keyboard
-        end
+%         if data.time{1}(1)<0
+%             keyboard
+%         end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
-        save([fullname '.mat'],'data')
-        perceive_plot_raw_signals(data)
-        perceive_print(fullname)
+        save([fullname '.mat'],'data');
+        perceive_plot_raw_signals(data);
+        perceive_print(fullname);
     end
     close all
+    copyfile(filename,nfile);
+    hdr.DeviceInformation.Final.NeurostimulatorLocation
 end
 
 
-end
+
