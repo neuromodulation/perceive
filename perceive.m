@@ -87,7 +87,7 @@ for a = 1:length(files)
     hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
-
+    
     if ~exist('subjectIDs','var')
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
@@ -124,7 +124,7 @@ for a = 1:length(files)
                         tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
                         side = tmp{2}(1);
                         electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
-                        e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;   
+                        e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
                         e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
                         imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
                         
@@ -140,92 +140,92 @@ for a = 1:length(files)
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
+                    title('Impedances')
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
-                        
-                case 'PatientEvents' 
+                    
+                case 'PatientEvents'
                     disp(fieldnames(data));
                     
                 case 'MostRecentInSessionSignalCheck'
-                    
-                    channels={};
-                    pow=[];rpow=[];lfit=[];bad=[];
-                    for c = 1:length(data)
-                        cdata = data(c);
-                        if iscell(cdata)
-                            cdata=cdata{1};
+                    if ~isempty(data)
+                        channels={};
+                        pow=[];rpow=[];lfit=[];bad=[];
+                        for c = 1:length(data)
+                            cdata = data(c);
+                            if iscell(cdata)
+                                cdata=cdata{1};
+                            end
+                            tmp=strsplit(cdata.Channel,'_');
+                            side=tmp{3}(1);
+                            tmp=strsplit(cdata.Channel,'.');tmp=strrep(tmp{2},'_AND_','');tmp=strsplit(tmp,'_');
+                            ch = strrep(strrep(strrep(strrep(strcat(tmp{1},tmp{2}),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                            channels{c} = [hdr.chan '_' side '_' ch];
+                            freq = cdata.SignalFrequencies;
+                            pow(c,:) = cdata.SignalPsdValues;
+                            rpow(c,:) = perceive_power_normalization(pow(c,:),freq);
+                            lfit(c,:) = perceive_fftlogfitter(freq,pow(c,:));
+                            bad(c,1) = strcmp('IFACT_PRESENT',cdata.ArtifactStatus(end-12:end));
+                            
+                            try
+                                peaks(c,1) = cdata.PeakFrequencyInHertz;
+                                peaks(c,2) = cdata.PeakMagnitudeInMicroVolt;
+                            catch
+                                peaks(c,:)=nan(1,2);
+                            end
                         end
-                        tmp=strsplit(cdata.Channel,'_');
-                        side=tmp{3}(1);
-                        tmp=strsplit(cdata.Channel,'.');tmp=strrep(tmp{2},'_AND_','');tmp=strsplit(tmp,'_');
-                        ch = strrep(strrep(strrep(strrep(strcat(tmp{1},tmp{2}),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                        channels{c} = [hdr.chan '_' side '_' ch];
-                        freq = cdata.SignalFrequencies;
-                        pow(c,:) = cdata.SignalPsdValues;
-                        rpow(c,:) = perceive_power_normalization(pow(c,:),freq);
-                        lfit(c,:) = perceive_fftlogfitter(freq,pow(c,:));
-                        bad(c,1) = strcmp('IFACT_PRESENT',cdata.ArtifactStatus(end-12:end));
                         
-                        try
-                            peaks(c,1) = cdata.PeakFrequencyInHertz;
-                            peaks(c,2) = cdata.PeakMagnitudeInMicroVolt;
-                        catch
-                            peaks(c,:)=nan(1,2);
+                        T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheckPowerSpectra.csv']));
+                        T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
+                        
+                        figure
+                        ir = perceive_ci([hdr.chan '_R'],channels);
+                        subplot(1,2,1)
+                        p=plot(freq,pow(ir,:));
+                        set(p(find(bad(ir))),'linestyle','--')
+                        hold on
+                        plot(freq,nanmean(pow(ir,:)),'color','k','linewidth',2)
+                        xlim([1 35])
+                        plot(peaks(ir,1),peaks(ir,2),'LineStyle','none','Marker','.','MarkerSize',12)
+                        for c = 1:length(ir)
+                            if peaks(ir(c),1)>0
+                                text(peaks(ir(c),1),peaks(ir(c),2),[' ' num2str(peaks(ir(c),1),3) ' Hz'])
+                            end
                         end
-                    end
-                    
-                    T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheckPowerSpectra.csv']));
-                    T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
-                    
-                    figure
-                    ir = perceive_ci([hdr.chan '_R'],channels);
-                    subplot(1,2,1)
-                    p=plot(freq,pow(ir,:));
-                    set(p(find(bad(ir))),'linestyle','--')
-                    hold on
-                    plot(freq,nanmean(pow(ir,:)),'color','k','linewidth',2)
-                    xlim([1 35])
-                    plot(peaks(ir,1),peaks(ir,2),'LineStyle','none','Marker','.','MarkerSize',12)
-                    for c = 1:length(ir)
-                        if peaks(ir(c),1)>0
-                            text(peaks(ir(c),1),peaks(ir(c),2),[' ' num2str(peaks(ir(c),1),3) ' Hz'])
+                        xlabel('Frequency [Hz]')
+                        ylabel('Power spectral density [uV²/Hz]')
+                        title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
+                        legend(strrep(channels(ir),'_',' '))
+                        il = perceive_ci([hdr.chan '_L'],channels);
+                        subplot(1,2,2)
+                        p=plot(freq,pow(il,:));
+                        set(p(find(bad(il))),'linestyle','--')
+                        hold on
+                        plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
+                        xlim([1 35])
+                        title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
+                        plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
+                        xlabel('Frequency [Hz]')
+                        ylabel('Power spectral density [uV²/Hz]')
+                        for c = 1:length(il)
+                            if peaks(il(c),1)>0
+                                text(peaks(il(c),1),peaks(il(c),2),[' ' num2str(peaks(il(c),1),3) ' Hz'])
+                            end
                         end
+                        legend(strrep(channels(il),'_',' '))
+                        savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
+                        
                     end
-                    xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV²/Hz]')
-                    title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
-                    legend(strrep(channels(ir),'_',' '))
-                    il = perceive_ci([hdr.chan '_L'],channels);
-                    subplot(1,2,2)
-                    p=plot(freq,pow(il,:));
-                    set(p(find(bad(il))),'linestyle','--')
-                    hold on
-                    plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
-                    xlim([1 35])
-                    title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
-                    plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
-                    xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV²/Hz]')
-                    for c = 1:length(il)
-                        if peaks(il(c),1)>0
-                            text(peaks(il(c),1),peaks(il(c),2),[' ' num2str(peaks(il(c),1),3) ' Hz'])
-                        end
-                    end
-                    legend(strrep(channels(il),'_',' '))
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
-                    
-                    
                 case 'DiagnosticData'
                     
                     if isfield(data,'LFPTrendLogs')
-                        keyboard
                         
                         data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
                         data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-   
+                        
                         runs = fieldnames(data.left);
                         LFP=[];
                         STIM=[];
@@ -242,24 +242,48 @@ for a = 1:length(files)
                         d.hdr = hdr;
                         d.fsample = 0.00166666666;
                         d.trial{1} = [LFP,STIM]';
+                        d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
+                        d.time{1} = linspace(seconds(DT(1)-hdr.d0),seconds(DT(end)-hdr.d0),size(d.trial{1},2));
+                        d.realtime{1} = DT;
+                        d.fsample = 1/diff(d.time{1}(1:2));
+                        d.hdr.Fs = d.fsample;
+                        d.hdr.label = d.label;
+                        firstsample = d.time{1}(1);
+                        lastsample = d.time{1}(end);
+                        d.sampleinfo(1,:) = [firstsample lastsample];
+                        if firstsample<0
+                            keyboard
+                        end
                         
-               
+                        
+                        d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
+                        alldata{length(alldata)+1} = d;
                         
                         
                         figure
                         subplot(2,1,1)
+                        title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
                         plot(DT,LFP(:,1),'Linewidth',2)
+                        ylabel('LFP Amplitude')
                         yyaxis right
                         plot(DT,STIM(:,1),'Linewidth',2,'linestyle','--')
+                        ylabel('STIM Amplitude')
+                        xlabel('Time')
                         subplot(2,1,2)
                         yyaxis left
                         plot(DT,LFP(:,2),'Linewidth',2)
+                        ylabel('LFP Amplitude')
                         yyaxis right
                         plot(DT,STIM(:,2),'Linewidth',2,'linestyle','--')
+                        title('RIGHT')
+                        xlabel('Time')
+                        ylabel('STIM Amplitude')
+                        savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
-                        keyboard
+                        warning('Check again')
                     end
                     
                 case 'BrainSenseTimeDomain'
@@ -693,7 +717,10 @@ for a = 1:length(files)
         end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data')
+        perceive_plot_raw_signals(data)
+        perceive_print(fullname)
     end
+    close all
 end
 
 

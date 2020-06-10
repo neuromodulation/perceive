@@ -121,12 +121,12 @@ for a = 1:length(files)
                 case 'Impedance'
                     T=table;
                     for c = 1:length(data.Hemisphere)
-                        tmp=strsplit(data(c).Hemisphere,'.');
+                        tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
                         side = tmp{2}(1);
-                        electrodes = unique([{data(c).SessionImpedance.Monopolar.Electrode2} {data(c).SessionImpedance.Monopolar.Electrode1}]);
-                        e1 = strrep([{data(c).SessionImpedance.Monopolar.Electrode1} {data(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;   
-                        e2 = [{data(c).SessionImpedance.Monopolar.Electrode2} {data(c).SessionImpedance.Bipolar.Electrode2}];
-                        imp = [[data(c).SessionImpedance.Monopolar.ResultValue] [data(c).SessionImpedance.Bipolar.ResultValue]];
+                        electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
+                        e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;   
+                        e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
+                        imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
                         
                         for e = 1:length(imp)
                             if strcmp(e1{e},'Case')
@@ -136,9 +136,11 @@ for a = 1:length(files)
                             end
                         end
                     end
+                    figure
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
+                    title('Impedances')
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
                         
@@ -220,7 +222,6 @@ for a = 1:length(files)
                 case 'DiagnosticData'
                     
                     if isfield(data,'LFPTrendLogs')
-                        keyboard
                         
                         data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
                         data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
@@ -241,24 +242,49 @@ for a = 1:length(files)
                         d.hdr = hdr;
                         d.fsample = 0.00166666666;
                         d.trial{1} = [LFP,STIM]';
+                        d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
+                        d.time{1} = linspace(seconds(DT(1)-hdr.d0),seconds(DT(end)-hdr.d0),size(d.trial{1},2));
+                        d.realtime{1} = DT;
+                        d.fsample = 1/diff(d.time{1}(1:2));
+                        d.hdr.Fs = d.fsample;
+                        d.hdr.label = d.label;
+                        firstsample = d.time{1}(1);
+                        lastsample = d.time{1}(end);
+                        d.sampleinfo(1,:) = [firstsample lastsample];
+                        if firstsample<0
+                            keyboard
+                        end
                         
-               
                         
+                        d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
+                        alldata{length(alldata)+1} = d;
+                    
                         
                         figure
                         subplot(2,1,1)
+                        title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
                         plot(DT,LFP(:,1),'Linewidth',2)
+                        ylabel('LFP Amplitude')
                         yyaxis right
                         plot(DT,STIM(:,1),'Linewidth',2,'linestyle','--')
+                        ylabel('STIM Amplitude')
+                        xlabel('Time')
                         subplot(2,1,2)
                         yyaxis left
                         plot(DT,LFP(:,2),'Linewidth',2)
+                        ylabel('LFP Amplitude')
                         yyaxis right
                         plot(DT,STIM(:,2),'Linewidth',2,'linestyle','--')
+                        title('RIGHT')
+                        xlabel('Time')
+                        ylabel('STIM Amplitude')
+                        savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
                         keyboard
+                        data = data.LfpFrequencySnapshotEvents
                     end
                     
                 case 'BrainSenseTimeDomain'
