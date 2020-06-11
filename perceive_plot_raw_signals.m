@@ -34,6 +34,7 @@ for a=1:length(files)
             chanlabels{a} = ['chan' num2str(a)];
         end
     end
+    raw(isnan(raw))=0;
     figure
     for b = 1:size(raw,1)
         p(b)=plot(time,zscore(raw(b,:)')'./10+b);
