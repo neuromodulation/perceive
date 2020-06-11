@@ -35,7 +35,7 @@ for a=1:length(files)
         end
     end
     raw(isnan(raw))=0;
-    figure
+    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
     for b = 1:size(raw,1)
         p(b)=plot(time,zscore(raw(b,:)')'./10+b);
         hold on
@@ -45,5 +45,6 @@ for a=1:length(files)
     ylabel('Amplitude')
     xlim([time(1) time(end)]);
     ylim([0 length(chanlabels)+1]);
-    title(fname)
+    title(strrep(fname,'_',' '))
+    
 end

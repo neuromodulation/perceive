@@ -156,7 +156,7 @@ for a = 1:length(files)
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
-                    title('Impedances')
+                    title({hdr.subject, hdr.session,'Impedances'})
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
                     
@@ -196,9 +196,9 @@ for a = 1:length(files)
                         T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                         writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
                         
-                        figure
+                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                         ir = perceive_ci([hdr.chan '_R'],channels);
-                        subplot(1,2,1)
+                        subplot(1,2,2)
                         p=plot(freq,pow(ir,:));
                         set(p(find(bad(ir))),'linestyle','--')
                         hold on
@@ -215,13 +215,13 @@ for a = 1:length(files)
                         title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
                         legend(strrep(channels(ir),'_',' '))
                         il = perceive_ci([hdr.chan '_L'],channels);
-                        subplot(1,2,2)
+                        subplot(1,2,1)
                         p=plot(freq,pow(il,:));
                         set(p(find(bad(il))),'linestyle','--')
                         hold on
                         plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
                         xlim([1 35])
-                        title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
+                        title(strrep({'MostRecentSignalCheck',hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
                         plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                         xlabel('Frequency [Hz]')
                         ylabel('Power spectral density [uV²/Hz]')
@@ -274,7 +274,7 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                         
                         
-                        figure
+                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                         subplot(2,1,1)
                         title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
@@ -399,7 +399,7 @@ for a = 1:length(files)
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
-                    figure
+                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                     for c=1:length(runs)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
@@ -561,7 +561,7 @@ for a = 1:length(files)
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
                     
-                    figure
+                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,2)
                     p=plot(freq,pow(ir,:));
@@ -599,7 +599,7 @@ for a = 1:length(files)
                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
                     pause(2)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
-                    
+         
                     
                 case 'IndefiniteStreaming'
                     
