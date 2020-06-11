@@ -40,6 +40,8 @@ for a=1:length(files)
         hold on
     end
     set(gca,'YTick',[1:size(raw,1)],'YTickLabel',strrep(chanlabels,'_',' '),'YTickLabelRotation',45);
+    xlabel('Time')
+    ylabel('Amplitude')
     xlim([time(1) time(end)]);
     ylim([0 length(chanlabels)+1]);
     title(fname)

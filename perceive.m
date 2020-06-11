@@ -41,11 +41,11 @@ function perceive(files,subjectIDs)
 
 %% TODO:
 % ADD DEIDENTIFICATION OF COPIED JSON
-% ADD BUG FIX REGARDING UTC TIMEZONE DIFFERENCES
+% BUG FIX UTC?
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
-% ADD CHRONIC DIAGNOSTIC READINGS
+% IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
 if ~exist('files','var') || isempty(files)
@@ -67,11 +67,18 @@ if exist('subjectIDs','var') && ischar(subjectIDs)
     subjectIDs={subjectIDs};
 end
 
+
 for a = 1:length(files)
     filename = files{a};
     disp(['RUNNING ' filename])
     
     js = jsondecode(fileread(filename));
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
     
     infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
     for b = 1:length(infofields)
@@ -79,7 +86,7 @@ for a = 1:length(files)
             hdr.(infofields{b})=js.(infofields{b});
         end
     end
-    disp(js.DeviceInformation.Initial.NeurostimulatorLocation)
+    disp(js.DeviceInformation.Final.NeurostimulatorLocation)
     
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
@@ -110,11 +117,11 @@ for a = 1:length(files)
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
-    nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
     
     datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
     
     alldata = {};
+    disp(['SUBJECT ' hdr.subject])
     for b = 1:length(datafields)
         if isfield(js,datafields{b})
             data = js.(datafields{b});
@@ -123,7 +130,7 @@ for a = 1:length(files)
             end
             switch datafields{b}
                 case 'Impedance'
-                   
+                    
                     T=table;
                     for c = 1:length(data.Hemisphere)
                         tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
@@ -240,7 +247,7 @@ for a = 1:length(files)
                             rdata = data.right.(runs{c});
                             LFP=[LFP;[[rdata(:).LFP];[ldata(:).LFP]]'];
                             STIM=[STIM;[[rdata(:).AmplitudeInMilliAmps];[ldata(:).AmplitudeInMilliAmps]]'];
-                            DT = [DT datetime(strrep(strrep({ldata(:).DateTime},'T',' '),'Z',''))];
+                            DT = [DT datetime({ldata(:).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''')];
                         end
                         [DT,i]=sort(DT);
                         LFP = LFP(i,:);
@@ -256,7 +263,7 @@ for a = 1:length(files)
                         firstsample = d.time{1}(1);
                         lastsample = d.time{1}(end);
                         d.sampleinfo(1,:) = [firstsample lastsample];
-                  
+                        
                         
                         
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
@@ -286,7 +293,41 @@ for a = 1:length(files)
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
-                        warning('Check again')
+                        lfp = data.LfpFrequencySnapshotEvents;
+                        Tpow=table;Trpow=table;Tlfit=table;pow=[];rpow=[];lfit=[];
+                        for c = 1:length(lfp)
+                            if lfp(c).LFP && isfield(lfp(c),'LfpFrequencySnapshotEvents')
+                                ids(c) = lfp(c).EventID;
+                                DT(c) = datetime(lfp(c).DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss');
+                                events{c} = lfp(c).EventName;
+                                tmp = strsplit(strrep(lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
+                                ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                tmp = strsplit(strrep(lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
+                                ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                chanlabels{c} = {ch1 ch2};
+                                stimgroups{c} = lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.GroupId(end);
+                                freq = lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.Frequency;
+                                pow(:,1) = lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
+                                pow(:,2) = lfp(c).LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
+                                Tpow.Frequency = freq;
+                                Tpow.(strrep([events{c} '_' num2str(c) '_' ch1 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,1);
+                                Tpow.(strrep([events{c} '_' num2str(c) '_' ch2 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,2);
+                                
+                                
+                                figure
+                                plot(freq,pow)
+                                legend(strrep(chanlabels{c},'_',' '))
+                                title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
+                                xlabel('Frequency [Hz]')
+                                ylabel('Power spectral density [uV²/Hz]')
+                                savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
+                                perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
+                            end
+                        end
+                        writetable(Tpow,fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']))
+                    else
+                        warning('LFP Snapshot Event without LFP data present.')
+                        
                     end
                     
                 case 'BrainSenseTimeDomain'
@@ -345,7 +386,6 @@ for a = 1:length(files)
                     end
                 case 'BrainSenseLfp'
                     
-                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
@@ -391,7 +431,7 @@ for a = 1:length(files)
                         ylabel('LFP Amplitude')
                         yyaxis right
                         sp=plot(d.realtime,d.trial{1}(3,:),'linewidth',2,'linestyle','--');
-                        title(strrep(hdr.fname,'_','-'))
+                        title(strrep(d.fname,'_','-'))
                         ylabel('Stimulation Amplitude')
                         legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
                         xlabel('Time')
@@ -413,17 +453,20 @@ for a = 1:length(files)
                         bsltime = [bsltime,d.realtime];
                         bslchannels = d.label;
                         alldata{length(alldata)+1} = d;
+                        keyboard
+                        
+                        savefig(fullfile(hdr.fpath,[d.fname '.fig']))
+                        perceive_print(fullfile(hdr.fpath,[d.fname]))
+                        
+                        
                     end
-                    title({strrep(hdr.fname,'_',' '),'BrainSenseLfp'})
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp.fig']))
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp']))
                     T=table;
                     T.Time = bsltime';
                     for c = 1:length(bslchannels)
                         T.(bslchannels{c}) = bsldata(c,:)';
                     end
                     
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_BrainSenseLfp.csv']))
+                    writetable(T,fullfile(hdr.fpath,['BrainSenseLFP.csv']))
                     
                 case 'LfpMontageTimeDomain'
                     
@@ -709,20 +752,25 @@ for a = 1:length(files)
         end
     end
     
+    nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
+    copyfile(files{a},nfile)
+    
     
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
-%         if data.time{1}(1)<0
-%             keyboard
-%         end
+        %         if data.time{1}(1)<0
+        %             keyboard
+        %         end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data');
         perceive_plot_raw_signals(data);
+        
         perceive_print(fullname);
     end
     close all
-    copyfile(filename,nfile);
+    
+    
     hdr.DeviceInformation.Final.NeurostimulatorLocation
 end
 
