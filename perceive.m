@@ -831,7 +831,8 @@ for a = 1:length(files)
             box off
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
             xlabel('T'),ylabel('A')
-            xlim([0 1.5])
+            xx = randi([d.time{1}(1),d.time{1}(end)-2],1);
+            xlim([xx xx+1.5])
            
 
             subplot(2,2,3)
@@ -868,7 +869,8 @@ for a = 1:length(files)
             box off
             plot(fulldata.time{1},fulldata.trial{1}(2,:))
             xlabel('T'),ylabel('A')
-            xlim([0 1.5])
+             xlim([xx xx+1.5])
+           
             
             subplot(2,2,4)
             imagesc(t,f,log(tf)),axis xy, 
