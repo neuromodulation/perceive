@@ -1,4 +1,4 @@
-function perceive(files,subjectIDs)
+function perceive(files,subjectIDs,datafields)
 % https://github.com/neuromodulation/perceive
 % v0.1 Contributors Wolf-Julian Neumann, Gerd Tinkhauser
 % This is an open research tool that is not intended for clinical purposes.
@@ -121,9 +121,9 @@ for a = 1:length(files)
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
-    
-    datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
-    
+    if ~exist('datafields','var')
+        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
+    end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
     for b = 1:length(datafields)
@@ -187,7 +187,7 @@ for a = 1:length(files)
                                 peaks(c,1) = cdata.PeakFrequencyInHertz;
                                 peaks(c,2) = cdata.PeakMagnitudeInMicroVolt;
                             catch
-                                peaks(c,:)=nan(1,2);
+                                peaks(c,:)=zeros(1,2);
                             end
                         end
                         
@@ -657,10 +657,8 @@ for a = 1:length(files)
                     
                 case 'CalibrationTests'
                     
-                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
-                    hdr.ctd0=datetime(FirstPacketDateTime{1}(1:10));
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
@@ -670,18 +668,34 @@ for a = 1:length(files)
                     for c = 1:length(tmp)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
-                    
-                    fsample = data.SampleRateInHz;
-                    gain=[data(:).Gain]';
-                    [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
+                  
+                    figure
+                    for c = 1:length(data)
+                    fsample = data(c).SampleRateInHz;
+                    gain=[data(c).Gain]';
+                    [tmp1,tmp2] = strtok(strrep({data(c).Channel}','_AND',''),'_');
                     ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     
                     [tmp1,tmp2] = strtok(tmp2,'_');
                     ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-                    Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-                    d=[];
+                    Channel(c) = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    tdtmp = zscore(data(c).TimeDomainData)./10+c;
+                    ttmp=[1:length(tdtmp)]./fsample;
+                    plot(ttmp,tdtmp)
+                    hold on
+                    end
+                    xlim([ttmp(1),ttmp(end)])
+                    set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
+                    xlabel('Time [s]')
+                    title({hdr.subject,hdr.session,'All CalibrationTests'})
+                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
+                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests']))
+         
+                    
                     for c = 1:length(runs)
+                    d=[];
+                    
                         i=perceive_ci(runs{c},FirstPacketDateTime);
                         raw=[data(i).TimeDomainData]';
                         d.hdr = hdr;
@@ -694,7 +708,7 @@ for a = 1:length(files)
                         d.label=Channel(i);
                         d.trial{1} = raw;
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.ctd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         
                         d.fsample = fsample;
                         firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
