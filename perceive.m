@@ -122,7 +122,7 @@ for a = 1:length(files)
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     if ~exist('datafields','var')
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
+        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
@@ -278,23 +278,25 @@ for a = 1:length(files)
                         subplot(2,1,1)
                         title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
-                        plot(DT,LFP(:,1),'Linestyle','none','Marker','.')
+                        
+                        scatter(DT,LFP(:,1),20,'filled','Marker','o')
                         ylabel('LFP Amplitude')
                         yyaxis right
-                        plot(DT,STIM(:,1),'Linewidth',2,'linestyle','--')
+                        scatter(DT,STIM(:,1),20,'filled','Marker','s')
                         ylabel('STIM Amplitude')
                         xlabel('Time')
                         subplot(2,1,2)
                         yyaxis left
-                        plot(DT,LFP(:,2),'Linestyle','none','Marker','.')
+                        scatter(DT,LFP(:,2),20,'filled','Marker','o')
                         ylabel('LFP Amplitude')
                         yyaxis right
-                        plot(DT,STIM(:,2),'Linewidth',2,'linestyle','--')
+                        scatter(DT,STIM(:,2),20,'filled','Marker','s')
                         title('RIGHT')
                         xlabel('Time')
                         ylabel('STIM Amplitude')
                         savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
+%                         keyboard
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
                         cdata= data.LfpFrequencySnapshotEvents;
@@ -324,7 +326,7 @@ for a = 1:length(files)
                                 
                                 
                                 figure
-                                plot(freq,pow)
+                                plot(freq,pow,'linewidth',2)
                                 legend(strrep(chanlabels{c},'_',' '))
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
                                 xlabel('Frequency [Hz]')
@@ -422,11 +424,11 @@ for a = 1:length(files)
                         
                         d.fsample = cdata.SampleRateInHz;
                         d.hdr.Fs = d.fsample;
-                  
+                        tstart = cdata.LfpData(1).TicksInMs/1000;
                         for e =1:length(cdata.LfpData)
                             d.trial{1}(1:2,e) = [cdata.LfpData(e).Left.LFP;cdata.LfpData(e).Right.LFP];
                             d.trial{1}(3:4,e) = [cdata.LfpData(e).Left.mA;cdata.LfpData(e).Right.mA];
-                            d.time{1}(e) = cdata.LfpData(e).TicksInMs/1000;
+                            d.time{1}(e) = seconds(datetime(runs{c},'InputFormat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+((cdata.LfpData(e).TicksInMs/1000)-tstart);
                             d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','Format','yyyy-MM-dd HH:mm:ss.SSS')+seconds((d.time{1}(e)-d.time{1}(1)));
                             d.hdr.BSL.seq(e)= cdata.LfpData(e).Seq;
                         end
@@ -528,7 +530,7 @@ for a = 1:length(files)
                         d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                     end
-                case 'LFPMontage'
+                case 'BrainSenseSurvey'
                     
                     channels={};
                     pow=[];rpow=[];lfit=[];bad=[];
@@ -557,9 +559,9 @@ for a = 1:length(files)
                     end
                     
                     T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']));
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurveyPowerSpectra.csv']));
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey_Peaks.csv']));
                     
                     figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                     ir = perceive_ci([hdr.chan '_R'],channels);
@@ -596,9 +598,9 @@ for a = 1:length(files)
                         end
                     end
                     legend(strrep(channels(il),'_',' '))
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
+                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
                     pause(2)
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
+                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey']))
          
                     
                 case 'IndefiniteStreaming'
@@ -795,8 +797,8 @@ for a = 1:length(files)
             bsl=load(strrep(fullname,'BSTD','BSL'));
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
             fulldata.label(3:6) = bsl.data.label;
-            fulldata.time{1}=fulldata.time{1}-fulldata.time{1}(1);
-            otime = bsl.data.time{1}-bsl.data.time{1}(1);
+            fulldata.time{1}=fulldata.time{1};
+            otime = bsl.data.time{1};
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime,bsl.data.trial{1}(c,:),fulldata.time{1},'nearest');
             end
