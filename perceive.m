@@ -800,7 +800,7 @@ for a = 1:length(files)
             fulldata.time{1}=fulldata.time{1};
             otime = bsl.data.time{1};
             for c =1:4
-                fulldata.trial{1}(c+2,:) = interp1(otime,bsl.data.trial{1}(c,:),fulldata.time{1},'nearest');
+                fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
            
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
@@ -831,7 +831,7 @@ for a = 1:length(files)
             box off
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
             xlabel('T'),ylabel('A')
-            xx = randi([d.time{1}(1),d.time{1}(end)-2],1);
+            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)-5]),1);
             xlim([xx xx+1.5])
            
 
