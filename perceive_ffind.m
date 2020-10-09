@@ -13,7 +13,23 @@ if ~rec
     if size(x,1)>1
         files = cellstr(ls(string));
     else
-        files = strsplit(x,' ');
+        % On unix, the output of 'ls' is a rich text, see the help for LS:
+        %  >> On UNIX, LS returns a character row vector of filenames
+        %  >> separated by tab and space characters.
+        % On top of that, the text terminates with a newline.
+        % Therefore, we can't split only on spaces, but also on tabs and newlines:
+        files = strsplit(x);
+        % On unix, splitting on newlines can result in the last entry being empty,
+        % so we remove empty entries:
+        if ~isempty(files)
+            nonempty=repmat(true,1,length(files));
+            for i=1:length(files)
+                if isempty(files{i})
+                    nonempty(i)=false;
+                end
+            end
+            files=files(nonempty);
+        end
     end
     
     for a =1:length(files)
