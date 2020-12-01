@@ -475,7 +475,7 @@ for a = 1:length(files)
                         else if length(tmp)==1
                             lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ]};
                             else
-                                error(['unsupported number of ' num2str(length(tmp)) ' sides in BrainSenseLfp']);
+                                error(['unsupported number of ' num2str(length(tmp)) 'sides in BrainSenseLfp']);
                             end
                         end
                         d=[];
@@ -486,16 +486,16 @@ for a = 1:length(files)
                             lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
                         else
-                            lfpsettings{1,1}='n/a';
-                            stimchannels = 'n/a';
+                            lfpsettings{1,1}='LFP n/a';
+                            stimchannels = 'STIM n/a';
                         end
                         if isfield(d.hdr.BSL.TherapySnapshot,'Right')
                             tmp = d.hdr.BSL.TherapySnapshot.Right;
                             lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
                         else
-                            lfpsettings{2,1} = 'n/a';
-                            stimchannels = {stimchannels,'n/a'};
+                            lfpsettings{2,1} = 'LFP n/a';
+                            stimchannels = {stimchannels,'STIM n/a'};
                         end
                         
                         d.label = [strcat(lfpchannels','_',lfpsettings)' stimchannels];
