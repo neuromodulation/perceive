@@ -156,7 +156,7 @@ for a = 1:length(files)
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
-                    title({hdr.subject, hdr.session,'Impedances'})
+                    title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
                     
@@ -212,7 +212,7 @@ for a = 1:length(files)
                         end
                         xlabel('Frequency [Hz]')
                         ylabel('Power spectral density [uV²/Hz]')
-                        title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
+                        title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
                         legend(strrep(channels(ir),'_',' '))
                         il = perceive_ci([hdr.chan '_L'],channels);
                         subplot(1,2,1)
@@ -475,7 +475,7 @@ for a = 1:length(files)
                         else if length(tmp)==1
                             lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ]};
                             else
-                                error(['unsupported number of ' num2str(length(tmp)) ' sides in BrainSenseLfp']);
+                                error(['unsupported number of ' num2str(length(tmp)) 'sides in BrainSenseLfp']);
                             end
                         end
                         d=[];
@@ -486,16 +486,16 @@ for a = 1:length(files)
                             lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
                         else
-                            lfpsettings{1,1}='n/a';
-                            stimchannels = 'n/a';
+                            lfpsettings{1,1}='LFP n/a';
+                            stimchannels = 'STIM n/a';
                         end
                         if isfield(d.hdr.BSL.TherapySnapshot,'Right')
                             tmp = d.hdr.BSL.TherapySnapshot.Right;
                             lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
                         else
-                            lfpsettings{2,1} = 'n/a';
-                            stimchannels = {stimchannels,'n/a'};
+                            lfpsettings{2,1} = 'LFP n/a';
+                            stimchannels = {stimchannels,'STIM n/a'};
                         end
                         
                         d.label = [strcat(lfpchannels','_',lfpsettings)' stimchannels];
@@ -524,7 +524,7 @@ for a = 1:length(files)
                         ylabel('LFP Amplitude')
                         yyaxis right
                         sp=plot(d.realtime,d.trial{1}(3,:),'linewidth',2,'linestyle','--');
-                        title(strrep(d.fname,'_','-'))
+                        title(strrep(strrep(d.fname,'_','-'),'_',' '))
                         ylabel('Stimulation Amplitude')
                         legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
                         xlabel('Time')
@@ -537,7 +537,7 @@ for a = 1:length(files)
                         title('RIGHT')
                         sp=plot(d.realtime,d.trial{1}(4,:),'linewidth',2,'linestyle','--');
                         ylabel('Stimulation Amplitude')
-                        legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
+                        legend([lp sp],strrep(d.label([2 4]),'_',' '),'location','northoutside')
                         xlabel('Time')
                         xlim([d.realtime(1) d.realtime(end)])
                         
@@ -658,7 +658,7 @@ for a = 1:length(files)
                     end
                     xlabel('Frequency [Hz]')
                     ylabel('Power spectral density [uV²/Hz]')
-                    title({hdr.subject,strrep(char(hdr.SessionDate),'_',' '),'RIGHT'})
+                    title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
                     legend(strrep(channels(ir),'_',' '))
                     il = perceive_ci([hdr.chan '_L'],channels);
                     subplot(1,2,1)
@@ -769,7 +769,7 @@ for a = 1:length(files)
                     xlim([ttmp(1),ttmp(end)])
                     set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
                     xlabel('Time [s]')
-                    title({hdr.subject,hdr.session,'All CalibrationTests'})
+                    title(strrep({hdr.subject,hdr.session,'All CalibrationTests'},'_',' '))
                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests']))
          
