@@ -537,7 +537,7 @@ for a = 1:length(files)
                         title('RIGHT')
                         sp=plot(d.realtime,d.trial{1}(4,:),'linewidth',2,'linestyle','--');
                         ylabel('Stimulation Amplitude')
-                        legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
+                        legend([lp sp],strrep(d.label([2 4]),'_',' '),'location','northoutside')
                         xlabel('Time')
                         xlim([d.realtime(1) d.realtime(end)])
                         
