@@ -238,17 +238,54 @@ for a = 1:length(files)
                 case 'DiagnosticData'
                     
                     if isfield(data,'LFPTrendLogs')
+
+                        if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
+                            data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
+                            runs = fieldnames(data.left);
+                        else
+                            data.left = [];
+                            runs = [];
+                        end
+                        if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Right')
+                            data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
+                            if isempty(runs)
+                                runs = fieldnames(data.right);
+                            end
+                        else
+                            data.right=[];
+                        end
                         
-                        data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
-                        data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-                        
-                        runs = fieldnames(data.left);
                         LFP=[];
                         STIM=[];
                         DT=[];
                         for c = 1:length(runs)
-                            ldata = data.left.(runs{c});
-                            rdata = data.right.(runs{c});
+                            if ~isempty(data.left)
+                                ldata = data.left.(runs{c});
+                            else
+                                ldata=[];
+                            end
+                            if ~isempty(data.right)
+                                rdata = data.right.(runs{c});
+                            else
+                                rdata = [];
+                            end
+                            if isempty(ldata) && isempty(rdata)
+                                error('both ldata and rdata empty!');
+                            else
+                                if isempty(ldata)
+                                    ldata = rdata;
+                                    for i=1:size(ldata,1)
+                                        ldata(i).LFP=0;
+                                        ldata(i).AmplitudeInMilliAmps=0;
+                                    end
+                                else
+                                    rdata = ldata;
+                                    for i=1:size(rdata,1)
+                                        rdata(i).LFP=0;
+                                        rdata(i).AmplitudeInMilliAmps=0;
+                                    end
+                                end
+                            end
                             LFP=[LFP;[[rdata(:).LFP];[ldata(:).LFP]]'];
                             STIM=[STIM;[[rdata(:).AmplitudeInMilliAmps];[ldata(:).AmplitudeInMilliAmps]]'];
                             DT = [DT datetime({ldata(:).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''')];
@@ -311,15 +348,41 @@ for a = 1:length(files)
                                 ids(c) = lfp.EventID;
                                 DT(c) = datetime(lfp.DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss');
                                 events{c} = lfp.EventName;
-                                tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
-                                ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
-                                tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
-                                ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
+                                    tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
+                                    ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                else
+                                    ch1 = 'n/a';
+                                end
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
+                                    tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
+                                    ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                else
+                                    ch2 = 'n/a';
+                                end
                                 chanlabels{c} = {ch1 ch2};
-                                stimgroups{c} = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.GroupId(end);
-                                freq = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.Frequency;
-                                pow(:,1) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
-                                pow(:,2) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
+                                if ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
+                                    error('none of HemisphereLocationDef_Left / HemisphereLocationDef_Right appear in LfpFrequencySnapshotEvents');
+                                end
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
+                                    stimgroups{c} = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.GroupId(end);
+                                    freq = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.Frequency;
+                                else
+                                    stimgroups{c} = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.GroupId(end);
+                                    freq = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.Frequency;
+                                end
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
+                                    pow(:,1) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
+                                    pow(:,2) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
+                                else
+                                    if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
+                                        pow(:,1) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
+                                        pow(:,2) = 0*pow(:,1);
+                                    else
+                                        pow(:,2) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
+                                        pow(:,1) = 0*pow(:,2);
+                                    end
+                                end
                                 Tpow.Frequency = freq;
                                 Tpow.(strrep([events{c} '_' num2str(c) '_' ch1 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,1);
                                 Tpow.(strrep([events{c} '_' num2str(c) '_' ch2 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,2);
@@ -406,18 +469,34 @@ for a = 1:length(files)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
                         tmp = strsplit(strrep(strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),',');
-                        lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
-                            [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
+                        if length(tmp)==2
+                            lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
+                                [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
+                        else if length(tmp)==1
+                            lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ]};
+                            else
+                                error(['unsupported number of ' num2str(length(tmp)) ' sides in BrainSenseLfp']);
+                            end
+                        end
                         d=[];
                         d.hdr = hdr;
                         d.hdr.BSL.TherapySnapshot = cdata.TherapySnapshot;
-                        tmp = d.hdr.BSL.TherapySnapshot.Left;
-                        lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
-                        stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
-                        tmp = d.hdr.BSL.TherapySnapshot.Right;
-                        lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
-                        stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
-                        
+                        if isfield(d.hdr.BSL.TherapySnapshot,'Left')
+                            tmp = d.hdr.BSL.TherapySnapshot.Left;
+                            lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
+                            stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
+                        else
+                            lfpsettings{1,1}='n/a';
+                            stimchannels = 'n/a';
+                        end
+                        if isfield(d.hdr.BSL.TherapySnapshot,'Right')
+                            tmp = d.hdr.BSL.TherapySnapshot.Right;
+                            lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
+                            stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
+                        else
+                            lfpsettings{2,1} = 'n/a';
+                            stimchannels = {stimchannels,'n/a'};
+                        end
                         
                         d.label = [strcat(lfpchannels','_',lfpsettings)' stimchannels];
                         d.hdr.label = d.label;
@@ -807,8 +886,14 @@ for a = 1:length(files)
             subplot(2,2,1)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
-             ylabel('Raw amplitude')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+            ylabel('Raw amplitude')
+            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            else
+                error('neither Left nor Right TherapySnapshot present');
+            end
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
@@ -844,8 +929,14 @@ for a = 1:length(files)
             subplot(2,2,2)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(2,:))
-             ylabel('Raw amplitude')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            ylabel('Raw amplitude')
+            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+            else
+                error('neither Left nor Right TherapySnapshot present');
+            end
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
