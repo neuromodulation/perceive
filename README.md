@@ -6,7 +6,7 @@ perceive
 
 
 https://github.com/neuromodulation/perceive 
-v0.1 Contributors Wolf-Julian Neumann, Gerd Tinkhauser
+v0.1 Contributors Tomas Sieger, Wolf-Julian Neumann, Gerd Tinkhauser
 This is an open research tool that is not intended for clinical purposes. 
 
 # INPUT
