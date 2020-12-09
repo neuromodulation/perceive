@@ -436,7 +436,19 @@ for a = 1:length(files)
                     d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
-                        raw=[data(i).TimeDomainData]';
+                        try
+                            raw=[data(i).TimeDomainData]';
+                        catch unmatched_samples
+                            for xi=1:length(i)
+                                sl(xi)=length(data(i(xi)).TimeDomainData);
+                            end
+                            smin=min(sl);
+                            raw=[];
+                            for xi = 1:length(xi)
+                                raw(xi,:) = data(i(xi)).TimeDomainData(1:smin);
+                            end
+                            warning('Sample size differed between channels. Check session affiliation.')
+                        end
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.CT.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
