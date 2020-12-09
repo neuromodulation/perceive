@@ -48,6 +48,10 @@ function perceive(files,subjectIDs,datafields)
 % IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
+if exist('datafields') && ischar(datafields)
+    datafields = {datafields};
+end
+
 if ~exist('files','var') || isempty(files)
     try
         files=perceive_ffind('*.json');
@@ -143,7 +147,7 @@ for a = 1:length(files)
                         e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
                         e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
                         imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
-                        
+%                         keyboard
                         for e = 1:length(imp)
                             if strcmp(e1{e},'Case')
                                 T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
@@ -334,6 +338,7 @@ for a = 1:length(files)
                                 savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
                             else
+                               % keyboard
                                 warning('LFP Snapshot Event without LFP data present.')
                             end
                         end
@@ -406,13 +411,22 @@ for a = 1:length(files)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
                         tmp = strsplit(strrep(strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),',');
-                        lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
-                            [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
+                        try
+                            lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
+                                [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
+                        catch
+                            lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ]};
+                                warning('Only one channel found!')
+                        end    
                         d=[];
                         d.hdr = hdr;
                         d.hdr.BSL.TherapySnapshot = cdata.TherapySnapshot;
-                        tmp = d.hdr.BSL.TherapySnapshot.Left;
-                        lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
+                        try 
+                            tmp = d.hdr.BSL.TherapySnapshot.Left;
+                        catch
+                            tmp = d.hdr.BSL.TherapySnapshot.Right;
+                        end
+                            lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                         stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
                         tmp = d.hdr.BSL.TherapySnapshot.Right;
                         lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
@@ -808,8 +822,12 @@ for a = 1:length(files)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
              ylabel('Raw amplitude')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            hold on
+             try
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+             catch
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+             end    
+                hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
             yyaxis right
