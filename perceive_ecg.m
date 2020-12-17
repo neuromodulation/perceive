@@ -33,7 +33,7 @@ nt=linspace(-2*dwindow/fs,size(ndata,2)/fs-2*dwindow/fs,size(ndata,2));
 mdata = nanmean(ndata);
 
 [absm,imax]=findpeaks(abs(mdata),'SortStr','descend','NPeaks',15);
-np=0;iim=[];iin=[];
+np=0.05;iim=[];iin=[];
 while isempty(iim) || isempty(iin)
     np=np+.025;
     pkrange=imax(1)-round(fs*np):imax(1)+round(fs*np);
