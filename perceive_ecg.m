@@ -7,7 +7,7 @@ if ~exist('plotit')
     plotit=1;
 end
 
-dwindow=round(fs/2);%*1/(40/60);;
+dwindow=round(fs/2) ;%*1/(40/60);;
 dmove = fs/10;
 ns = size(data,2);
 i =[1+dwindow:dmove:ns-dwindow-1]';

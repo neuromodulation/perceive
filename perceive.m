@@ -571,7 +571,11 @@ for a = 1:length(files)
                     T=table;
                     T.Time = bsltime';
                     for c = 1:length(bslchannels)
-                        T.(bslchannels{c}) = bsldata(c,:)';
+                        try
+                            T.(bslchannels{c}) = bsldata(c,:)';
+                        catch
+                            T.(strrep(bslchannels{c},'-','_')) = bsldata(c,:)';
+                        end
                     end
                     
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseLFP.csv']))
@@ -615,7 +619,7 @@ for a = 1:length(files)
                         
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1})));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
