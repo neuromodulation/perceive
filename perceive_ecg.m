@@ -93,7 +93,7 @@ cbins = zeros(size(data));
 for a = 1:length(pks)
     tss=size(ecg.proc.template2,2);
     ic=i(a):i(a)+tss-1;
-    mirrorrange=[i(a)-round(tss/2)+2:i(a) i(a)+tss:i(a)+tss+round(tss/2)-1];
+    mirrorrange=[i(a):-1:i(a)-round(tss/2)+2 i(a)+tss+round(tss/2)-1:i(a)+tss];
     try
         ecg.cleandata(ic)=data(mirrorrange);
     catch
