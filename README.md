@@ -6,8 +6,13 @@ perceive
 
 
 https://github.com/neuromodulation/perceive 
-v0.1 Contributors Tomas Sieger, Wolf-Julian Neumann, Gerd Tinkhauser
+v0.2 Contributors Tomas Sieger, Wolf-Julian Neumann, Gerd Tinkhauser
 This is an open research tool that is not intended for clinical purposes. 
+
+# What's new?
+
+Tomas Sieger has added support for unilateral implants!
+I have written some code for artefact detection and cleaning that is automatically run on all BrainSense TimeDomain signals. 
 
 # INPUT
 

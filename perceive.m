@@ -473,6 +473,16 @@ for a = 1:length(files)
                         d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
+                        d.ecg=[];
+                        d.ecg_cleaned=[];
+                        for e = 1:size(raw,1)
+                            d.ecg{e} = perceive_ecg(raw(e,:));
+                            title(strrep(d.label{e},'_',' '))
+                            xlabel(strrep(d.fname,'_',' '))
+                            savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
+                            perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
+                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
+                        end
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseLfp'
@@ -896,12 +906,17 @@ for a = 1:length(files)
             bsl=load(strrep(fullname,'BSTD','BSL'));
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
             fulldata.label(3:6) = bsl.data.label;
+            fulldata.label(7:8) = strcat('cleaned_',data.label);
             fulldata.time{1}=fulldata.time{1};
+            fulldata.ecg = data.ecg;
             otime = bsl.data.time{1};
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           
+            for c = 1:size(data.ecg_cleaned,1)
+                fulldata.trial{1}(size(fulldata.trial{1},1)+c,:)=data.ecg_cleaned(c,:);
+            end
+         
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
             subplot(2,2,1)
             yyaxis left
