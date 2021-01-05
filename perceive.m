@@ -81,12 +81,25 @@ for a = 1:length(files)
     disp(['RUNNING ' filename])
     
     js = jsondecode(fileread(filename));
-    js.PatientInformation.Initial.PatientFirstName ='';
-    js.PatientInformation.Initial.PatientLastName ='';
-    js.PatientInformation.Initial.PatientDateOfBirth ='';
-    js.PatientInformation.Final.PatientFirstName ='';
-    js.PatientInformation.Final.PatientLastName ='';
-    js.PatientInformation.Final.PatientDateOfBirth ='';
+    try
+        js.PatientInformation.Initial.PatientFirstName ='';
+        js.PatientInformation.Initial.PatientLastName ='';
+        js.PatientInformation.Initial.PatientDateOfBirth ='';
+        js.PatientInformation.Final.PatientFirstName ='';
+        js.PatientInformation.Final.PatientLastName ='';
+        js.PatientInformation.Final.PatientDateOfBirth ='';
+    catch
+        js = rmfield(js,'PatientInformation');
+        js.PatientInformation.Initial.PatientFirstName ='';
+        js.PatientInformation.Initial.PatientLastName ='';
+        js.PatientInformation.Initial.PatientDateOfBirth ='';
+        js.PatientInformation.Initial.Diagnosis ='';
+        js.PatientInformation.Final.PatientFirstName ='';
+        js.PatientInformation.Final.PatientLastName ='';
+        js.PatientInformation.Final.PatientDateOfBirth ='';
+        js.PatientInformation.Final.Diagnosis = '';
+    end
+    
     
     infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
     for b = 1:length(infofields)
@@ -98,7 +111,12 @@ for a = 1:length(files)
     
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
     hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
-    hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
+    if ~isempty(js.PatientInformation.Final.Diagnosis)
+        hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
+    else
+        hdr.Diagnosis = '';
+    end
+        
     hdr.OriginalFile = filename;
     hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
@@ -888,7 +906,7 @@ for a = 1:length(files)
         end
     end
     
-    nfile = fullfile(hdr.fpath,[hdr.fname '.json']);
+     nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
     copyfile(files{a},nfile)
     
     
@@ -902,33 +920,29 @@ for a = 1:length(files)
         if regexp(data.fname,'BSTD')
             fulldata = data;
             fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
-            
-            bsl=load(strrep(fullname,'BSTD','BSL'));
+            bslfile = strrep(fullname,'BSTD','BSL');
+             
+            try
+                bsl=load(bslfile);
+            catch
+                   [x,x,bslfile] = perceive_ffind([bslfile(1:end-3) '*.mat']);
+                   bslfile = bslfile{1}; 
+                   bsl=load(bslfile);
+            end
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
             fulldata.label(3:6) = bsl.data.label;
-            fulldata.label(7:8) = strcat('cleaned_',data.label);
             fulldata.time{1}=fulldata.time{1};
-            fulldata.ecg = data.ecg;
             otime = bsl.data.time{1};
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-            for c = 1:size(data.ecg_cleaned,1)
-                fulldata.trial{1}(size(fulldata.trial{1},1)+c,:)=data.ecg_cleaned(c,:);
-            end
-         
+           if size(fulldata.trial{1},2) > 250
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
             subplot(2,2,1)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
+             ylabel('Raw amplitude')
+            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
@@ -951,7 +965,7 @@ for a = 1:length(files)
             box off
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
             xlabel('T'),ylabel('A')
-            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)-5]),1);
+            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
             xlim([xx xx+1.5])
            
 
@@ -964,14 +978,8 @@ for a = 1:length(files)
             subplot(2,2,2)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(2,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
+             ylabel('Raw amplitude')
+            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
@@ -1002,7 +1010,7 @@ for a = 1:length(files)
             imagesc(t,f,log(tf)),axis xy, 
             xlabel('Time [s]')
             ylabel('Frequency [Hz]')
-
+           end
 
             fullname = fullfile('.',hdr.fpath,fulldata.fname);
             perceive_print(fullname)
@@ -1016,7 +1024,6 @@ for a = 1:length(files)
         
     end
     close all
-    
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation
 end

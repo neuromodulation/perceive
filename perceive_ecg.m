@@ -76,6 +76,9 @@ ecg.proc.r2 = r2;
 disp('...temporal correlation on second template done...')
 %% readjust threshold
 h=max(findpeaks(r2))-.05:-0.01:0.2;thr=[];
+if isempty(h)
+    h= max(findpeaks(r2))/2;
+end
 for a=1:length(h)
     [~,ix]=findpeaks(r2,'MinPeakHeight',h(a),'MaxPeakWidth',round(0.1*fs));
     if ~isempty(ix),dd=60./(diff(ix)/fs);thr2(a)=nansum(dd>55&dd<120)./std(dd);end
@@ -120,8 +123,8 @@ disp([detstring{ecg.detected+1} ' detected.'])
 %% plot
 if plotit
     t = linspace(0,ns/fs,ns);
-    [~,f,rpow]=perceive_fft(data(~isnan(data)),fs,fs*2);
-    [~,f,rnpow]=perceive_fft(ecg.cleandata(~isnan(ecg.cleandata)),fs,fs*2);
+    [~,f,rpow]=perceive_fft(data(find(~isnan(data))),fs,fs*2);
+    [~,f,rnpow]=perceive_fft(ecg.cleandata(find(~isnan(ecg.cleandata))),fs,fs*2);
     nt2 = linspace(-.05,.1,size(ecg.proc.template2,2));
     
     figure
