@@ -257,77 +257,96 @@ for a = 1:length(files)
                         
                     end
                 case 'DiagnosticData'
-                    
                     if isfield(data,'LFPTrendLogs')
-
+                          LFPL=[];STIML=[];DTL=[];
+                            LFPR=[];STIMR=[];DTR=[]; 
                         if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
                             data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
-                            runs = fieldnames(data.left);
-                        else
-                            data.left = [];
-                            runs = [];
+                            runs = fieldnames(data.left);          
+                            for c=1:length(runs)
+                                clfp = [data.left.(runs{c}).LFP];
+                                cstim = [data.left.(runs{c}).AmplitudeInMilliAmps];
+                                cdt = datetime({data.left.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''');
+                                [cdt,i] = sort(cdt);
+                                LFPL=[LFPL,clfp(i)];
+                                STIML=[STIML,cstim(i)];
+                                DTL=[DTL,cdt];
+                                
+                                d=[];
+                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                d.fsample = 0.00166666666;
+                                d.trial{1} = [clfp(i);cstim(i)];
+                                d.label = {'LFP_LEFT','STIM_LEFT'};
+                                d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
+                                d.realtime{1} = cdt;
+                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
+                                d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                alldata{length(alldata)+1} = d;
+                            end
                         end
+                            
+              
+                        
                         if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Right')
                             data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-                            if isempty(runs)
-                                runs = fieldnames(data.right);
+                            runs = fieldnames(data.right);          
+                            for c=1:length(runs)
+                                clfp = [data.right.(runs{c}).LFP];
+                                cstim = [data.right.(runs{c}).AmplitudeInMilliAmps];
+                                cdt = datetime({data.right.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''');
+                               
+                                 [cdt,i] = sort(cdt);
+                                LFPR=[LFPR,clfp(i)];
+                                STIMR=[STIMR,cstim(i)];
+                                DTR=[DTR,cdt];
+                
+                                
+                                d=[];
+                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                d.trial{1} = [clfp;cstim];
+                                d.label = {'LFP_RIGHT','STIM_RIGHT'};
+                                d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
+                                d.realtime{1} = cdt;
+                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
+                                d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                alldata{length(alldata)+1} = d;
                             end
-                        else
-                            data.right=[];
                         end
+                        
                         
                         LFP=[];
                         STIM=[];
-                        DT=[];
-                        for c = 1:length(runs)
-                            if ~isempty(data.left)
-                                ldata = data.left.(runs{c});
+                        DT=sort([DTL,setdiff(DTR,DTL)]);
+                        for c = 1:length(DT)
+                            if ismember(DT(c),DTL)
+                                i = find(DTL==DT(c));
+                                LFP(1,c) = LFPL(i);
+                                STIM(1,c) = STIML(i);
                             else
-                                ldata=[];
+                                LFP(1,c) = nan;
+                                STIM(1,c) = nan;
                             end
-                            if ~isempty(data.right)
-                                rdata = data.right.(runs{c});
+                            if ismember(DT(c),DTR)
+                                i = find(DTR==DT(c));
+                                LFP(2,c) = LFPR(i);
+                                STIM(2,c) = STIMR(i);
                             else
-                                rdata = [];
+                                LFP(2,c) = nan;
+                                STIM(2,c) = nan;
                             end
-                            if isempty(ldata) && isempty(rdata)
-                                error('both ldata and rdata empty!');
-                            else
-                                if isempty(ldata)
-                                    ldata = rdata;
-                                    for i=1:size(ldata,1)
-                                        ldata(i).LFP=0;
-                                        ldata(i).AmplitudeInMilliAmps=0;
-                                    end
-                                else
-                                    rdata = ldata;
-                                    for i=1:size(rdata,1)
-                                        rdata(i).LFP=0;
-                                        rdata(i).AmplitudeInMilliAmps=0;
-                                    end
-                                end
-                            end
-                            LFP=[LFP;[[rdata(:).LFP];[ldata(:).LFP]]'];
-                            STIM=[STIM;[[rdata(:).AmplitudeInMilliAmps];[ldata(:).AmplitudeInMilliAmps]]'];
-                            DT = [DT datetime({ldata(:).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''')];
                         end
-                        [DT,i]=sort(DT);
-                        LFP = LFP(i,:);
+                        d=[];
                         d.hdr = hdr;
-                        d.fsample = 0.00166666666;
-                        d.trial{1} = [LFP,STIM]';
+                        d.datatype = 'DiagnosticData.LFPTrends';
+                        d.trial{1} = [LFP;STIM];
                         d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
-                        d.time{1} = linspace(seconds(DT(1)-hdr.d0),seconds(DT(end)-hdr.d0),size(d.trial{1},2));
-                        d.realtime{1} = DT;
-                        d.fsample = 1/diff(d.time{1}(1:2));
-                        d.hdr.Fs = d.fsample;
-                        d.hdr.label = d.label;
+                        d.time{1} = DT;
+                        d.fsample = diff(DT);
                         firstsample = d.time{1}(1);
                         lastsample = d.time{1}(end);
-                        d.sampleinfo(1,:) = [firstsample lastsample];
-                        
-                        
-                        
+                        d.sampleinfo(1,:) = [firstsample lastsample];                      
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
                         alldata{length(alldata)+1} = d;
                         
@@ -337,24 +356,24 @@ for a = 1:length(files)
                         title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
                         
-                        scatter(DT,LFP(:,1),20,'filled','Marker','o')
+                        scatter(DT,LFP(1,:),20,'filled','Marker','o')
                         ylabel('LFP Amplitude')
                         yyaxis right
-                        scatter(DT,STIM(:,1),20,'filled','Marker','s')
+                        scatter(DT,STIM(1,:),20,'filled','Marker','s')
                         ylabel('STIM Amplitude')
                         xlabel('Time')
                         subplot(2,1,2)
                         yyaxis left
-                        scatter(DT,LFP(:,2),20,'filled','Marker','o')
+                        scatter(DT,LFP(2,:),20,'filled','Marker','o')
                         ylabel('LFP Amplitude')
                         yyaxis right
-                        scatter(DT,STIM(:,2),20,'filled','Marker','s')
+                        scatter(DT,STIM(2,:),20,'filled','Marker','s')
                         title('RIGHT')
                         xlabel('Time')
                         ylabel('STIM Amplitude')
                         savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
-%                         keyboard
+
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
                         cdata= data.LfpFrequencySnapshotEvents;
@@ -491,6 +510,7 @@ for a = 1:length(files)
                         d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
+                      
                         d.ecg=[];
                         d.ecg_cleaned=[];
                         for e = 1:size(raw,1)
@@ -499,7 +519,7 @@ for a = 1:length(files)
                             xlabel(strrep(d.fname,'_',' '))
                             savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
-                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
+                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;                 
                         end
                         alldata{length(alldata)+1} = d;
                     end
@@ -516,7 +536,8 @@ for a = 1:length(files)
                         if length(tmp)==2
                             lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ], ...
                                 [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
-                        else if length(tmp)==1
+                        else
+                            if length(tmp)==1
                             lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) ]};
                             else
                                 error(['unsupported number of ' num2str(length(tmp)) 'sides in BrainSenseLfp']);
@@ -635,6 +656,7 @@ for a = 1:length(files)
                     d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
+                        d=[];
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.IS.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
@@ -757,13 +779,14 @@ for a = 1:length(files)
                     d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
+                        d=[];
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.IS.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
                         d.hdr.IS.GlobalSequences=GlobalSequences(i,:);
                         d.hdr.IS.GlobalPacketSizes=GlobalPacketSizes(i,:);
                         d.hdr.IS.FirstPacketDateTime = runs{c};
-                        tmp =  [data(i).TimeDomainData]';;
+                        tmp =  [data(i).TimeDomainData]';
                         xchans = perceive_ci({'L_03','L_13','L_02','R_03','R_13','R_02'},Channel(i));
                         nchans = {'L_01','L_12','L_23','R_01','R_12','R_23'};
                         refraw = [tmp(xchans(1),:)-tmp(xchans(2),:);(tmp(xchans(1),:)-tmp(xchans(2),:))-tmp(xchans(3),:);tmp(xchans(3),:)-tmp(xchans(1),:);
@@ -827,6 +850,7 @@ for a = 1:length(files)
                     
                         i=perceive_ci(runs{c},FirstPacketDateTime);
                         raw=[data(i).TimeDomainData]';
+                        d=[];
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.CT.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
@@ -874,9 +898,9 @@ for a = 1:length(files)
                     ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
                     Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-                    d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
+                        d=[];
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.IS.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
@@ -906,7 +930,7 @@ for a = 1:length(files)
         end
     end
     
-     nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
+    nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
     copyfile(files{a},nfile)
     
     
