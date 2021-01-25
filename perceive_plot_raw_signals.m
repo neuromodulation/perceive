@@ -14,7 +14,11 @@ for a=1:length(files)
     end
     
     if isstruct(data)
-        time = data.time{1};
+        if isfield(data,'realtime')
+            time = data.realtime{1};
+        else
+            time = data.time{1};
+        end
         chanlabels = data.label;
         fname = data.fname;
         fs = data.fsample;
