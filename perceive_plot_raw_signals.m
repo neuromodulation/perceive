@@ -15,7 +15,11 @@ for a=1:length(files)
     
     if isstruct(data)
         if isfield(data,'realtime')
-            time = data.realtime{1};
+            try
+                time = data.realtime{1};
+            catch
+                time = data.realtime;
+            end
         else
             time = data.time{1};
         end
