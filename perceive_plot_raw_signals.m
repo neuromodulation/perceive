@@ -15,9 +15,9 @@ for a=1:length(files)
     
     if isstruct(data)
         if isfield(data,'realtime')
-            try
+            if iscell(data.realtime)
                 time = data.realtime{1};
-            catch
+            else
                 time = data.realtime;
             end
         else

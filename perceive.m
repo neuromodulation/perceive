@@ -258,8 +258,8 @@ for a = 1:length(files)
                     end
                 case 'DiagnosticData'
                     if isfield(data,'LFPTrendLogs')
-                          LFPL=[];STIML=[];DTL=[];
-                            LFPR=[];STIMR=[];DTR=[]; 
+                          LFPL=[];STIML=[];DTL=datetime([],[],[]);
+                            LFPR=[];STIMR=[];DTR=datetime([],[],[]);
                         if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
                             data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
                             runs = fieldnames(data.left);          
