@@ -282,6 +282,7 @@ for a = 1:length(files)
                                 d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
                         end
@@ -311,6 +312,7 @@ for a = 1:length(files)
                                 d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
                         end
@@ -348,6 +350,8 @@ for a = 1:length(files)
                         lastsample = d.time{1}(end);
                         d.sampleinfo(1,:) = [firstsample lastsample];                      
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
+                        % TODO: set if needed::
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         
@@ -521,6 +525,8 @@ for a = 1:length(files)
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
                             d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;                 
                         end
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseLfp'
@@ -610,6 +616,8 @@ for a = 1:length(files)
                         bsldata = [bsldata,d.trial{1}];
                         bsltime = [bsltime,d.realtime];
                         bslchannels = d.label;
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         savefig(fullfile(hdr.fpath,[d.fname '.fig']))
@@ -677,6 +685,8 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseSurvey'
@@ -804,6 +814,8 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                     
@@ -872,6 +884,8 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'SenseChannelTests'
@@ -921,6 +935,8 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
             end
@@ -939,8 +955,14 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
+        % remove the optional 'keepfig' field (not to mess up the saved data)
+        if isfield(data,'keepfig')
+            data=rmfield(data,'keepfig');
+        end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data');
+        % restore the data (incl. the optional 'keepfig' field)
+        data=alldata{b};
         if regexp(data.fname,'BSTD')
             fulldata = data;
             fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
@@ -1034,16 +1056,34 @@ for a = 1:length(files)
             imagesc(t,f,log(tf)),axis xy, 
             xlabel('Time [s]')
             ylabel('Frequency [Hz]')
+           else
+            disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
+            disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
+            disp('Please, review it.');
+            keyboard
            end
 
             fullname = fullfile('.',hdr.fpath,fulldata.fname);
             perceive_print(fullname)
+            % close the figure if should not be kept open
+            if isfield(fulldata,'keepfig')
+                if ~fulldata.keepfig
+                    close();
+                end
+                fulldata=rmfield(fulldata,'keepfig');
+            end
             data=fulldata;
             save([fullname '.mat'],'data')
         else
            perceive_plot_raw_signals(data);
            perceive_print(fullname);
            savefig([fullname '.fig'])
+            % close the figure if should not be kept open
+            if isfield(data,'keepfig')
+                if ~data.keepfig
+                    close();
+                end
+            end
         end
         
     end
