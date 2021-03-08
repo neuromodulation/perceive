@@ -987,8 +987,15 @@ for a = 1:length(files)
             subplot(2,2,1)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
-             ylabel('Raw amplitude')
+            ylabel('Raw amplitude')
+            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
             pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            else
+                error('neither Left nor Right TherapySnapshot present');
+            end
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
@@ -1024,8 +1031,14 @@ for a = 1:length(files)
             subplot(2,2,2)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(2,:))
-             ylabel('Raw amplitude')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            ylabel('Raw amplitude')
+            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+            else
+                error('neither Left nor Right TherapySnapshot present');
+            end
             hold on
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
