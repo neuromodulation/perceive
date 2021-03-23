@@ -9,8 +9,6 @@
 % Arguments: a structure of global options (see perceive_options.m)
 % Returns: a structure of refined options
 %
-% Created by: T.Sieger, 2021-03-09
-%
 function popt = perceive_options_local(popt)
 
     % User-specific options that override the global options.
