@@ -71,6 +71,7 @@ function popt = perceive_options()
             pdisp('Error using local options, please check ''perceive_options_local.m''.');
         end
     else
+        % generate perceive_options_local.m
         fcont={
             '% perceive_options_local',...
             '%',...
@@ -98,14 +99,18 @@ function popt = perceive_options()
             'end'};
 
         fh = fopen('perceive_options_local.m','w');
-        for li = 1:length(fcont)
-            line = fcont{li};
-            fprintf(fh,'%s\n',line);
+        if fh~=-1
+            for li = 1:length(fcont)
+                line = fcont{li};
+                fprintf(fh,'%s\n',line);
+            end
+            fclose(fh);
+            error(['perceive_options: perceive_options_local.m was not present > generated in the current directory ' ...
+                pwd '. Please review and adapt according to your needs, but DO NOT COMMIT this file!']);
+        else
+            error(['perceive_options: perceive_options_local.m was not present, but can''t create it the current directory ' pwd]);
         end
-        fclose(fh);
 
-        error(['perceive_options: perceive_options_local.m was not present > generated in the current directory ' ...
-            pwd '. Please review and adapt according to your needs, but DO NOT COMMIT this file!']);
     end
 
 
