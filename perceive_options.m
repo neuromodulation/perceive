@@ -65,10 +65,10 @@ function popt = perceive_options()
     % if there are local options, populate the global options with them
     if exist('perceive_options_local.m','file')
         try
-            disp('Adapting options using local options.');
+            pdisp('Adapting options using local options.',2);
             popt=perceive_options_local(popt);
         catch
-            disp('Error using local options, please check ''perceive_options_local.m''.');
+            pdisp('Error using local options, please check ''perceive_options_local.m''.');
         end
     else
         fcont={
