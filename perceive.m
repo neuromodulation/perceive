@@ -48,6 +48,12 @@ function perceive(files,subjectIDs,datafields)
 % IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
+% shared options (and runtime settings)
+global popt;
+
+% configure options
+popt = perceive_options();
+
 if exist('datafields') && ischar(datafields)
     datafields = {datafields};
 end
@@ -101,7 +107,7 @@ for a = 1:length(files)
     end
     
     
-    infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
+    infofields = perceive_data_fields('info');
     for b = 1:length(infofields)
         if isfield(js,infofields{b})
             hdr.(infofields{b})=js.(infofields{b});
@@ -144,7 +150,7 @@ for a = 1:length(files)
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     if ~exist('datafields','var')
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
+        datafields = perceive_data_fields('data');
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
@@ -173,7 +179,7 @@ for a = 1:length(files)
                             end
                         end
                     end
-                    figure
+                    perceive_figure('Impedance');
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
@@ -217,7 +223,7 @@ for a = 1:length(files)
                         T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                         writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
                         
-                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                        perceive_figure('MostRecentInSessionSignalCheck','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
                         ir = perceive_ci([hdr.chan '_R'],channels);
                         subplot(1,2,2)
                         p=plot(freq,pow(ir,:));
@@ -273,7 +279,7 @@ for a = 1:length(files)
                                 DTL=[DTL,cdt];
                                 
                                 d=[];
-                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                d.hdr = hdr;d.datatype = 'DiagnosticData_LFPTrends';
                                 d.fsample = 0.00166666666;
                                 d.trial{1} = [clfp(i);cstim(i)];
                                 d.label = {'LFP_LEFT','STIM_LEFT'};
@@ -282,7 +288,6 @@ for a = 1:length(files)
                                 d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
                         end
@@ -304,7 +309,7 @@ for a = 1:length(files)
                 
                                 
                                 d=[];
-                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                d.hdr = hdr;d.datatype = 'DiagnosticData_LFPTrends';
                                 d.trial{1} = [clfp;cstim];
                                 d.label = {'LFP_RIGHT','STIM_RIGHT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
@@ -312,7 +317,6 @@ for a = 1:length(files)
                                 d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
                         end
@@ -341,7 +345,7 @@ for a = 1:length(files)
                         end
                         d=[];
                         d.hdr = hdr;
-                        d.datatype = 'DiagnosticData.LFPTrends';
+                        d.datatype = 'DiagnosticData_LFPTrends';
                         d.trial{1} = [LFP;STIM];
                         d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
                         d.time{1} = DT;
@@ -350,12 +354,10 @@ for a = 1:length(files)
                         lastsample = d.time{1}(end);
                         d.sampleinfo(1,:) = [firstsample lastsample];                      
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed::
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         
-                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                        perceive_figure('DiagnosticData','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
                         subplot(2,1,1)
                         title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
@@ -432,7 +434,7 @@ for a = 1:length(files)
                                 Tpow.(strrep([events{c} '_' num2str(c) '_' ch2 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,2);
                                 
                                 
-                                figure
+                                perceive_figure('DiagnosticData_LfpFrequencySnapshotEvents');
                                 plot(freq,pow,'linewidth',2)
                                 legend(strrep(chanlabels{c},'_',' '))
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
@@ -525,8 +527,6 @@ for a = 1:length(files)
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
                             d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;                 
                         end
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseLfp'
@@ -534,7 +534,7 @@ for a = 1:length(files)
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                    perceive_figure('BrainSenseLfp','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
                     for c=1:length(runs)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
@@ -616,8 +616,6 @@ for a = 1:length(files)
                         bsldata = [bsldata,d.trial{1}];
                         bsltime = [bsltime,d.realtime];
                         bslchannels = d.label;
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         savefig(fullfile(hdr.fpath,[d.fname '.fig']))
@@ -685,8 +683,6 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseSurvey'
@@ -722,7 +718,7 @@ for a = 1:length(files)
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey_Peaks.csv']));
                     
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                    perceive_figure('BrainSenseSurvey','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,2)
                     p=plot(freq,pow(ir,:));
@@ -814,8 +810,6 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                     
@@ -833,7 +827,7 @@ for a = 1:length(files)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
                   
-                    figure
+                    perceive_figure('CalibrationTests');
                     for c = 1:length(data)
                     fsample = data(c).SampleRateInHz;
                     gain=[data(c).Gain]';
@@ -884,8 +878,6 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
                 case 'SenseChannelTests'
@@ -935,8 +927,6 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
             end
@@ -955,14 +945,8 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
-        % remove the optional 'keepfig' field (not to mess up the saved data)
-        if isfield(data,'keepfig')
-            data=rmfield(data,'keepfig');
-        end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data');
-        % restore the data (incl. the optional 'keepfig' field)
-        data=alldata{b};
         if regexp(data.fname,'BSTD')
             fulldata = data;
             fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
@@ -982,8 +966,10 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 250
-            figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+           if size(fulldata.trial{1},2) <= 250
+            error('size(fulldata.trial{1},2) <= 250, plotting disabled. TODO: adapt plotting to such a short signal.');
+           else
+            perceive_figure('BrainSenseTimeDomain','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
             subplot(2,2,1)
             yyaxis left
             plot(fulldata.time{1},fulldata.trial{1}(1,:))
@@ -1069,34 +1055,16 @@ for a = 1:length(files)
             imagesc(t,f,log(tf)),axis xy, 
             xlabel('Time [s]')
             ylabel('Frequency [Hz]')
-           else
-            disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-            disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
-            disp('Please, review it.');
-            keyboard
            end
 
             fullname = fullfile('.',hdr.fpath,fulldata.fname);
             perceive_print(fullname)
-            % close the figure if should not be kept open
-            if isfield(fulldata,'keepfig')
-                if ~fulldata.keepfig
-                    close();
-                end
-                fulldata=rmfield(fulldata,'keepfig');
-            end
             data=fulldata;
             save([fullname '.mat'],'data')
         else
            perceive_plot_raw_signals(data);
            perceive_print(fullname);
            savefig([fullname '.fig'])
-            % close the figure if should not be kept open
-            if isfield(data,'keepfig')
-                if ~data.keepfig
-                    close();
-                end
-            end
         end
         
     end

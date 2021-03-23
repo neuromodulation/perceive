@@ -27,7 +27,13 @@ for a=1:length(files)
         fname = data.fname;
         fs = data.fsample;
         raw = data.trial{1};
-        
+        if isfield(data,'datatype')
+            dataType = data.datatype;
+            pdbg(['data type: ' datatype],2);
+        else
+            warning('datatype missing in data, this is discouraged');
+            dataType = '';
+        end
     else
         raw = data;
         fname = '';
@@ -35,6 +41,7 @@ for a=1:length(files)
         if ~exist('time','var') || isempty(time)
             time = linspace(0,length(data)/fs,length(data));
         end
+        dataType = '';
     end
     
     if ~exist('chanlabels','var')
@@ -43,7 +50,7 @@ for a=1:length(files)
         end
     end
     raw(isnan(raw))=0;
-    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+    perceive_figure(dataType,'Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
     for b = 1:size(raw,1)
         p(b)=plot(time,zscore(raw(b,:)')'./10+b);
         hold on
