@@ -106,7 +106,7 @@ function popt = perceive_options()
             end
             fclose(fh);
             error(['perceive_options: perceive_options_local.m was not present > generated in the current directory ' ...
-                pwd '. Please review and adapt according to your needs, but DO NOT COMMIT this file!']);
+                pwd '. Please review it, adapt according to your needs, but DO NOT COMMIT this file! Then, rerun perceive.']);
         else
             error(['perceive_options: perceive_options_local.m was not present, but can''t create it the current directory ' pwd]);
         end
