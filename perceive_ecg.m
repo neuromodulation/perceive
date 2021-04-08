@@ -88,7 +88,8 @@ end
 [pks,i]=findpeaks(r2,'MinPeakHeight',ecg.proc.thresh2,'MaxPeakWidth',round(0.1*fs));
 disp('...final ECG artefact detection done...')
 %% save info
-ecg.stats.intervals = 60./(diff(i)./fs);
+
+ecg.stats.intervals = 1000.*(diff(i)./fs);
 ecg.hr=60/(nanmedian(diff(i))/fs);
 ecg.nandata = data;
 ecg.cleandata=data;
