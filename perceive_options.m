@@ -24,7 +24,7 @@ function popt = perceive_options()
     % 1 = basic progress output,
     % 2 = verbose progress output,
     % 3 = detailed progress output (useful for debugging)
-    popt.verbosity = 2;
+    popt.verbosity = 1;
 
 
     %%-----------------------------------------------------------------
