@@ -11,11 +11,11 @@
 function pdisp(txt,level)
     global popt;
 
-    if nargin<2
+    if nargin<3
         level=1;
     end
 
-    if isempty(popt) || level<=popt.verbosity
+    if level<=popt.verbosity
         disp(txt);
     end
 end
