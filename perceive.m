@@ -1,4 +1,4 @@
-function perceive(files,subjectIDs,datafields)
+function perceive(files,subjectIDs,datafields,task)
 % https://github.com/neuromodulation/perceive
 % v0.1 Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser
 % This is an open research tool that is not intended for clinical purposes.
@@ -21,6 +21,8 @@ function perceive(files,subjectIDs,datafields)
 % if unspecified or left empy, the subjectID will be created from
 % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
 
+% task:
+% you can specify a task descriptor to be included in all filenames
 
 %% OUTPUT
 % The script generates BIDS inspired subject and session folders with the
@@ -50,6 +52,8 @@ function perceive(files,subjectIDs,datafields)
 
 if exist('datafields') && ischar(datafields)
     datafields = {datafields};
+elseif exist('datafields','var') && isempty(datafields)
+    clear datafields
 end
 
 if ~exist('files','var') || isempty(files)
@@ -122,7 +126,7 @@ for a = 1:length(files)
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     
-    if ~exist('subjectIDs','var')
+    if ~exist('subjectIDs','var') || isempty(subjectIDs)
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
         else
@@ -140,6 +144,9 @@ for a = 1:length(files)
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
     hdr.fname = [hdr.subject '_' hdr.session];
+    if exist('task','var')
+        hdr.fname = [hdr.fname '_task-' task];
+    end
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
@@ -982,7 +989,7 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 250
+           if size(fulldata.trial{1},2) > 1000
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
             subplot(2,2,1)
             yyaxis left
@@ -1069,15 +1076,11 @@ for a = 1:length(files)
             imagesc(t,f,log(tf)),axis xy, 
             xlabel('Time [s]')
             ylabel('Frequency [Hz]')
-           else
-            disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-            disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
-            disp('Please, review it.');
-            keyboard
-           end
-
             fullname = fullfile('.',hdr.fpath,fulldata.fname);
             perceive_print(fullname)
+           
+
+         
             % close the figure if should not be kept open
             if isfield(fulldata,'keepfig')
                 if ~fulldata.keepfig
@@ -1087,6 +1090,9 @@ for a = 1:length(files)
             end
             data=fulldata;
             save([fullname '.mat'],'data')
+           else
+               warning('Data shorter than 4 sec are ignored by perceive.')
+           end
         else
            perceive_plot_raw_signals(data);
            perceive_print(fullname);

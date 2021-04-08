@@ -11,6 +11,7 @@ ns = length(data);
 dwindow=round(fs); % segment window size (500 ms)
 dmove = fs; % moving window size (100 ms)
 i=[1+dwindow:dmove:ns-dwindow-1]'; % segment indices
+if ~isempty(i)
 for a = 1:length(i)
     x(a,:) = data([i(a)-dwindow:i(a)+dwindow]); % epoch data
 end
@@ -24,7 +25,7 @@ for a = 2:size(x,1)
     [r,l]=xcorr(nanmean(ndata,1),x(a,:),fs);[~,mi]=max(r);tlag = l(mi);
     if tlag >0;n=n+1;ndata(n,tlag:tlag+size(x,2)-1)=x(a,:);end
 end
-mdata = nanmean(ndata); % average aligned data
+mdata = nanmean(ndata,1); % average aligned data
 %% find ECG peak characteristics in xcorr aligned data
 [absm,imax]=findpeaks(abs(mdata),'SortStr','descend','NPeaks',15); np=0.05;iim=[];iin=[];
 while isempty(iim) || isempty(iin)
@@ -145,4 +146,10 @@ if plotit
     plot(t,data,'color','r');    hold on
     plot(t,ecg.cleandata,'color','k');
     legend('original','cleaned');ylabel('Amplitude');xlabel('Time [s]')
+end
+
+else 
+    warning('Insufficient data length for ECG correction.')
+    ecg=[];
+    ecg.cleandata =nan(size(data));
 end
