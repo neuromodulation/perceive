@@ -26,7 +26,6 @@ function perceive(files,subjectIDs,datafields)
 % json to only create the output that you need for your specific analysis. 
 % Currently supported datafields are: 
 % 'BrainSenseLfp',
-% 'BrainSenseSurvey',
 % 'BrainSenseTimeDomain',
 % 'CalibrationTests',
 % 'DiagnosticData'
@@ -34,6 +33,7 @@ function perceive(files,subjectIDs,datafields)
 % 'Impedance',
 % 'IndefiniteStreaming',
 % 'LfpMontageTimeDomain',
+% 'LFPMontage',
 % 'MostRecentInSessionSignalCheck'
 % 'PatientEvents'
 
@@ -48,7 +48,7 @@ function perceive(files,subjectIDs,datafields)
 %% Recording type output naming
 % Each of the FieldTrip data files correspond to a specific aspect of the
 % Recording session:
-% LMTD = LFP Montage Time Domain - BrainSenseSurvey
+% LMTD = LFP Montage Time Domain - (BrainSenseSurvey on tablet)
 % IS = Indefinite Streaming - BrainSenseStreaming
 % CT = Calibration Testing - Calibration Tests
 % BSL = BrainSense LFP (2 Hz power average + stimulation settings)
@@ -157,7 +157,7 @@ for a = 1:length(files)
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     if ~exist('datafields','var')
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
+        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
@@ -474,11 +474,9 @@ for a = 1:length(files)
                                 warning('LFP Snapshot Event without LFP data present.')
                             end
                             
-                            if isstruct(cdata(c))
-
+                            if isstruct(cdata(c)) && c <= length(DT)
                                 LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),['LFPSnapshot: ' cdata(c).EventName],char(datetime(DT(c),'Format','yyyy-MM-dd hh:mm:ss')),'',fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']),'','',filename}
-                            else
-                             
+                            elseif c <= length(DT)
                                 LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),['LFPSnapshot: ' cdata{c}.EventName],char(datetime(DT(c),'Format','yyyy-MM-dd hh:mm:ss')),'',fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']),'','',filename}
                             end
                         end
@@ -751,9 +749,9 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
-                        keyboard
+%                         keyboard
                     end
-                case 'BrainSenseSurvey'
+                case 'LFPMontage'
                     
                     channels={};
                     pow=[];rpow=[];lfit=[];bad=[];
@@ -782,9 +780,9 @@ for a = 1:length(files)
                     end
                     
                     T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurveyPowerSpectra.csv']));
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']));
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey_Peaks.csv']));
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
                     
                     figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
                     ir = perceive_ci([hdr.chan '_R'],channels);
@@ -801,7 +799,7 @@ for a = 1:length(files)
                         end
                     end
                     xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV�/Hz]')
+                    ylabel('Power spectral density [uV^2/Hz]')
                     title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
                     legend(strrep(channels(ir),'_',' '))
                     il = perceive_ci([hdr.chan '_L'],channels);
@@ -814,7 +812,7 @@ for a = 1:length(files)
                     title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
                     plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                     xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV�/Hz]')
+                    ylabel('Power spectral density [uV^2/Hz]')
                     for c = 1:length(il)
                         if peaks(il(c),1)>0
                             text(peaks(il(c),1),peaks(il(c),2),[' ' num2str(peaks(il(c),1),3) ' Hz'])
@@ -822,11 +820,11 @@ for a = 1:length(files)
                     end
                     legend(strrep(channels(il),'_',' '))
                     set(gcf,'visible','on')
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
+                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
                     pause(2)
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey']))
+                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
                     close
-                    keyboard % LOG missing    LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},'','',fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']),'','',filename}
+                    LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},'','',fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']),'','',filename}
                  
                 case 'IndefiniteStreaming'
                     
