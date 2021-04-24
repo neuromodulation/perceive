@@ -183,11 +183,11 @@ for a = 1:length(files)
                         
                         for e = 1:length(imp)
                             if strcmp(e1{e},'Case')
-                                e2_chan_id = stringsplit(e2{e},'_');
+                                e2_chan_id = strsplit(e2{e},'_');
                                 T.([hdr.chan '_' side '_' e2_chan_id{2} '_' hdr.LeadLocation]) = imp(e);
                             else
-                                e1_chan_id = stringsplit(e1{e},'_');
-                                e2_chan_id = stringsplit(e2{e},'_');
+                                e1_chan_id = strsplit(e1{e},'_');
+                                e2_chan_id = strsplit(e2{e},'_');
                                 T.([hdr.chan '_' side '_' e2_chan_id{2} e1_chan_id{2} '_' hdr.LeadLocation]) = imp(e);
                             end
                         end
@@ -701,17 +701,17 @@ for a = 1:length(files)
                        if sum(ismember('_LEFT_',tmp{c}))==6
                             side = 'L';
                             iside = 1;
-                            tmp1 = stringsplit(tmp{c},'_LEFT')
+                            tmp1 = strsplit(tmp{c},'_LEFT')
                         else
                             side = 'R';
-                            tmp1=stringsplit(tmp{c},'_RIGHT')
+                            tmp1=strsplit(tmp{c},'_RIGHT')
                             iside=2;
                         end
                         
-                        tmp1=stringsplit(tmp1{1},'_AND_');
+                        tmp1=strsplit(tmp1{1},'_AND_');
                         
                         if numel(tmp1)==1
-                            tmp1 = stringsplit(tmp1{1},'_');
+                            tmp1 = strsplit(tmp1{1},'_');
                         end
                         ch1 = strrep(strrep(strrep(strrep(strrep(tmp1{1},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_','');
                         ch2 = strrep(strrep(strrep(strrep(strrep(tmp1{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_','');
@@ -762,9 +762,9 @@ for a = 1:length(files)
                         end
                         tmp=strsplit(cdata.Hemisphere,'.');
                         side=tmp{2}(1);
-                        tmp=strsplit(cdata.SensingElectrodes,'.');tmp=strrep(tmp{2},'_AND_','');
+                        tmp=strsplit(cdata.SensingElectrodes,'.');tmp=strrep(strrep(tmp{2},'_AND_',''),'_','');
                         ch = strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                        channels{c} = [hdr.chan '_' side '_' ch];
+                        channels{c} = [hdr.chan '_' side '_' ch '_' hdr.LeadLocation];
                         freq = cdata.LFPFrequency;
                         pow(c,:) = cdata.LFPMagnitude;
                         rpow(c,:) = perceive_power_normalization(pow(c,:),freq);
@@ -825,7 +825,7 @@ for a = 1:length(files)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
                     close
                     LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},'','',fullfile(hdr.fpath,[hdr.fname '_run-LFPMontagePowerSpectra.csv']),'','',filename}
-                 
+                    
                 case 'IndefiniteStreaming'
                     
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
