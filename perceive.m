@@ -23,8 +23,8 @@ function perceive(files,subjectIDs,datafields)
 %
 % datafields:
 % you can limit the output for each file to specific data fields in the
-% json to only create the output that you need for your specific analysis. 
-% Currently supported datafields are: 
+% json to only create the output that you need for your specific analysis.
+% Currently supported datafields are:
 % 'BrainSenseLfp',
 % 'BrainSenseTimeDomain',
 % 'CalibrationTests',
@@ -55,6 +55,8 @@ function perceive(files,subjectIDs,datafields)
 % BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL
 % file)
 
+%% TODO
+% Add channel and stimulation information for chronic recordings
 
 
 if exist('datafields') && ischar(datafields)
@@ -127,7 +129,7 @@ for a = 1:length(files)
     else
         hdr.Diagnosis = '';
     end
-        
+    
     hdr.OriginalFile = filename;
     hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
@@ -152,7 +154,7 @@ for a = 1:length(files)
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
     hdr.fname = [hdr.subject '_' hdr.session];
-
+    
     hdr.chan = ['LFP' ];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
@@ -162,7 +164,7 @@ for a = 1:length(files)
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
     LogTable = table({},{},{},{},{},{},{},{},{},{},'VariableNames',{'subjectID','SessionDate','SessionEndDate','DataField','DataDate','DataDuration','FileName','Comments','MetaFiles','SourceFile'});
-   
+    
     for b = 1:length(datafields)
         if isfield(js,datafields{b})
             data = js.(datafields{b});
@@ -171,12 +173,12 @@ for a = 1:length(files)
             end
             switch datafields{b}
                 case 'Impedance'
-%                  keyboard 
+                    %                  keyboard
                     T=table;
                     for c = 1:length(data.Hemisphere)
                         tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
                         side = tmp{2}(1);
-%                         electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
+                        %                         electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
                         e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
                         e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
                         imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
@@ -192,7 +194,7 @@ for a = 1:length(files)
                             end
                         end
                     end
-                   
+                    
                     figure('visible','off')
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
@@ -228,16 +230,16 @@ for a = 1:length(files)
                             catch
                                 peaks(c,:)=zeros(1,2);
                             end
-%                             keyboard
+                            %                             keyboard
                             LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'SignalCheck','','',fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheckPowerSpectra.csv']),'','',filename}
-                 
+                            
                         end
                         
                         T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
                         writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheckPowerSpectra.csv']));
                         T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                         writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
-                   
+                        
                         figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
                         ir = perceive_ci([hdr.chan '_R'],channels);
                         subplot(1,2,2)
@@ -275,57 +277,58 @@ for a = 1:length(files)
                         legend(strrep(channels(il),'_',' '))
                         savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
-                    
+                        
                     end
                 case 'DiagnosticData'
                     if isfield(data,'LFPTrendLogs')
-                          LFPL=[];STIML=[];DTL=datetime([],[],[]);
-                            LFPR=[];STIMR=[];DTR=datetime([],[],[]);
+                        LFPL=[];STIML=[];DTL=datetime([],[],[]);
+                        LFPR=[];STIMR=[];DTR=datetime([],[],[]);
                         if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
                             data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
-                            runs = fieldnames(data.left);          
+                            runs = fieldnames(data.left);
                             for c=1:length(runs)
                                 clfp = [data.left.(runs{c}).LFP];
-                                cstim = [data.left.(runs{c}).AmplitudeInMilliAmps];
-                                cdt = datetime({data.left.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''','Format','yyyy-MM-dd hh:mm:ss');
-                                [cdt,i] = sort(cdt);
-                                LFPL=[LFPL,clfp(i)];
-                                STIML=[STIML,cstim(i)];
-                                DTL=[DTL,cdt];
-                                
-                                d=[];
-                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
-                                d.fsample = 0.00166666666;
-                                d.trial{1} = [clfp(i);cstim(i)];
-                                d.label = {'LFP_LEFT','STIM_LEFT'};
-                                d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
-                                d.realtime{1} = cdt;
-                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
-                                firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
-                                d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
-                                alldata{length(alldata)+1} = d;
-                                
-                                LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'ChronicLeft',char(datetime(cdt(1),'Format','yyyy-MM-dd hh:mm:ss')),char(cdt(end)-cdt(1)),[d.fname '.mat'],'','',filename}
-                 
+                                if length(clfp)>1
+                                    cstim = [data.left.(runs{c}).AmplitudeInMilliAmps];
+                                    cdt = datetime({data.left.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''','Format','yyyy-MM-dd hh:mm:ss');
+                                    [cdt,i] = sort(cdt);
+                                    LFPL=[LFPL,clfp(i)];
+                                    STIML=[STIML,cstim(i)];
+                                    DTL=[DTL,cdt];
+                                    
+                                    d=[];
+                                    d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                    d.fsample = 0.00166666666;
+                                    d.trial{1} = [clfp(i);cstim(i)];
+                                    d.label = {'LFP_LEFT','STIM_LEFT'};
+                                    d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
+                                    d.realtime{1} = cdt;
+                                    d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                    firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
+                                    d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                    d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
+                                    alldata{length(alldata)+1} = d;
+                                    
+                                    LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'ChronicLeft',char(datetime(cdt(1),'Format','yyyy-MM-dd hh:mm:ss')),char(cdt(end)-cdt(1)),[d.fname '.mat'],'','',filename}
+                                end
                             end
                         end
-                            
-              
+                        
+                        
                         
                         if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Right')
                             data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-                            runs = fieldnames(data.right);          
+                            runs = fieldnames(data.right);
                             for c=1:length(runs)
                                 clfp = [data.right.(runs{c}).LFP];
                                 cstim = [data.right.(runs{c}).AmplitudeInMilliAmps];
                                 cdt = datetime({data.right.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''','Format','yyyy-MM-dd hh:mm:ss');
-                               
-                                 [cdt,i] = sort(cdt);
+                                
+                                [cdt,i] = sort(cdt);
                                 LFPR=[LFPR,clfp(i)];
                                 STIMR=[STIMR,cstim(i)];
                                 DTR=[DTR,cdt];
-                
+                                
                                 
                                 d=[];
                                 d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
@@ -339,7 +342,7 @@ for a = 1:length(files)
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                                 LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'ChronicRight',char(datetime(cdt(1),'Format','yyyy-MM-dd hh:mm:ss')),char(cdt(end)-cdt(1)),[d.fname '.mat'],'','',filename}
-                 
+                                
                             end
                         else
                             keyboard % create table with events
@@ -376,7 +379,7 @@ for a = 1:length(files)
                         d.fsample = diff(DT);
                         firstsample = d.time{1}(1);
                         lastsample = d.time{1}(end);
-                        d.sampleinfo(1,:) = [firstsample lastsample];                      
+                        d.sampleinfo(1,:) = [firstsample lastsample];
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
                         % TODO: set if needed::
                         %d.keepfig = false; % do not keep figure with this signal open
@@ -405,13 +408,13 @@ for a = 1:length(files)
                         ylabel('STIM Amplitude')
                         savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
-
+                        
                     end
                     if isfield(data,'LfpFrequencySnapshotEvents')
                         cdata= data.LfpFrequencySnapshotEvents;
                         Tpow=table;Trpow=table;Tlfit=table;pow=[];rpow=[];lfit=[];lfp=struct;
                         for c = 1:length(cdata)
-                            try 
+                            try
                                 lfp=cdata{c};
                             catch
                                 lfp=cdata(c);
@@ -468,9 +471,9 @@ for a = 1:length(files)
                                 ylabel('Power spectral density [uV^2/Hz]')
                                 savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
-                            
+                                
                             else
-                               % keyboard
+                                % keyboard
                                 warning('LFP Snapshot Event without LFP data present.')
                             end
                             
@@ -481,7 +484,7 @@ for a = 1:length(files)
                             end
                         end
                         writetable(Tpow,fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']))
-                   
+                        
                         
                     end
                     
@@ -549,7 +552,7 @@ for a = 1:length(files)
                         d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
-                      
+                        
                         d.ecg=[];
                         d.ecg_cleaned=[];
                         for e = 1:size(raw,1)
@@ -558,17 +561,17 @@ for a = 1:length(files)
                             xlabel(strrep(d.fname,'_',' '))
                             savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
-                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;                 
+                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
                         end
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
-%                         keyboard
-                       LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','Format','yyyy-MM-dd HH:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
-                 
+                        %                         keyboard
+                        LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','Format','yyyy-MM-dd HH:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
+                        
                     end
                 case 'BrainSenseLfp'
-              
+                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
@@ -577,13 +580,13 @@ for a = 1:length(files)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
                         tmp = strsplit(strrep(strrep(strrep(strrep(strrep(tmp,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),',');
-%                         keyboard
+                        %                         keyboard
                         if length(tmp)==2
                             lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) '_' hdr.LeadLocation], ...
                                 [hdr.chan '_' tmp{2}(3) '_' tmp{2}(1:2)]};
                         else
                             if length(tmp)==1
-                            lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) '_' hdr.LeadLocation ]};
+                                lfpchannels = {[hdr.chan '_' tmp{1}(3) '_' tmp{1}(1:2) '_' hdr.LeadLocation ]};
                             else
                                 error(['unsupported number of ' num2str(length(tmp)) 'sides in BrainSenseLfp']);
                             end
@@ -621,7 +624,7 @@ for a = 1:length(files)
                             d.realtime(e) = datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','Format','yyyy-MM-dd HH:mm:ss.SSS')+seconds((d.time{1}(e)-d.time{1}(1)));
                             d.hdr.BSL.seq(e)= cdata.LfpData(e).Seq;
                         end
-                      
+                        
                         d.trialinfo(1) = c;
                         d.hdr.realtime = d.realtime;
                         
@@ -662,8 +665,8 @@ for a = 1:length(files)
                         savefig(fullfile(hdr.fpath,[d.fname '.fig']))
                         perceive_print(fullfile(hdr.fpath,[d.fname]))
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(d.realtime(1),'Format','yyyy-MM-dd hh:mm:ss')),char(d.realtime(end)-d.realtime(1)),fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseLFP.csv']),'','',filename}
-                 
-         
+                        
+                        
                     end
                     T=table;
                     T.Time = bsltime';
@@ -678,7 +681,7 @@ for a = 1:length(files)
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseLFP.csv']))
                     
                 case 'LfpMontageTimeDomain'
-                  
+                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     
@@ -694,11 +697,11 @@ for a = 1:length(files)
                     
                     fsample = data.SampleRateInHz;
                     gain=[data(:).Gain]';
-%                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
+                    %                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
                     tmp = {data(:).Channel};
                     for c = 1:length(tmp)
                         
-                       if sum(ismember('_LEFT_',tmp{c}))==6
+                        if sum(ismember('_LEFT_',tmp{c}))==6
                             side = 'L';
                             iside = 1;
                             tmp1 = strsplit(tmp{c},'_LEFT')
@@ -715,10 +718,10 @@ for a = 1:length(files)
                         end
                         ch1 = strrep(strrep(strrep(strrep(strrep(tmp1{1},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_','');
                         ch2 = strrep(strrep(strrep(strrep(strrep(tmp1{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_','');
-                    
-                     
-                  
-%                         keyboard
+                        
+                        
+                        
+                        %                         keyboard
                         Channel{c} = strcat(hdr.chan,'_', side, '_', ch1,ch2, '_', hdr.LeadLocation);
                     end
                     d=[];
@@ -749,12 +752,12 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
-%                         keyboard
+                        %                         keyboard
                     end
                 case 'LFPMontage'
                     
                     channels={};
-                    pow=[];rpow=[];lfit=[];bad=[];
+                    pow=[];rpow=[];lfit=[];bad=[];peaks=[];
                     for c = 1:length(data)
                         cdata = data(c);
                         if iscell(cdata)
@@ -882,7 +885,7 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
-                 
+                        
                     end
                     
                 case 'CalibrationTests'
@@ -898,23 +901,23 @@ for a = 1:length(files)
                     for c = 1:length(tmp)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
-                  
+                    
                     figure('visible','off')
                     for c = 1:length(data)
-                    fsample = data(c).SampleRateInHz;
-                    gain=[data(c).Gain]';
-                    [tmp1,tmp2] = strtok(strrep({data(c).Channel}','_AND',''),'_');
-                    ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                    
-                    [tmp1,tmp2] = strtok(tmp2,'_');
-                    ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                    side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-                    Channel(c) = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-                    tdtmp = zscore(data(c).TimeDomainData)./10+c;
-                    ttmp=[1:length(tdtmp)]./fsample;
-                    
-                    plot(ttmp,tdtmp)
-                    hold on
+                        fsample = data(c).SampleRateInHz;
+                        gain=[data(c).Gain]';
+                        [tmp1,tmp2] = strtok(strrep({data(c).Channel}','_AND',''),'_');
+                        ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                        
+                        [tmp1,tmp2] = strtok(tmp2,'_');
+                        ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                        side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
+                        Channel(c) = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                        tdtmp = zscore(data(c).TimeDomainData)./10+c;
+                        ttmp=[1:length(tdtmp)]./fsample;
+                        
+                        plot(ttmp,tdtmp)
+                        hold on
                     end
                     xlim([ttmp(1),ttmp(end)])
                     set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
@@ -922,11 +925,11 @@ for a = 1:length(files)
                     title(strrep({hdr.subject,hdr.session,'All CalibrationTests'},'_',' '))
                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests']))
-         
+                    
                     
                     for c = 1:length(runs)
-                    d=[];
-                    
+                        d=[];
+                        
                         i=perceive_ci(runs{c},FirstPacketDateTime);
                         raw=[data(i).TimeDomainData]';
                         d=[];
@@ -955,7 +958,7 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
-                 
+                        
                     end
                 case 'SenseChannelTests'
                     
@@ -1008,7 +1011,7 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         keyboard % LOG missing    LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},'','',fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']),'','',filename}
-                 
+                        
                     end
             end
             
@@ -1038,13 +1041,13 @@ for a = 1:length(files)
             fulldata = data;
             fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
             bslfile = strrep(fullname,'BSTD','BSL');
-             
+            
             try
                 bsl=load(bslfile);
             catch
-                   [x,x,bslfile] = perceive_ffind([bslfile(1:end-3) '*.mat']);
-                   bslfile = bslfile{1}; 
-                   bsl=load(bslfile);
+                [x,x,bslfile] = perceive_ffind([bslfile(1:end-3) '*.mat']);
+                bslfile = bslfile{1};
+                bsl=load(bslfile);
             end
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
             fulldata.label(3:6) = bsl.data.label;
@@ -1053,116 +1056,116 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 1000
-            figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
-            subplot(2,2,1)
-            yyaxis left
-            plot(fulldata.time{1},fulldata.trial{1}(1,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
-            hold on
-            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
-            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-            yyaxis right
-            ylabel('LFP and STIM amplitude')
-            plot(fulldata.time{1},fulldata.trial{1}(3,:))
-            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-            hold on
-            plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
-            plot(t,mpow.*1000)
-            title(strrep({fulldata.fname,fulldata.label{3},fulldata.label{5}},'_',' '))
-            axes('Position',[.34 .8 .1 .1])
-            box off
-            plot(f,nanmean(log(tf),2))
-            xlabel('F')
-            ylabel('P')
-            xlim([3 40])
-
-            axes('Position',[.16 .8 .1 .1])
-            box off
-            plot(fulldata.time{1},fulldata.trial{1}(1,:))
-            xlabel('T'),ylabel('A')
-            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
-            xlim([xx xx+1.5])
-           
-
-            subplot(2,2,3)
-            imagesc(t,f,log(tf)),axis xy, 
-            xlabel('Time [s]')
-            ylabel('Frequency [Hz]')
-        
-            
-            subplot(2,2,2)
-            yyaxis left
-            plot(fulldata.time{1},fulldata.trial{1}(2,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
-            hold on
-            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
-            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-            yyaxis right
-            ylabel('LFP and STIM amplitude')
-            plot(fulldata.time{1},fulldata.trial{1}(4,:))
-            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-            hold on
-            plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
-            plot(t,mpow.*1000)
-            title(strrep({fulldata.label{4},fulldata.label{6}},'_',' '))
-            
-            axes('Position',[.78 .8 .1 .1])
-            box off
-            plot(f,nanmean(log(tf),2))
-            xlim([3 40])
-            xlabel('F')
-            ylabel('P')
-            
-            axes('Position',[.6 .8 .1 .1])
-            box off
-            plot(fulldata.time{1},fulldata.trial{1}(2,:))
-            xlabel('T'),ylabel('A')
-             xlim([xx xx+1.5])
-           
-            
-            subplot(2,2,4)
-            imagesc(t,f,log(tf)),axis xy, 
-            xlabel('Time [s]')
-            ylabel('Frequency [Hz]')
-            fullname = fullfile('.',hdr.fpath,fulldata.fname);
-            perceive_print(fullname)
-           
-
-         
-            % close the figure if should not be kept open
-            if isfield(fulldata,'keepfig')
-                if ~fulldata.keepfig
-                    close();
+            if size(fulldata.trial{1},2) > 1000
+                figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
+                subplot(2,2,1)
+                yyaxis left
+                plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                ylabel('Raw amplitude')
+                if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                else
+                    error('neither Left nor Right TherapySnapshot present');
                 end
-                fulldata=rmfield(fulldata,'keepfig');
+                hold on
+                [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
+                mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                yyaxis right
+                ylabel('LFP and STIM amplitude')
+                plot(fulldata.time{1},fulldata.trial{1}(3,:))
+                xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                hold on
+                plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
+                plot(t,mpow.*1000)
+                title(strrep({fulldata.fname,fulldata.label{3},fulldata.label{5}},'_',' '))
+                axes('Position',[.34 .8 .1 .1])
+                box off
+                plot(f,nanmean(log(tf),2))
+                xlabel('F')
+                ylabel('P')
+                xlim([3 40])
+                
+                axes('Position',[.16 .8 .1 .1])
+                box off
+                plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                xlabel('T'),ylabel('A')
+                xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
+                xlim([xx xx+1.5])
+                
+                
+                subplot(2,2,3)
+                imagesc(t,f,log(tf)),axis xy,
+                xlabel('Time [s]')
+                ylabel('Frequency [Hz]')
+                
+                
+                subplot(2,2,2)
+                yyaxis left
+                plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                ylabel('Raw amplitude')
+                if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                else
+                    error('neither Left nor Right TherapySnapshot present');
+                end
+                hold on
+                [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
+                mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                yyaxis right
+                ylabel('LFP and STIM amplitude')
+                plot(fulldata.time{1},fulldata.trial{1}(4,:))
+                xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                hold on
+                plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
+                plot(t,mpow.*1000)
+                title(strrep({fulldata.label{4},fulldata.label{6}},'_',' '))
+                
+                axes('Position',[.78 .8 .1 .1])
+                box off
+                plot(f,nanmean(log(tf),2))
+                xlim([3 40])
+                xlabel('F')
+                ylabel('P')
+                
+                axes('Position',[.6 .8 .1 .1])
+                box off
+                plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                xlabel('T'),ylabel('A')
+                xlim([xx xx+1.5])
+                
+                
+                subplot(2,2,4)
+                imagesc(t,f,log(tf)),axis xy,
+                xlabel('Time [s]')
+                ylabel('Frequency [Hz]')
+                fullname = fullfile('.',hdr.fpath,fulldata.fname);
+                perceive_print(fullname)
+                
+                
+                
+                % close the figure if should not be kept open
+                if isfield(fulldata,'keepfig')
+                    if ~fulldata.keepfig
+                        close();
+                    end
+                    fulldata=rmfield(fulldata,'keepfig');
+                end
+                data=fulldata;
+                save([fullname '.mat'],'data')
+            else
+                warning('Data shorter than 4 sec are ignored by perceive.')
             end
-            data=fulldata;
-            save([fullname '.mat'],'data')
-           else
-               warning('Data shorter than 4 sec are ignored by perceive.')
-           end
         else
-           figure('visible','off')
-           perceive_plot_raw_signals(data);
-           perceive_print(fullname);
-           savefig([fullname '.fig'])
-           close
+            figure('visible','off')
+            perceive_plot_raw_signals(data);
+            perceive_print(fullname);
+            savefig([fullname '.fig'])
+            close
             % close the figure if should not be kept open
             if isfield(data,'keepfig')
                 if ~data.keepfig
@@ -1175,12 +1178,12 @@ for a = 1:length(files)
     close all
     [~,i] = sort(LogTable.DataDate);
     writetable(LogTable(i,:),fullfile(hdr.fpath(1:end-5),[hdr.subject '_' hdr.session '_LogTable.csv']))
-   if a==1
-       MasterTable = LogTable(i,:);
-   else
-       MasterTable = [MasterTable;LogTable(i,:)];
-   end
- 
+    if a==1
+        MasterTable = LogTable(i,:);
+    else
+        MasterTable = [MasterTable;LogTable(i,:)];
+    end
+    
 end
 disp(MasterTable)
 writetable(MasterTable,fullfile(hdr.subject,['Perceive_MasterTable_' char(datetime(now,'ConvertFrom','datenum','Format','yyyy-MM-dd_hh-mm-ss')) '.csv']))
