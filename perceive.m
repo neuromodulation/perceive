@@ -420,17 +420,17 @@ for a = 1:length(files)
                                 ids(c) = lfp.EventID;
                                 DT(c) = datetime(lfp.DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss','Format','yyyy-MM-dd hh:mm:ss');
                                 events{c} = lfp.EventName;
-                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && ~isempty(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID)
                                     tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
                                     ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),'_',hdr.LeadLocation);
                                 else
-                                    ch1 = 'n/a';
+                                    ch1 = 'na';
                                 end
-                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right') && ~isempty(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID)
                                     tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
                                     ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''),'_',hdr.LeadLocation);
                                 else
-                                    ch2 = 'n/a';
+                                    ch2 = 'na';
                                 end
                                 chanlabels{c} = {ch1 ch2};
                                 if ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
