@@ -29,7 +29,7 @@ for a=1:length(files)
         raw = data.trial{1};
         if isfield(data,'datatype')
             dataType = data.datatype;
-            pdbg(['data type: ' datatype],2);
+            pdbg(['data type: ' dataType],2);
         else
             warning('datatype missing in data, this is discouraged');
             dataType = '';
