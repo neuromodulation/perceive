@@ -11,6 +11,7 @@ ns = length(data);
 dwindow=round(fs); % segment window size (500 ms)
 dmove = fs; % moving window size (100 ms)
 i=[1+dwindow:dmove:ns-dwindow-1]'; % segment indices
+if ~isempty(i)
 for a = 1:length(i)
     x(a,:) = data([i(a)-dwindow:i(a)+dwindow]); % epoch data
 end
@@ -24,7 +25,7 @@ for a = 2:size(x,1)
     [r,l]=xcorr(nanmean(ndata,1),x(a,:),fs);[~,mi]=max(r);tlag = l(mi);
     if tlag >0;n=n+1;ndata(n,tlag:tlag+size(x,2)-1)=x(a,:);end
 end
-mdata = nanmean(ndata); % average aligned data
+mdata = nanmean(ndata,1); % average aligned data
 %% find ECG peak characteristics in xcorr aligned data
 [absm,imax]=findpeaks(abs(mdata),'SortStr','descend','NPeaks',15); np=0.05;iim=[];iin=[];
 while isempty(iim) || isempty(iin)
@@ -50,7 +51,17 @@ r = corr(corrdata,ecg.proc.template1').^2;
 ecg.proc.r = r;
 disp('...first temporal correlation done...')
 %% adjust r threshold to maximize HR associated peak identification
-h=max(findpeaks(r))-.05:-0.01:0.01;
+h=[max(findpeaks(r))*.95,...
+    max(findpeaks(r))*.90,...
+    max(findpeaks(r))*.85,...
+    max(findpeaks(r))*.80,...
+    max(findpeaks(r))*.75,...
+    max(findpeaks(r))*.70,...
+    max(findpeaks(r))*.65,...
+    max(findpeaks(r))*.60,...
+    max(findpeaks(r))*.55,...
+    max(findpeaks(r))*.50];
+
 thr=[];
 for a=1:length(h)
     [~,ix]=findpeaks(r,'MinPeakHeight',h(a),'MaxPeakWidth',round(0.1*fs));
@@ -64,7 +75,7 @@ disp('...first threshold adjusted...')
 for a = 1:length(i)
     try ndata2(a,:)=data(i(a)-round(.05*fs):i(a)+round(.1*fs));end
 end
-ecg.proc.template2 = nanmean(ndata2);
+ecg.proc.template2 = nanmean(ndata2,1);
 disp('...realigned and generated template 2...')
 %% run temporal correlation on second template
 corrdata=[];
@@ -75,10 +86,16 @@ r2 = corr(corrdata,ecg.proc.template2').^2;
 ecg.proc.r2 = r2;
 disp('...temporal correlation on second template done...')
 %% readjust threshold
-h=max(findpeaks(r2))-.05:-0.01:0.2;thr=[];
-if isempty(h)
-    h= max(findpeaks(r2))/2;
-end
+h=[max(findpeaks(r2))*.95,...
+    max(findpeaks(r2))*.90,...
+    max(findpeaks(r2))*.85,...
+    max(findpeaks(r2))*.80,...
+    max(findpeaks(r2))*.75,...
+    max(findpeaks(r2))*.70,...
+    max(findpeaks(r2))*.65,...
+    max(findpeaks(r2))*.60,...
+    max(findpeaks(r2))*.55,...
+    max(findpeaks(r2))*.50];
 for a=1:length(h)
     [~,ix]=findpeaks(r2,'MinPeakHeight',h(a),'MaxPeakWidth',round(0.1*fs));
     if ~isempty(ix),dd=60./(diff(ix)/fs);thr2(a)=nansum(dd>55&dd<120)./std(dd);end
@@ -93,6 +110,7 @@ ecg.hr=60/(nanmedian(diff(i))/fs);
 ecg.nandata = data;
 ecg.cleandata=data;
 cbins = zeros(size(data));
+if numel(pks)
 for a = 1:length(pks)
     tss=size(ecg.proc.template2,2);
     ic=i(a):i(a)+tss-1;
@@ -105,6 +123,9 @@ for a = 1:length(pks)
     end
     ecg.stats.n = numel(pks);
     cbins(ic)=1;
+end
+else
+    ecg.stats.n = 0;
 end
 ecg.nandata(find(cbins))=nan;
 ecg.ecgbins = cbins;
@@ -145,4 +166,10 @@ if plotit
     plot(t,data,'color','r');    hold on
     plot(t,ecg.cleandata,'color','k');
     legend('original','cleaned');ylabel('Amplitude');xlabel('Time [s]')
+end
+
+else 
+    warning('Insufficient data length for ECG correction.')
+    ecg=[];
+    ecg.cleandata =nan(size(data));
 end
