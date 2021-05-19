@@ -59,6 +59,12 @@ function perceive(files,subjectIDs,datafields)
 % Add channel and stimulation information for chronic recordings
 
 
+% shared options (and runtime settings)
+global popt;
+
+% configure options
+popt = perceive_options();
+
 if exist('datafields') && ischar(datafields)
     datafields = {datafields};
 elseif exist('datafields','var') && isempty(datafields)
@@ -114,7 +120,7 @@ for a = 1:length(files)
     end
     
     
-    infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
+    infofields = perceive_data_fields('info');
     for b = 1:length(infofields)
         if isfield(js,infofields{b})
             hdr.(infofields{b})=js.(infofields{b});
@@ -331,7 +337,7 @@ for a = 1:length(files)
                                 
                                 
                                 d=[];
-                                d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
+                                d.hdr = hdr;d.datatype = 'DiagnosticData_LFPTrends';
                                 d.trial{1} = [clfp;cstim];
                                 d.label = {'LFP_RIGHT','STIM_RIGHT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
@@ -339,7 +345,6 @@ for a = 1:length(files)
                                 d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                                 LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'ChronicRight',char(datetime(cdt(1),'Format','yyyy-MM-dd hh:mm:ss')),char(cdt(end)-cdt(1)),[d.fname '.mat'],'','',filename}
                                 
@@ -372,7 +377,7 @@ for a = 1:length(files)
                         end
                         d=[];
                         d.hdr = hdr;
-                        d.datatype = 'DiagnosticData.LFPTrends';
+                        d.datatype = 'DiagnosticData_LFPTrends';
                         d.trial{1} = [LFP;STIM];
                         d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
                         d.time{1} = DT;
@@ -381,8 +386,6 @@ for a = 1:length(files)
                         lastsample = d.time{1}(end);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed::
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         
@@ -563,8 +566,6 @@ for a = 1:length(files)
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
                             d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
                         end
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         %                         keyboard
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','Format','yyyy-MM-dd HH:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
@@ -658,8 +659,6 @@ for a = 1:length(files)
                         bsldata = [bsldata,d.trial{1}];
                         bsltime = [bsltime,d.realtime];
                         bslchannels = d.label;
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
                         savefig(fullfile(hdr.fpath,[d.fname '.fig']))
@@ -748,8 +747,6 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
                         %                         keyboard
@@ -894,8 +891,6 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
                         
@@ -967,8 +962,6 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         
                         d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
                         
@@ -1020,8 +1013,6 @@ for a = 1:length(files)
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
                         d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         keyboard % LOG missing    LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},'','',fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']),'','',filename}
                         
@@ -1042,14 +1033,8 @@ for a = 1:length(files)
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
-        % remove the optional 'keepfig' field (not to mess up the saved data)
-        if isfield(data,'keepfig')
-            data=rmfield(data,'keepfig');
-        end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         save([fullname '.mat'],'data');
-        % restore the data (incl. the optional 'keepfig' field)
-        data=alldata{b};
         if regexp(data.fname,'BSTD')
             fulldata = data;
             fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
