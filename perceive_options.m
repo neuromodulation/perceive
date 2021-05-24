@@ -58,6 +58,7 @@ function popt = perceive_options()
     popt.maxOpenFigures.MostRecentInSessionSignalCheck = Inf;
 
 
+    if 0 %% local (user-, or folder-specific) options disabled for now (subject for discussion)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Refine global options with local user-specific options
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,6 +113,7 @@ function popt = perceive_options()
         end
 
     end
+    end % local options disabled for now
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
