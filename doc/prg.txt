@@ -1,0 +1,127 @@
+Here come internal programming notes: design choices, implementation notes, etc.
+
+
+Options
+=======
+
+There are global options (shared among all users) and local options (user-specific).
+See perceive_options.m, and perceive_options_local.m. The latter file must NOT be 
+committed.
+
+The options are stored in a global variable called 'popt' (Perceive OPTions)
+that can be made accessible using
+
+    global popt;
+
+put at the first line of each function that wishes to use the options.
+
+The options are configured in perceive.m by calling 
+
+    popt = perceive_options();
+
+and used e.g. in perceive_print.m to learn the desired file type to be printed.
+
+
+
+Figure handling
+===============
+
+To ease figure creation and enable configuration of the number of open figures,
+matlab figures should be openened using 
+
+    percept_figure(dataType, ...) 
+
+instead of
+
+    figure(...)
+
+where `dataType' is the type of data to be plotted in the figure, and `...' 
+are regular arguments to figure.
+
+This enables to limit the number of figures to a configurable number, see 
+popt.maxOpenFigures.* in perceive_options.m.
+
+To close all figures, use:
+
+    percept_figure_close_all()
+
+
+
+Percept Data Types
+==================
+
+To track which data fields appear in json data files, and which of these fields
+are recognized and handled by perceive, there is 
+
+    perceive_data_fields(dataType)
+
+function, which returns:
+- all (currently) known json data fields [use dataType=''],
+- info data fields [use dataType='info'] - those used in perceive to populate the
+    info header
+- data fields [use dataType='data'] - fields to be processed by perceive
+
+The idea is not to use hardcoded data fields in code, but retrieve field names
+using perceive_data_fields(dataType), such that:
+- when we learn a new field appear in json, we simply add them to
+perceive_data_fields() without a need to alter hardcoded field names in the code,
+- we can immediately learn whether we handle all data fields in the code.
+
+
+Percept Data Processing
+=======================
+
+Table correlating data fields in json with the identifiers of the data fields
+used in perceive_options (used to configure which figures are kept opened).
+
+json structure                              data idf in perceive_options                    comment
+                                            (datatype field of data stored in 'alldata'
+                                            in perceive.m, dataType as argument 
+                                            to perceive_figure())
+
+DiagnosticData                              'DiagnosticData'                                chronic recordings (long-term)
+DiagnosticData/LFPTrendLogs                 'DiagnosticData_LFPTrends'                      chronic LFP trends (left, right, both)
+DiagnosticData/LfpFrequencySnapshotEvents   'DiagnosticData_LfpFrequencySnapshotEvents'     LFP snapshots
+BrainSenseTimeDomain                        'Ecg'                                           ECG artifact removal
+BrainSenseTimeDomain                        'BrainSenseTimeDomain'
+BrainSenseLfp                               'BrainSenseLfp'
+LfpMontageTimeDomain                        'LfpMontageTimeDomain'
+BrainSenseSurvey                            'BrainSenseSurvey'
+IndefiniteStreaming                         'IndefiniteStreaming'
+CalibrationTests                            'CalibrationTests'
+SenseChannelTests                           'SenseChannelTests'
+MostRecentInSessionSignalCheck              'MostRecentInSessionSignalCheck'
+
+
+Progress / debug printing
+=========================
+
+To unify prints (progress made by perceive, verbose info messages, debug
+prints), one can use
+
+    pdisp(...)
+    or
+    pdisp(..., level)
+
+instead of standard matlab
+
+    disp(...)
+
+where `level' specifies the verbosity level of the message.
+In options, users can configure the level of verbosity that is of their current
+interest (see `popt.verbosity' in perceive_options.m, or
+perceive_options_local.m.). 
+
+The idea is that all important steps in code are enriched with reports (with
+different level of verbosity), such that:
+- users can enable all of them to get detailed (debug) info, or
+- users can enable the less detailed level only to get just the basic info, or
+- users can disable all messages.
+
+Debug prints can be rather printed using
+
+    pdbg(...)
+
+such that this kind of messages can be further enriched with additional info
+later on.
+
