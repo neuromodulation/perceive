@@ -788,8 +788,6 @@ for a = 1:length(files)
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
                     
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
-                    
                     perceive_figure('BrainSenseSurvey','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,2)
