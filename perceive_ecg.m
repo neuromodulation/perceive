@@ -148,7 +148,7 @@ if plotit
     [~,f,rnpow]=perceive_fft(ecg.cleandata(find(~isnan(ecg.cleandata))),fs,fs*2);
     nt2 = linspace(-.05,.1,size(ecg.proc.template2,2));
     
-    perceive_figure('ecg');
+    perceive_figure('Ecg');
     
     subplot(2,2,1);
     plot(nt2,ndata2','linewidth',0.1,'color',[.9 .9 .9]);
