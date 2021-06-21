@@ -69,6 +69,8 @@ function f = perceive_figure(dataType,varargin)
         % reuse the current figure
         pdbg('reusing the current figure');
         f=gcf();
+        clf(f,'reset');
+        cla(f,'reset');
         if length(varargin)>0
             if mod(length(varargin),2)==0
                 for i=1:length(varargin)/2
