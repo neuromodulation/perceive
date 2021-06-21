@@ -1,17 +1,17 @@
 function perceive_print(filename)
 
-% global popt;
+global popt;
 
 [fold,file,ext]=fileparts(filename);
 if ~exist(fold,'dir')
     mkdir(fold);
 end
 
-% if popt.printToPng
+if popt.printToPng
     print(gcf,fullfile(fold,file),'-dpng','-r300','-opengl');
-% end
+end
 
-% if popt.printToPdf
+if popt.printToPdf
     % save the current orientation
     or=get(gcf,'PaperOrientation');
     % set landscape orientation
@@ -20,4 +20,4 @@ end
     print(gcf,fullfile(fold,file),'-dpdf','-r80','-bestfit');
     % restore the orientation
     set(gcf,'PaperOrientation',or);
-% end
+end

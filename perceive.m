@@ -60,10 +60,10 @@ function perceive(files,subjectIDs,datafields)
 
 
 % shared options (and runtime settings)
-% global popt;
+global popt;
 
 % configure options
-% popt = perceive_options();
+popt = perceive_options();
 
 if exist('datafields') && ischar(datafields)
     datafields = {datafields};
