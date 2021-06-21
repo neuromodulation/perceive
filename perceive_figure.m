@@ -37,7 +37,7 @@ function f = perceive_figure(dataType,varargin)
         curFig=NaN;
     elseif ~ismember(dataType,fieldnames(popt.maxOpenFigures))
         % opening a specific figure having no maximal number of figures configured
-        warning('perceive:options',['maxOpenFigures'' not configured for dataType ''' dataType ''', using generic setting']);
+        warning('perceive:options',['''maxOpenFigures'' not configured for dataType ''' dataType ''', using generic setting']);
         maxFig=NaN;
         curFig=NaN;
     else
