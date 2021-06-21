@@ -171,11 +171,7 @@ for a = 1:length(files)
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
     if ~exist('datafields','var')
-<<<<<<< HEAD
         datafields = perceive_data_fields('data');
-=======
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','LFPMontage','CalibrationTests','PatientEvents','DiagnosticData'});
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
@@ -210,12 +206,7 @@ for a = 1:length(files)
                             end
                         end
                     end
-<<<<<<< HEAD
                     perceive_figure('Impedance');
-=======
-                    
-                    figure('visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
@@ -260,11 +251,7 @@ for a = 1:length(files)
                         T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                         writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
                         
-<<<<<<< HEAD
                         perceive_figure('MostRecentInSessionSignalCheck','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
-=======
-                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                         ir = perceive_ci([hdr.chan '_R'],channels);
                         subplot(1,2,2)
                         p=plot(freq,pow(ir,:));
@@ -406,11 +393,7 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                         
                         
-<<<<<<< HEAD
                         perceive_figure('DiagnosticData','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
-=======
-                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                         subplot(2,1,1)
                         title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
                         yyaxis left
@@ -487,11 +470,7 @@ for a = 1:length(files)
                                 Tpow.(strrep([events{c} '_' num2str(c) '_' ch2 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,2);
                                 
                                 
-<<<<<<< HEAD
                                 perceive_figure('DiagnosticData_LfpFrequencySnapshotEvents');
-=======
-                                figure('visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                                 plot(freq,pow,'linewidth',2)
                                 legend(strrep(chanlabels{c},'_',' '))
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
@@ -601,11 +580,7 @@ for a = 1:length(files)
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
-<<<<<<< HEAD
                     perceive_figure('BrainSenseLfp','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
-=======
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                     for c=1:length(runs)
                         cdata = data(c);
                         tmp = strrep(cdata.Channel,'_AND','');
@@ -813,12 +788,7 @@ for a = 1:length(files)
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage_Peaks.csv']));
                     
-<<<<<<< HEAD
                     perceive_figure('BrainSenseSurvey','Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
-=======
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20],'visible','off')
-                    
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                     ir = perceive_ci([hdr.chan '_R'],channels);
                     subplot(1,2,2)
                     if ~isempty(ir)
@@ -942,13 +912,8 @@ for a = 1:length(files)
                     for c = 1:length(tmp)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
-<<<<<<< HEAD
                   
                     perceive_figure('CalibrationTests');
-=======
-                    
-                    figure('visible','off')
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
                     for c = 1:length(data)
                         fsample = data(c).SampleRateInHz;
                         gain=[data(c).Gain]';
@@ -1193,15 +1158,6 @@ for a = 1:length(files)
             perceive_print(fullname);
             savefig([fullname '.fig'])
             close
-<<<<<<< HEAD
-=======
-            % close the figure if should not be kept open
-            if isfield(data,'keepfig')
-                if ~data.keepfig
-                    close();
-                end
-            end
->>>>>>> 1f4c5c048301d820f6cedcde9ea30a0fe137c61d
         end
         
     end
