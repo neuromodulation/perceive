@@ -50,8 +50,7 @@ for a=1:length(files)
         end
     end
     raw(isnan(raw))=0;
-%     perceive_figure(dataType,'Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
-    figure  
+    perceive_figure(dataType,'Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20]);
     for b = 1:size(raw,1)
         p(b)=plot(time,zscore(raw(b,:)')'./10+b);
         hold on

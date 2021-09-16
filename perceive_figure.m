@@ -37,7 +37,7 @@ function f = perceive_figure(dataType,varargin)
         curFig=NaN;
     elseif ~ismember(dataType,fieldnames(popt.maxOpenFigures))
         % opening a specific figure having no maximal number of figures configured
-        warning('perceive:options',['maxOpenFigures'' not configured for dataType ''' dataType ''', using generic setting']);
+        warning('perceive:options',['''maxOpenFigures'' not configured for dataType ''' dataType ''', using generic setting']);
         maxFig=NaN;
         curFig=NaN;
     else
@@ -69,6 +69,8 @@ function f = perceive_figure(dataType,varargin)
         % reuse the current figure
         pdbg('reusing the current figure');
         f=gcf();
+        clf(f,'reset');
+        cla(f,'reset');
         if length(varargin)>0
             if mod(length(varargin),2)==0
                 for i=1:length(varargin)/2
