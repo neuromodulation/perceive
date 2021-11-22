@@ -320,7 +320,13 @@ for a = 1:length(files)
                         
                         LFP=[];
                         STIM=[];
-                        DT=sort([DTL,setdiff(DTR,DTL)]);
+                        if isempty(DTL)
+                            DT = sort(DTR);
+                        elseif isempty(DTR)
+                            DT = sort(DTL);
+                        else
+                            DT=sort([DTL,setdiff(DTR,DTL)]);
+                        end
                         for c = 1:length(DT)
                             if ismember(DT(c),DTL)
                                 i = find(DTL==DT(c));
