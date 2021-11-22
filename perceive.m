@@ -398,15 +398,21 @@ for a = 1:length(files)
                                 ids(c) = lfp.EventID;
                                 DT(c) = datetime(lfp.DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss');
                                 events{c} = lfp.EventName;
-                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') 
                                     tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
+                                    if isempty(tmp{1}) || length(tmp) == 1
+                                        tmp = {'','unknown'};
+                                    end
                                     ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
                                 else
                                     ch1 = 'n/a';
                                 end
                                 if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
                                     tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
-                                    ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
+                                    if isempty(tmp{1}) || length(tmp) == 1
+                                        tmp = {'','unknown'};
+                                    end
+                                    ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));                               
                                 else
                                     ch2 = 'n/a';
                                 end
