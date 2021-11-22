@@ -353,14 +353,18 @@ for a = 1:length(files)
                                 LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),'ChronicRight',char(datetime(cdt(1),'Format','yyyy-MM-dd hh:mm:ss')),char(cdt(end)-cdt(1)),[d.fname '.mat'],'','',filename}
                                 
                             end
-                        else
-                            keyboard % create table with events
                         end
                         
                         
                         LFP=[];
                         STIM=[];
-                        DT=sort([DTL,setdiff(DTR,DTL)]);
+                        if isempty(DTL)
+                            DT = sort(DTR);
+                        elseif isempty(DTR)
+                            DT = sort(DTL);
+                        else
+                            DT=sort([DTL,setdiff(DTR,DTL)]);
+                        end
                         for c = 1:length(DT)
                             if ismember(DT(c),DTL)
                                 i = find(DTL==DT(c));
