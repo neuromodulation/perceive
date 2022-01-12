@@ -994,7 +994,7 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 250
+           if size(fulldata.trial{1},2) > 250*2
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
             subplot(2,2,1)
             yyaxis left
