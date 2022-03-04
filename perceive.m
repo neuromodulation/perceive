@@ -486,6 +486,7 @@ for a = 1:length(files)
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
                                 xlabel('Frequency [Hz]')
                                 ylabel('Power spectral density [uV^2/Hz]')
+                                xlim([1 60])
                                 savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
                                 
@@ -572,6 +573,18 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
                         
+                        d.parrm=[];
+                        d.parrm_cleaned=[];
+                        for e = 1:size(raw,1)
+                            d.parrm{e} = perceive_parrm(raw(e,:));
+                            title(strrep(d.label{e},'_',' '))
+                            xlabel(strrep(d.fname,'_',' '))
+                            savefig(fullfile(hdr.fpath,[d.fname '_PARRM_' d.label{e} '.fig']))
+                            perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_' d.label{e}]))
+                            d.parrm_cleaned(e,:) = d.parrm{e}.cleandata;
+                        end
+                        
+                        
                         d.ecg=[];
                         d.ecg_cleaned=[];
                         for e = 1:size(raw,1)
@@ -581,6 +594,19 @@ for a = 1:length(files)
                             savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
                             d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
+                        end
+                        
+                        if ~isempty(d.parrm)
+                            d.parrm_ecg=[];
+                            d.parrm_ecg_cleaned=[];
+                            for e = 1:size(raw,1)
+                                d.parrm_ecg{e} = perceive_ecg(d.parrm_cleaned(e,:));
+                                title(strrep(d.label{e},'_',' '))
+                                xlabel(strrep(d.fname,'_',' '))
+                                savefig(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e} '.fig']))
+                                perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e}]))
+                                d.parrm_ecg_cleaned(e,:) = d.parrm_ecg{e}.cleandata;
+                            end
                         end
                         alldata{length(alldata)+1} = d;
                         %                         keyboard
