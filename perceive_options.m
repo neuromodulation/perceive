@@ -32,10 +32,13 @@ function popt = perceive_options()
     %%
 
     % Make PDF plots?
-    popt.printToPdf = true;
+    popt.printToPdf = false;
 
     % Make PNG plots?
     popt.printToPng = true;
+    
+    % Make FIG plots?
+    popt.printToFig = false;
 
     % The maximum number of open figures in total.
     % (must be positive)
@@ -57,7 +60,12 @@ function popt = perceive_options()
     popt.maxOpenFigures.LfpMontageTimeDomain = Inf;
     popt.maxOpenFigures.MostRecentInSessionSignalCheck = Inf;
 
-
+    %% Artifact cleaning
+    popt.run_perceive_ecg = 1;
+    popt.run_parrm = 1;
+    popt.run_parrm_ecg = 1;
+    
+    
     if 0 %% local (user-, or folder-specific) options disabled for now (subject for discussion)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Refine global options with local user-specific options

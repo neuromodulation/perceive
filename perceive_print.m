@@ -21,3 +21,8 @@ if popt.printToPdf
     % restore the orientation
     set(gcf,'PaperOrientation',or);
 end
+
+if popt.printToFig
+    savefig(fullfile(fold,file))
+end
+                          

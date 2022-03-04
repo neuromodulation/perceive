@@ -58,13 +58,6 @@ function perceive(files,subjectIDs,datafields)
 %% TODO
 % Add channel and stimulation information for chronic recordings
 
-
-% shared options (and runtime settings)
-global popt;
-
-% configure options
-popt = perceive_options();
-
 % shared options (and runtime settings)
 global popt;
 
@@ -104,8 +97,12 @@ end
 for a = 1:length(files)
     filename = files{a};
     disp(['RUNNING ' filename])
+    try
+        js = jsondecode(fileread(filename));
+    catch
+        warning('JSON file could not be read')
+    end
     
-    js = jsondecode(fileread(filename));
     try
         js.PatientInformation.Initial.PatientFirstName ='';
         js.PatientInformation.Initial.PatientLastName ='';
@@ -150,7 +147,12 @@ for a = 1:length(files)
     
     if ~exist('subjectIDs','var') || isempty(subjectIDs)
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
-            hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
+            if ~isempty(hdr.Diagnosis)
+                diagnosis = hdr.Diagnosis(1);
+            else
+                diagnosis = 'Unknown';
+            end
+            hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') diagnosis hdr.LeadLocation];
         else
             hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
         end
@@ -210,6 +212,9 @@ for a = 1:length(files)
                     barh(table2array(T(1,:))')
                     set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                     xlabel('Impedance')
+                    keyboard
+                    if length(T.Properties.VariableNames) > 50
+                        
                     title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
                     T = table(T{:,:}.','RowNames',T.Properties.VariableNames,'VariableNames',{'Impedance'});
@@ -286,7 +291,7 @@ for a = 1:length(files)
                             end
                         end
                         legend(strrep(channels(il),'_',' '))
-                        savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
+                        %                         savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
                         
                     end
@@ -417,7 +422,7 @@ for a = 1:length(files)
                         title('RIGHT')
                         xlabel('Time')
                         ylabel('STIM Amplitude')
-                        savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
+                        %                         savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
                         
                     end
@@ -434,7 +439,7 @@ for a = 1:length(files)
                                 ids(c) = lfp.EventID;
                                 DT(c) = datetime(lfp.DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss','Format','yyyy-MM-dd hh:mm:ss');
                                 events{c} = lfp.EventName;
-                             if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') 
+                                if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
                                     tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
                                     if isempty(tmp{1}) || length(tmp) == 1
                                         tmp = {'','unknown'};
@@ -448,7 +453,7 @@ for a = 1:length(files)
                                     if isempty(tmp{1}) || length(tmp) == 1
                                         tmp = {'','unknown'};
                                     end
-                                    ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));                               
+                                    ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
                                 else
                                     ch2 = 'n/a';
                                 end
@@ -487,10 +492,10 @@ for a = 1:length(files)
                                 xlabel('Frequency [Hz]')
                                 ylabel('Power spectral density [uV^2/Hz]')
                                 xlim([1 60])
-                                savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
+                                %                                 savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
                                 
-                                         
+                                
                                 if isstruct(cdata(c)) && c <= length(DT)
                                     LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),['LFPSnapshot: ' cdata(c).EventName],char(datetime(DT(c),'Format','yyyy-MM-dd hh:mm:ss')),'',fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']),'','',filename}
                                 elseif c <= length(DT)
@@ -501,7 +506,7 @@ for a = 1:length(files)
                                 % keyboard
                                 warning('LFP Snapshot Event without LFP data present.')
                             end
-                   
+                            
                         end
                         writetable(Tpow,fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']))
                         
@@ -575,38 +580,41 @@ for a = 1:length(files)
                         
                         d.parrm=[];
                         d.parrm_cleaned=[];
-                        for e = 1:size(raw,1)
-                            d.parrm{e} = perceive_parrm(raw(e,:));
-                            title(strrep(d.label{e},'_',' '))
-                            xlabel(strrep(d.fname,'_',' '))
-                            savefig(fullfile(hdr.fpath,[d.fname '_PARRM_' d.label{e} '.fig']))
-                            perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_' d.label{e}]))
-                            d.parrm_cleaned(e,:) = d.parrm{e}.cleandata;
-                        end
                         
+                        if popt.run_parrm
+                            for e = 1:size(raw,1)
+                                d.parrm{e} = perceive_parrm(raw(e,:));
+                                title(strrep(d.label{e},'_',' '))
+                                xlabel(strrep(d.fname,'_',' '))
+                                perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_' d.label{e}]))
+                                d.parrm_cleaned(e,:) = d.parrm{e}.cleandata;
+                            end
+                        end
                         
                         d.ecg=[];
                         d.ecg_cleaned=[];
-                        for e = 1:size(raw,1)
-                            d.ecg{e} = perceive_ecg(raw(e,:));
-                            title(strrep(d.label{e},'_',' '))
-                            xlabel(strrep(d.fname,'_',' '))
-                            savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
-                            perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
-                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
+                        if popt.run_perceive_ecg
+                            for e = 1:size(raw,1)
+                                d.ecg{e} = perceive_ecg(raw(e,:));
+                                title(strrep(d.label{e},'_',' '))
+                                xlabel(strrep(d.fname,'_',' '))
+                                %                             savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
+                                perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
+                                d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
+                            end
                         end
-                        
-                        d.parrm_ecg=[];
-                        d.parrm_ecg_cleaned=[];
-                        for e = 1:size(raw,1)
-                            d.parrm_ecg{e} = perceive_ecg(raw(e,:));
-                            title(strrep(d.label{e},'_',' '))
-                            xlabel(strrep(d.fname,'_',' '))
-                            savefig(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e} '.fig']))
-                            perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e}]))
-                            d.parrm_ecg_cleaned(e,:) = d.parrm_ecg{e}.cleandata;
+                        if ~isempty(d.parrm) && popt.run_parrm_ecg
+                            d.parrm_ecg=[];
+                            d.parrm_ecg_cleaned=[];
+                            for e = 1:size(raw,1)
+                                d.parrm_ecg{e} = perceive_ecg(d.parrm_cleaned(e,:));
+                                title(strrep(d.label{e},'_',' '))
+                                xlabel(strrep(d.fname,'_',' '))
+                                %                                 savefig(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e} '.fig']))
+                                perceive_print(fullfile(hdr.fpath,[d.fname '_PARRM_ECG_' d.label{e}]))
+                                d.parrm_ecg_cleaned(e,:) = d.parrm_ecg{e}.cleandata;
+                            end
                         end
-                        
                         alldata{length(alldata)+1} = d;
                         %                         keyboard
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','Format','yyyy-MM-dd HH:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
@@ -702,7 +710,7 @@ for a = 1:length(files)
                         bslchannels = d.label;
                         alldata{length(alldata)+1} = d;
                         
-                        savefig(fullfile(hdr.fpath,[d.fname '.fig']))
+                        %                         savefig(fullfile(hdr.fpath,[d.fname '.fig']))
                         perceive_print(fullfile(hdr.fpath,[d.fname]))
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(d.realtime(1),'Format','yyyy-MM-dd hh:mm:ss')),char(d.realtime(end)-d.realtime(1)),fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseLFP.csv']),'','',filename}
                         
@@ -787,7 +795,7 @@ for a = 1:length(files)
                         
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmsss'))];
                         alldata{length(alldata)+1} = d;
                         LogTable(size(LogTable,1)+1,:) = {hdr.subject,char(hdr.SessionDate),char(hdr.SessionEndDate),datafields{b},char(datetime(runs{c},'format','yyyy-MM-dd hh:mm:ss')),char(duration(seconds(d.time{1}(end)-d.time{1}(1)),'Format','hh:mm:ss')),[d.fname '.mat'],'','',filename}
                         %                         keyboard
@@ -873,7 +881,7 @@ for a = 1:length(files)
                         axis off
                     end
                     set(gcf,'visible','on')
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
+                    %                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage.fig']))
                     pause(2)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-LFPMontage']))
                     close
@@ -949,7 +957,7 @@ for a = 1:length(files)
                     for c = 1:length(tmp)
                         GlobalPacketSizes(c,:) = str2double(tmp{c});
                     end
-                  
+                    
                     perceive_figure('CalibrationTests');
                     for c = 1:length(data)
                         fsample = data(c).SampleRateInHz;
@@ -971,7 +979,7 @@ for a = 1:length(files)
                     set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
                     xlabel('Time [s]')
                     title(strrep({hdr.subject,hdr.session,'All CalibrationTests'},'_',' '))
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
+                    %                     savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests']))
                     
                     
@@ -1083,8 +1091,22 @@ for a = 1:length(files)
             try
                 bsl=load(bslfile);
             catch
-                [x,x,bslfile] = perceive_ffind([bslfile(1:end-3) '*.mat']);
-                bslfile = bslfile{1};
+                [x,x,bslfile] = perceive_ffind([bslfile(1:end-4) '*.mat']);
+                if length(bslfile)==1
+                    bslfile = bslfile{1};
+                elseif length(bslfile)>1
+                    odate = strsplit(fulldata.fname,'BrainSense');
+                    odate = str2num(odate{2});
+                        
+                    for ff =1:length(bslfile)
+                    bdate = strsplit(bslfile{ff},'BSL');
+                    bdate = str2num(bdate{2}(1:end-4));
+                    ddate(ff) = abs(odate-bdate);
+                    end
+                    [~,i]=min(ddate);
+                    bslfile=bslfile{i};
+                end    
+                    
                 bsl=load(bslfile);
             end
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
@@ -1193,7 +1215,7 @@ for a = 1:length(files)
             figure('visible','off')
             perceive_plot_raw_signals(data);
             perceive_print(fullname);
-            savefig([fullname '.fig'])
+            %             savefig([fullname '.fig'])
             close
         end
         

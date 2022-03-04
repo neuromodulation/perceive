@@ -31,7 +31,7 @@ for a=1:length(files)
             dataType = data.datatype;
             pdbg(['data type: ' dataType]);
         else
-            warning('datatype missing in data, this is discouraged');
+%             warning('datatype missing in data, this is discouraged');
             dataType = '';
         end
     else
