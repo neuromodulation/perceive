@@ -1128,6 +1128,7 @@ for a = 1:length(files)
                 else
                     error('neither Left nor Right TherapySnapshot present');
                 end
+                
                 hold on
                 [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
                 mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
@@ -1156,6 +1157,7 @@ for a = 1:length(files)
                 
                 subplot(2,2,3)
                 imagesc(t,f,log(tf)),axis xy,
+                ylim([3 125])
                 xlabel('Time [s]')
                 ylabel('Frequency [Hz]')
                 
@@ -1199,6 +1201,7 @@ for a = 1:length(files)
                 
                 subplot(2,2,4)
                 imagesc(t,f,log(tf)),axis xy,
+                ylim([3 125])
                 xlabel('Time [s]')
                 ylabel('Frequency [Hz]')
                 fullname = fullfile('.',hdr.fpath,fulldata.fname);

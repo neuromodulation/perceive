@@ -28,6 +28,11 @@ function popt = perceive_options()
 
 
     %%-----------------------------------------------------------------
+    %% Artifact cleaning
+    popt.run_perceive_ecg = true;
+    popt.run_parrm = true;
+    popt.run_parrm_ecg = true;
+    
     %% plotting
     %%
 
@@ -60,10 +65,7 @@ function popt = perceive_options()
     popt.maxOpenFigures.LfpMontageTimeDomain = Inf;
     popt.maxOpenFigures.MostRecentInSessionSignalCheck = Inf;
 
-    %% Artifact cleaning
-    popt.run_perceive_ecg = 1;
-    popt.run_parrm = 1;
-    popt.run_parrm_ecg = 1;
+
     
     
     if 0 %% local (user-, or folder-specific) options disabled for now (subject for discussion)
