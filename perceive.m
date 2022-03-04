@@ -103,6 +103,30 @@ for a = 1:length(files)
         warning('JSON file could not be read')
     end
     
+
+    
+    infofields = perceive_data_fields('info');
+    for b = 1:length(infofields)
+        if isfield(js,infofields{b})
+            hdr.(infofields{b})=js.(infofields{b});
+        end
+    end
+    disp(js.DeviceInformation.Final.NeurostimulatorLocation)
+    
+    hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
+    hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
+    if ~isempty(js.PatientInformation.Final.Diagnosis)
+        hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
+    else
+        hdr.Diagnosis = {''};
+    end
+    
+    hdr.OriginalFile = filename;
+    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
+    hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
+    hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=upper(hdr.LeadLocation{2});
+    hdr.ElectrodeModel = strrep({hdr.LeadConfiguration.Final.Model},'LeadModelDef.','');
+
     try
         js.PatientInformation.Initial.PatientFirstName ='';
         js.PatientInformation.Initial.PatientLastName ='';
@@ -122,39 +146,12 @@ for a = 1:length(files)
         js.PatientInformation.Final.Diagnosis = '';
     end
     
-    
-    infofields = perceive_data_fields('info');
-    for b = 1:length(infofields)
-        if isfield(js,infofields{b})
-            hdr.(infofields{b})=js.(infofields{b});
-        end
-    end
-    disp(js.DeviceInformation.Final.NeurostimulatorLocation)
-    
-    hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
-    hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
-    if ~isempty(js.PatientInformation.Final.Diagnosis)
-        hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
-    else
-        hdr.Diagnosis = '';
-    end
-    
-    hdr.OriginalFile = filename;
-    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
-    hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
-    hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=upper(hdr.LeadLocation{2});
-    hdr.ElectrodeModel = strrep({hdr.LeadConfiguration.Final.Model},'LeadModelDef.','');
-    
     if ~exist('subjectIDs','var') || isempty(subjectIDs)
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
-            if ~isempty(hdr.Diagnosis)
-                diagnosis = hdr.Diagnosis(1);
-            else
-                diagnosis = 'Unknown';
-            end
-            hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') diagnosis hdr.LeadLocation];
+     
+            hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis{1} hdr.LeadLocation];
         else
-            hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
+            hdr.subject = ['sub-000' hdr.Diagnosis{1} hdr.LeadLocation];
         end
     elseif iscell(subjectIDs) && length(subjectIDs) == length(files)
         hdr.subject = subjectIDs{a};
