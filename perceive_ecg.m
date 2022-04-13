@@ -131,7 +131,7 @@ ecg.nandata(find(cbins))=nan;
 ecg.ecgbins = cbins;
 ecg.stats.pctartefact = nansum(cbins)/ns*100;
 ecg.stats.msartefact = nansum(cbins)/fs;
-ecg.stats.ecglength = length(ecg.proc.template1)/fs;
+ecg.stats.ecglength = length(ecg.proc.template2)/fs;
 %% decide on detection
 detstring = {'Unreliable or no ECG','Consistent ECG'};
 if (ecg.hr<55 || ecg.hr>120) || ecg.stats.n <= 0.5*ns/fs || (ii2-ii1)/fs > 0.075 || pdif < 20
