@@ -279,7 +279,13 @@ for a = 1:length(files)
                                 d.label = {'LFP_LEFT','STIM_LEFT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
                                 d.realtime{1} = cdt;
-                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                if length(d.time{1})>1
+                                    d.fsample = abs(1/diff(d.time{1}(1:2)));
+                                else
+                                    warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
+                                    d.fsample = 1/600; % 10*60 sec = 10 minutes
+                                end
+                                d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -309,7 +315,13 @@ for a = 1:length(files)
                                 d.label = {'LFP_RIGHT','STIM_RIGHT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
                                 d.realtime{1} = cdt;
-                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                if length(d.time{1})>1
+                                    d.fsample = abs(1/diff(d.time{1}(1:2)))
+                                else
+                                    warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
+                                    d.fsample = 1/600; % 10*60 sec = 10 minutes
+                                end
+                                ;d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
