@@ -279,7 +279,13 @@ for a = 1:length(files)
                                 d.label = {'LFP_LEFT','STIM_LEFT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
                                 d.realtime{1} = cdt;
-                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                if length(d.time{1})>1
+                                    d.fsample = abs(1/diff(d.time{1}(1:2)));
+                                else
+                                    warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
+                                    d.fsample = 1/600; % 10*60 sec = 10 minutes
+                                end
+                                d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -309,7 +315,13 @@ for a = 1:length(files)
                                 d.label = {'LFP_RIGHT','STIM_RIGHT'};
                                 d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
                                 d.realtime{1} = cdt;
-                                d.fsample = abs(1/diff(d.time{1}(1:2)));d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                if length(d.time{1})>1
+                                    d.fsample = abs(1/diff(d.time{1}(1:2)))
+                                else
+                                    warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
+                                    d.fsample = 1/600; % 10*60 sec = 10 minutes
+                                end
+                                ;d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                 d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -667,12 +679,19 @@ for a = 1:length(files)
                     fsample = data.SampleRateInHz;
                     gain=[data(:).Gain]';
                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
-                    ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                    [tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
+
+                    % ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                    ch1 = strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
                     
-                    [tmp1,tmp2] = strtok(tmp2,'_');
-                    ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                    side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-                    Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    % [tmp1,tmp2] = strtok(tmp2,'_');
+                    % ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
+                    ch2 = strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
+
+                    % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
+                    % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
+
                     d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
@@ -696,7 +715,7 @@ for a = 1:length(files)
                         
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss')), '_',num2str(c)];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
