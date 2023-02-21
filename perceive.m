@@ -158,28 +158,37 @@ for a = 1:length(files)
                 case 'Impedance'
                     
                     T=table;
+                    save_impedance=1;
                     for c = 1:length(data.Hemisphere)
                         tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
                         side = tmp{2}(1);
                         electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
                         e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
                         e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
+                        if ~ischar([data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue]) && ~ischar([data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]) 
                         imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
-                        for e = 1:length(imp)
-                            if strcmp(e1{e},'Case')
-                                T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
-                            else
-                                T.([hdr.chan '_' side e2{e}(end) e1{e}(end)]) = imp(e);
+                            for e = 1:length(imp)
+                                if strcmp(e1{e},'Case')
+                                    T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
+                                else
+                                    T.([hdr.chan '_' side e2{e}(end) e1{e}(end)]) = imp(e);
+                                end
                             end
+                        else
+                            warning('impedance values too high, not being saved...')
+                            save_impedance=0;
                         end
+ 
                     end
-                    figure
-                    barh(table2array(T(1,:))')
-                    set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
-                    xlabel('Impedance')
-                    title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
+                    if save_impedance
+                        figure
+                        barh(table2array(T(1,:))')
+                        set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
+                        xlabel('Impedance')
+                        title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
+                    end
                     
                 case 'PatientEvents'
                     disp(fieldnames(data));
@@ -475,21 +484,35 @@ for a = 1:length(files)
                     end
                     
                 case 'BrainSenseTimeDomain'
-                    
+
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
+                    fsample = data.SampleRateInHz;
                     
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
-                        GlobalSequences(c,:) = str2double(tmp{c});
+                        GlobalSequences{c,:} = str2num(tmp{c});
+                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2);
+                        nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
+                    tmp =  {data(:).TicksInMses};
+                    for c = 1:length(tmp)
+                        TicksInMses{c,:}= str2num(tmp{c});
+                        TicksInS{c,:} = (TicksInMses{c,:} - TicksInMses{c,:}(1))/1000;
+                    end
+                
                     tmp =  {data(:).GlobalPacketSizes};
                     for c = 1:length(tmp)
-                        GlobalPacketSizes(c,:) = str2double(tmp{c});
+                        GlobalPacketSizes{c,:} = str2num(tmp{c});
+                        isDataMissing(c)= logical(TicksInS{c,:}(end) >= sum(GlobalPacketSizes{c,:})/fsample);
+                        time_real{c,:} = TicksInS{c,:}(1):1/fsample:TicksInS{c,:}(end)+(GlobalPacketSizes{c,:}(end)-1)/fsample;
+                        time_real{c,:} = round(time_real{c,:},3);
                     end
                     
-                    fsample = data.SampleRateInHz;
+                
+                    
+                    
                     gain=[data(:).Gain]';
                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
                     ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
@@ -501,8 +524,43 @@ for a = 1:length(files)
                     d=[];
                     for c = 1:length(runs)
                         i=perceive_ci(runs{c},FirstPacketDateTime);
-                        try
-                            raw=[data(i).TimeDomainData]';
+                        try 
+                            x=find(ismember(i, find(isDataMissing)));
+                            if ~isempty(x)
+                                warning('missing packages detected, will interpolate to replace missing data')
+                                for k=1:numel(x)
+                                    isReceived = zeros(size(time_real{i(k),:}, 2), 1);
+                                    nPackets = numel(GlobalPacketSizes{i(k),:});
+                                    for packetId = 1:nPackets
+                                        timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
+                                        [~, packetIdx] = min(timeTicksDistance);
+                                        if isReceived(packetIdx) == 1
+                                            packetIdx = packetIdx +1;
+                                        end
+                                        isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
+                        %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
+                                    end 
+                                    data_temp = NaN(size(time_real{i(k),:}, 2), 1);
+                                    data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
+                                    ind_interp=find(diff(isReceived));
+                                    if isReceived(ind_interp(1)+1)==1
+                                        ind_interp=[1 ind_interp];
+                                        data_temp(1)=0;
+                                    end
+                                    if isReceived(ind_interp(end)+1)==0
+                                        ind_interp=[ind_interp size(data_temp,1)-1];
+                                        data_temp(end)=0;
+                                    end
+                                    for mm=1:2:numel(ind_interp/2)
+                                        data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
+                                        linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
+                                    end
+                                    raw_temp(x(k),:)=data_temp';
+                                end
+                                raw=raw_temp;
+                            else
+                                raw=[data(i).TimeDomainData]';
+                            end
                         catch unmatched_samples
                             for xi=1:length(i)
                                 sl(xi)=length(data(i(xi)).TimeDomainData);
@@ -553,6 +611,8 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                     end
+                    
+                    
                 case 'BrainSenseLfp'
               
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
@@ -669,11 +729,11 @@ for a = 1:length(files)
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
-                        GlobalSequences(c,:) = str2double(tmp{c});
+                        GlobalSequences{c,:} = str2num(tmp{c});
                     end
                     tmp =  {data(:).GlobalPacketSizes};
                     for c = 1:length(tmp)
-                        GlobalPacketSizes(c,:) = str2double(tmp{c});
+                        GlobalPacketSizes{c,:} = str2num(tmp{c});
                     end
                     
                     fsample = data.SampleRateInHz;
@@ -797,18 +857,36 @@ for a = 1:length(files)
                     
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
+                    fsample = data.SampleRateInHz;
                     
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
-                        GlobalSequences(c,:) = str2double(tmp{c});
+                        GlobalSequences{c,:} = str2num(tmp{c});
+                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2);
+                        nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
-                    tmp =  {data(:).GlobalPacketSizes};
+                    tmp =  {data(:).TicksInMses};
                     for c = 1:length(tmp)
-                        GlobalPacketSizes(c,:) = str2double(tmp{c});
+                        TicksInMses{c,:}          = str2num(tmp{c});
+                        TicksInS_temp             = (TicksInMses{c,:} - TicksInMses{c,:}(1))/1000;
+                        [TicksInS_temp,~,ci_temp] = unique(TicksInS_temp);
+                        TicksInS{c,:}             = TicksInS_temp;
+                        ci{c,:}                   = ci_temp;
                     end
                     
-                    fsample = data.SampleRateInHz;
+                    tmp =  {data(:).GlobalPacketSizes};
+                    for c = 1:length(tmp)
+                         GlobalPacketSizes_temp = str2num(tmp{c});
+                        for kk=1:max(ci{c,:})
+                            GPS_temp(kk)=sum(GlobalPacketSizes_temp(find(ci{c,:}==kk)));
+                        end
+                        GlobalPacketSizes{c,:} = GPS_temp;
+                        isDataMissing(c)       = logical(TicksInS{c,:}(end) >= sum(GlobalPacketSizes{c,:})/fsample);
+                        time_real{c,:}         = TicksInS{c,:}(1):1/fsample:TicksInS{c,:}(end)+(GlobalPacketSizes{c,:}(end)-1)/fsample;
+                        time_real{c,:}         = round(time_real{c,:},3);
+                    end
+                    
                     gain=[data(:).Gain]';
                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
                     ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
@@ -827,7 +905,59 @@ for a = 1:length(files)
                         d.hdr.IS.GlobalSequences=GlobalSequences(i,:);
                         d.hdr.IS.GlobalPacketSizes=GlobalPacketSizes(i,:);
                         d.hdr.IS.FirstPacketDateTime = runs{c};
-                        tmp =  [data(i).TimeDomainData]';
+                        x=find(ismember(i, find(isDataMissing)));
+                        if ~isempty(x)
+                            warning('missing packages detected, will interpolate to replace missing data')
+                            for k=1:numel(x)
+                                isReceived = zeros(size(time_real{i(k),:}, 2), 1);
+                                nPackets = numel(GlobalPacketSizes{i(k),:});
+                                for packetId = 1:nPackets
+                                    timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
+                                    [~, packetIdx] = min(timeTicksDistance);
+                                    if isReceived(packetIdx) == 1
+                                        packetIdx = packetIdx +1;
+                                    end
+%                                     if packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1>size(isReceived,1)
+%                                         cut_sampl=size(isReceived,1)-packetIdx+GlobalPacketSizes{i(k),:}(packetId);
+%                                         isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl)+1;
+%                                     else
+                                        isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
+                        %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
+%                                     end
+                                end 
+                                
+                                %If there are pseudo double-received samples, compensate non-received samples
+%                                 numel(find(logical(isReceived)))+nDoubles
+                                doublesIdx = find(isReceived == 2);
+                                nDoubles = numel(doublesIdx);
+                                for doubleId = 1:nDoubles
+                                    missingIdx = find(isReceived == 0);
+                                    [~, idxOfidx] = min(abs(missingIdx - doublesIdx(doubleId)));
+                                    isReceived(missingIdx(idxOfidx)) = 1; 
+                                    isReceived(doublesIdx(doubleId)) = 1;
+                                end
+
+                                data_temp = NaN(size(time_real{i(k),:}, 2), 1);
+                                data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
+                                ind_interp=find(diff(isReceived));
+                                if isReceived(ind_interp(1)+1)==1
+                                    ind_interp=[1 ind_interp];
+                                    data_temp(1)=0;
+                                end
+                                if isReceived(ind_interp(end)+1)==0
+                                    ind_interp=[ind_interp size(data_temp,1)-1];
+                                    data_temp(end)=0;
+                                end
+                                for mm=1:2:numel(ind_interp/2)
+                                    data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
+                                    linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
+                                end
+                                raw_temp(x(k),:)=data_temp';
+                            end
+                            tmp=raw_temp;
+                        else
+                            tmp=[data(i).TimeDomainData]';
+                        end   
                         xchans = perceive_ci({'L_03','L_13','L_02','R_03','R_13','R_02'},Channel(i));
                         nchans = {'L_01','L_12','L_23','R_01','R_12','R_23'};
                         refraw = [tmp(xchans(1),:)-tmp(xchans(2),:);(tmp(xchans(1),:)-tmp(xchans(2),:))-tmp(xchans(3),:);tmp(xchans(3),:)-tmp(xchans(1),:);
@@ -850,6 +980,8 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                     end
                     
+                    
+                    
                 case 'CalibrationTests'
                     
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
@@ -857,11 +989,11 @@ for a = 1:length(files)
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
-                        GlobalSequences(c,:) = str2double(tmp{c});
+                        GlobalSequences{c,:} = str2num(tmp{c});
                     end
                     tmp =  {data(:).GlobalPacketSizes};
                     for c = 1:length(tmp)
-                        GlobalPacketSizes(c,:) = str2double(tmp{c});
+                        GlobalPacketSizes{c,:} = str2num(tmp{c});
                     end
                   
                     figure
@@ -927,11 +1059,11 @@ for a = 1:length(files)
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
                     for c = 1:length(tmp)
-                        GlobalSequences(c,:) = str2double(tmp{c});
+                        GlobalSequences{c,:} = str2num(tmp{c});
                     end
                     tmp =  {data(:).GlobalPacketSizes};
                     for c = 1:length(tmp)
-                        GlobalPacketSizes(c,:) = str2double(tmp{c});
+                        GlobalPacketSizes{c,:} = str2num(tmp{c});
                     end
                     raw = [data(:).TimeDomainData]';
                     fsample = data.SampleRateInHz;
@@ -1013,7 +1145,7 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 250
+           if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
             figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
             subplot(2,2,1)
             yyaxis left
@@ -1028,6 +1160,7 @@ for a = 1:length(files)
                 error('neither Left nor Right TherapySnapshot present');
             end
             hold on
+                
             [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
             mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
             yyaxis right
@@ -1044,6 +1177,7 @@ for a = 1:length(files)
             xlabel('F')
             ylabel('P')
             xlim([3 40])
+
 
             axes('Position',[.16 .8 .1 .1])
             box off
