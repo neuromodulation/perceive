@@ -1,6 +1,9 @@
 function perceive(files,subjectIDs,datafields)
 % https://github.com/neuromodulation/perceive
-% v0.1 Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser
+% Toolbox by Wolf-Julian Neumann
+% v1.0 update by J Vanhoecke
+% Merge requests from Jennifer Behnke and Mansoureh Fahimi
+% Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser
 % This is an open research tool that is not intended for clinical purposes.
 
 %% INPUT
@@ -261,7 +264,7 @@ for a = 1:length(files)
                             end
                         end
                         legend(strrep(channels(il),'_',' '))
-                        savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
+                        %savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
                         
                     end
@@ -402,7 +405,7 @@ for a = 1:length(files)
                         title('RIGHT')
                         xlabel('Time')
                         ylabel('STIM Amplitude')
-                        savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
+                        %savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
                         perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
 
                     end
@@ -471,7 +474,7 @@ for a = 1:length(files)
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
                                 xlabel('Frequency [Hz]')
                                 ylabel('Power spectral density [uV�/Hz]')
-                                savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
+                                %savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
                             else
                                % keyboard
@@ -603,7 +606,7 @@ for a = 1:length(files)
                             d.ecg{e} = perceive_ecg(raw(e,:));
                             title(strrep(d.label{e},'_',' '))
                             xlabel(strrep(d.fname,'_',' '))
-                            savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
+                            %savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
                             perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
                             d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;                 
                         end
@@ -704,7 +707,7 @@ for a = 1:length(files)
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
                         
-                        savefig(fullfile(hdr.fpath,[d.fname '.fig']))
+                        %savefig(fullfile(hdr.fpath,[d.fname '.fig']))
                         perceive_print(fullfile(hdr.fpath,[d.fname]))
                         
                         
@@ -848,8 +851,8 @@ for a = 1:length(files)
                         end
                     end
                     legend(strrep(channels(il),'_',' '))
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
-                    pause(2)
+                    %savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
+                    %pause(2)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey']))
          
                     
@@ -1016,7 +1019,7 @@ for a = 1:length(files)
                     set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
                     xlabel('Time [s]')
                     title(strrep({hdr.subject,hdr.session,'All CalibrationTests'},'_',' '))
-                    savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
+                    %savefig(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests.fig']))
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-AllCalibrationTests']))
          
                     
@@ -1109,8 +1112,8 @@ for a = 1:length(files)
         end
     end
     
-    nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
-    copyfile(files{a},nfile)
+    %nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
+    %copyfile(files{a},nfile)
     
     
     
@@ -1255,7 +1258,7 @@ for a = 1:length(files)
         else
            perceive_plot_raw_signals(data);
            perceive_print(fullname);
-           savefig([fullname '.fig'])
+           %savefig([fullname '.fig'])
             % close the figure if should not be kept open
             if isfield(data,'keepfig')
                 if ~data.keepfig
@@ -1267,7 +1270,9 @@ for a = 1:length(files)
     end
     close all
     
-    hdr.DeviceInformation.Final.NeurostimulatorLocation
+    hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
+
+    disp('all done!')
 end
 
 
