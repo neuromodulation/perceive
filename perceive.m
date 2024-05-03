@@ -258,7 +258,7 @@ for a = 1:length(files)
                             end
                         end
                         xlabel('Frequency [Hz]')
-                        ylabel('Power spectral density [uV�/Hz]')
+                        ylabel('Power spectral density [uV^2/Hz]')
                         title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
                         legend(strrep(channels(ir),'_',' '))
                         il = perceive_ci([hdr.chan '_L'],channels);
@@ -271,7 +271,7 @@ for a = 1:length(files)
                         title(strrep({'MostRecentSignalCheck',hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
                         plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                         xlabel('Frequency [Hz]')
-                        ylabel('Power spectral density [uV�/Hz]')
+                        ylabel('Power spectral density [uV^2/Hz]')
                         for c = 1:length(il)
                             if peaks(il(c),1)>0
                                 text(peaks(il(c),1),peaks(il(c),2),[' ' num2str(peaks(il(c),1),3) ' Hz'])
@@ -487,7 +487,7 @@ for a = 1:length(files)
                                 legend(strrep(chanlabels{c},'_',' '))
                                 title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
                                 xlabel('Frequency [Hz]')
-                                ylabel('Power spectral density [uV�/Hz]')
+                                ylabel('Power spectral density [uV^2/Hz]')
                                 %savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
                                 perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
                             else
@@ -845,7 +845,7 @@ for a = 1:length(files)
                         end
                     end
                     xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV�/Hz]')
+                    ylabel('Power spectral density [uV^2/Hz]')
                     title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
                     legend(strrep(channels(ir),'_',' '))
                     il = perceive_ci([hdr.chan '_L'],channels);
@@ -858,7 +858,7 @@ for a = 1:length(files)
                     title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
                     plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                     xlabel('Frequency [Hz]')
-                    ylabel('Power spectral density [uV�/Hz]')
+                    ylabel('Power spectral density [uV^2/Hz]')
                     for c = 1:length(il)
                         if peaks(il(c),1)>0
                             text(peaks(il(c),1),peaks(il(c),2),[' ' num2str(peaks(il(c),1),3) ' Hz'])
