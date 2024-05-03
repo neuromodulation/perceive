@@ -1,4 +1,4 @@
-function perceive(files,subjectIDs,datafields)
+function perceive(files,sub)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
@@ -7,7 +7,8 @@ function perceive(files,subjectIDs,datafields)
 % This is an open research tool that is not intended for clinical purposes.
 
 %% INPUT
-
+arguments
+    files {mustBeA(files,["char","cell"])} = '';
 % files:
 % All input is optional, you can specify files as cell or character array
 % (e.g. files = 'Report_Json_Session_Report_20200115T123657.json')
@@ -15,14 +16,18 @@ function perceive(files,subjectIDs,datafields)
 % all files in the current working directory
 % if no files in the current working directory are found, a you can choose
 % files via the MATLAB uigetdir window.
-%
-% subjectIDs:
+    sub {mustBeA(sub,["char","cell","numeric"])} = '';
+% sub:
 % you can specify a subject ID for each file in case you want to follow an
 % IRB approved naming scheme for file export
-% (e.g. run
-% perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
+% (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
 % if unspecified or left empy, the subjectID will be created from
 % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
+    
+end
+
+%
+
 
 
 %% OUTPUT
@@ -74,8 +79,17 @@ end
 if ischar(files)
     files = {files};
 end
-if exist('subjectIDs','var') && ischar(subjectIDs)
-    subjectIDs={subjectIDs};
+if exist('sub','var')
+    if isnumeric(sub)
+        sub=num2str(sub);
+    end
+    if ischar(sub)
+        if length(sub) == sum(isstrprop(sub,'digit'))
+            sub=pad(sub,3,'left','0');
+            sub=['sub-' sub];
+        end
+            sub={sub};
+    end
 end
 
 
@@ -125,16 +139,16 @@ for a = 1:length(files)
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     
-    if ~exist('subjectIDs','var')
+    if ~exist('sub','var') | isempty(sub{1})
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
         else
             hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
         end
-    elseif iscell(subjectIDs) && length(subjectIDs) == length(files)
-        hdr.subject = subjectIDs{a};
-    elseif length(subjectIDs) == 1
-        hdr.subject = subjectIDs{1};
+    elseif iscell(sub) && length(sub) == length(files)
+        hdr.subject = sub{a};
+    elseif length(sub) == 1
+        hdr.subject = sub{1};
     end
     hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     
