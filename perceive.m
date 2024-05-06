@@ -102,6 +102,12 @@ end
 %% create session
 ses = ['ses-', sesFu99m, sesMedOffOn01];
 
+%% create task
+task = 'task-TASK';
+%% create run / mod / acq
+run = 0;
+mod = '';
+acq = '';
 %% iterate over files
 for a = 1:length(files)
     filename = files{a};
@@ -169,7 +175,7 @@ for a = 1:length(files)
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
-    hdr.fname = [hdr.subject '_' hdr.session];
+    hdr.fname = [hdr.subject '_' hdr.session '_' task];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
@@ -184,9 +190,12 @@ for a = 1:length(files)
             if isempty(data)
                 continue
             end
+            mod='';
+            run=1;
+
             switch datafields{b}
                 case 'Impedance'
-                    
+                    mod = 'mod-Impedance';
                     T=table;
                     save_impedance=1;
                     for c = 1:length(data.Hemisphere)
@@ -216,14 +225,15 @@ for a = 1:length(files)
                         set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
                         xlabel('Impedance')
                         title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
-                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-Impedance']))
-                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-Impedance.csv']));
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod '.csv']));
                     end
                     
                 case 'PatientEvents'
                     disp(fieldnames(data));
                     
                 case 'MostRecentInSessionSignalCheck'
+                    mod = 'mod-MostRecentSignalCheck';
                     if ~isempty(data)
                         channels={};
                         pow=[];rpow=[];lfit=[];bad=[];peaks=[];
@@ -252,9 +262,9 @@ for a = 1:length(files)
                         end
                         
                         T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
-                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheckPowerSpectra.csv']));
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod 'PowerSpectra.csv']));
                         T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
-                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck_Peaks.csv']));
+                        writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod 'Peaks.csv']));
                         
                         figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                         ir = perceive_ci([hdr.chan '_R'],channels);
@@ -292,10 +302,11 @@ for a = 1:length(files)
                         end
                         legend(strrep(channels(il),'_',' '))
                         %savefig(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck.fig']))
-                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-MostRecentSignalCheck']))
+                        perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
                         
                     end
                 case 'DiagnosticData'
+                    
                     if isfield(data,'LFPTrendLogs')
                           LFPL=[];STIML=[];DTL=datetime([],[],[]);
                             LFPR=[];STIMR=[];DTR=datetime([],[],[]);
@@ -326,7 +337,9 @@ for a = 1:length(files)
                                 end
                                 d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
-                                d.fname = [hdr.fname '_run-ChronicLeft' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                mod= 'mod-ChronicLeft';
+                                d.fname = [hdr.fname '_' mod];
+                                d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
@@ -360,9 +373,11 @@ for a = 1:length(files)
                                     warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
                                     d.fsample = 1/600; % 10*60 sec = 10 minutes
                                 end
-                                ;d.hdr.Fs = d.fsample; d.hdr.label = d.label;
+                                d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                 firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
-                                d.fname = [hdr.fname '_run-ChronicRight' char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
+                                mod = 'mod-ChronicRight';
+                                d.fname = [hdr.fname '_' mod];
+                                d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                 d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
                                 alldata{length(alldata)+1} = d;
                             end
@@ -405,8 +420,10 @@ for a = 1:length(files)
                         d.fsample = diff(DT);
                         firstsample = d.time{1}(1);
                         lastsample = d.time{1}(end);
-                        d.sampleinfo(1,:) = [firstsample lastsample];                      
-                        d.fname = [hdr.fname '_run-CHRONIC' char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
+                        d.sampleinfo(1,:) = [firstsample lastsample];
+                        mod = 'mod-Chronic';
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
                         % TODO: set if needed::
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -623,7 +640,9 @@ for a = 1:length(files)
                             keyboard
                         end
                         d.trialinfo(1) = c;
-                        d.fname = [hdr.fname '_run-BSTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        mod = 'mod-BSTD';
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
                       
@@ -700,8 +719,9 @@ for a = 1:length(files)
                         d.trialinfo(1) = c;
                         d.hdr.realtime = d.realtime;
                         
-                        
-                        d.fname = [hdr.fname '_run-BSL' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        mod = 'mod-BSL';
+                        d.fname = [hdr.fname '_' mod ];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         
                         subplot(2,1,1)
                         yyaxis left
@@ -749,7 +769,8 @@ for a = 1:length(files)
                         end
                     end
                     
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseLFP.csv']))
+                    mod = 'mod-BrainsenseLFP';
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod '.csv']))
                     
                 case 'LfpMontageTimeDomain'
                     
@@ -805,7 +826,9 @@ for a = 1:length(files)
                         
                         d.hdr.label = d.label;
                         d.hdr.Fs = d.fsample;
-                        d.fname = [hdr.fname '_run-LMTD' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                        mod = 'mod-LMTD';
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss')), '_',num2str(c)];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -839,9 +862,10 @@ for a = 1:length(files)
                     end
                     
                     T=array2table([freq';pow;rpow;lfit]','VariableNames',[{'Frequency'};strcat({'POW'},channels');strcat({'RPOW'},channels');strcat({'LFIT'},channels')]);
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurveyPowerSpectra.csv']));
+                    mod = 'mod-BrainSenseSurveyBip';
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod 'PowerSpectra.csv']));
                     T=array2table(peaks','VariableNames',channels,'RowNames',{'PeakFrequency','PeakPower'});
-                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey_Peaks.csv']));
+                    writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod 'Peaks.csv']));
                     
                     figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                     ir = perceive_ci([hdr.chan '_R'],channels);
@@ -880,7 +904,7 @@ for a = 1:length(files)
                     legend(strrep(channels(il),'_',' '))
                     %savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
                     %pause(2)
-                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey']))
+                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
          
                     
                 case 'IndefiniteStreaming'
@@ -1003,8 +1027,9 @@ for a = 1:length(files)
                         d.trialinfo(1) = c;
                         d.hdr.label=d.label;
                         d.hdr.Fs = d.fsample;
-                        
-                        d.fname = [hdr.fname '_run-IS' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        mod = 'mod-ISRing';
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -1144,7 +1169,7 @@ for a = 1:length(files)
     
     
     
-    
+    %% save all data
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
         data=alldata{b};
@@ -1153,12 +1178,18 @@ for a = 1:length(files)
             data=rmfield(data,'keepfig');
         end
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
+        run = 1;
+        fullname = [fullname '_run-' num2str(run)];
+        while isfile(fullname)
+            run = run+1;
+            fullname = [fullname(1:end-1) num2str(run)];
+        end
         save([fullname '.mat'],'data');
         % restore the data (incl. the optional 'keepfig' field)
         data=alldata{b};
         if regexp(data.fname,'BSTD')
             fulldata = data;
-            fulldata.fname = strrep(data.fname,'BSTD','BrainSense');
+            fulldata.fname = strrep(data.fname,'BSTD','BrainSenseBip');
             bslfile = strrep(fullname,'BSTD','BSL');
              
             try
