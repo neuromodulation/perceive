@@ -84,18 +84,8 @@ end
 if ischar(files)
     files = {files};
 end
-if exist('sub','var')
-    if isnumeric(sub)
-        sub=num2str(sub);
-    end
-    if ischar(sub)
-        if length(sub) == sum(isstrprop(sub,'digit'))
-            sub=pad(sub,3,'left','0');
-            sub=['sub-' sub];
-        end
-            sub={sub};
-    end
-end
+
+%% create subject
 if exist('sub','var')
     if isnumeric(sub)
         sub=num2str(sub);
@@ -109,7 +99,10 @@ if exist('sub','var')
     end
 end
 
+%% create session
+ses = ['ses-', sesFu99m, sesMedOffOn01];
 
+%% iterate over files
 for a = 1:length(files)
     filename = files{a};
     disp(['RUNNING ' filename])
@@ -167,8 +160,11 @@ for a = 1:length(files)
     elseif length(sub) == 1
         hdr.subject = sub{1};
     end
-    hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
-    
+    if isempty(ses)
+        hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+    else
+        hdr.session = ses;
+    end
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
