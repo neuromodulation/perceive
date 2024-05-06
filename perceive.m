@@ -1,10 +1,16 @@
-function perceive(files,sub)
+function perceive(files, sub, sesFu99m, sesMedOffOn01)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
 % Merge requests from Jennifer Behnke and Mansoureh Fahimi
 % Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser
 % This is an open research tool that is not intended for clinical purposes.
+%
+% INPUT:
+% file          ["", 'Report_Json_Session_Report_20200115T123657.json', {'Report_Json_Session_Report_20200115T123657.json','Report_Json_Session_Report_20200115T123658.json'}, ...]
+% sub           ["", 7, 21 , "021", ... ]
+% sesFu99m      ["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"]
+% sesMedOffOn01 ["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"]
 
 %% INPUT
 arguments
@@ -21,14 +27,15 @@ arguments
 % you can specify a subject ID for each file in case you want to follow an
 % IRB approved naming scheme for file export
 % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
-% if unspecified or left empy, the subjectID will be created from
+% if unspecified or left empy, the subjectID will be created from:
 % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    
+    sesFu99m {mustBeMember(sesFu99m,["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"])} = ''; %Postop Fu3m Fu12m
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
+    %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
+    %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB
+    %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
+    %run = ''; %numeric
 end
-
-%
-
-
 
 %% OUTPUT
 % The script generates BIDS inspired subject and session folders with the
@@ -38,18 +45,16 @@ end
 % python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
 
 %% Recording type output naming
-% Each of the FieldTrip data files correspond to a specific aspect of the
-% Recording session:
+% Each of the FieldTrip data files correspond to a specific aspect of the Recording session:
 % LMTD = LFP Montage Time Domain - BrainSenseSurvey
 % IS = Indefinite Streaming - BrainSenseStreaming
 % CT = Calibration Testing - Calibration Tests
 % BSL = BrainSense LFP (2 Hz power average + stimulation settings)
-% BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL
-% file)
+% BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL file)
 
 %% TODO:
-% ADD DEIDENTIFICATION OF COPIED JSON
-% BUG FIX UTC?
+% ADD DEIDENTIFICATION OF COPIED JSON -> remove copied json, OK
+% BUG FIX UTC? -> yes
 % ADD BATTERY DRAIN
 % ADD BSL data to BSTD ephys file
 % ADD PATIENT SNAPSHOT EVENT READINGS
@@ -78,6 +83,18 @@ end
 
 if ischar(files)
     files = {files};
+end
+if exist('sub','var')
+    if isnumeric(sub)
+        sub=num2str(sub);
+    end
+    if ischar(sub)
+        if length(sub) == sum(isstrprop(sub,'digit'))
+            sub=pad(sub,3,'left','0');
+            sub=['sub-' sub];
+        end
+            sub={sub};
+    end
 end
 if exist('sub','var')
     if isnumeric(sub)
@@ -126,8 +143,8 @@ for a = 1:length(files)
     end
     disp(js.DeviceInformation.Final.NeurostimulatorLocation)
     
-    hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' '));
-    hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' '));
+    hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' ')); %To Do
+    hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' ')); %To Do
     if ~isempty(js.PatientInformation.Final.Diagnosis)
         hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
     else
@@ -135,7 +152,7 @@ for a = 1:length(files)
     end
         
     hdr.OriginalFile = filename;
-    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-');
+    hdr.ImplantDate = strrep(strrep(js.DeviceInformation.Final.ImplantDate(1:end-1),'T','_'),':','-'); %To Do
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     
@@ -1287,6 +1304,11 @@ for a = 1:length(files)
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
 
     disp('all done!')
+end
+end
+
+function acq=check_stim(config)
+    acq='StimOff';
 end
 
 
