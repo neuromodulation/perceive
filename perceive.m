@@ -107,7 +107,7 @@ task = 'task-TASK';
 %% create run / mod / acq
 run = 0;
 mod = '';
-acq = '';
+acq = 'acq-StimOff';
 %% iterate over files
 for a = 1:length(files)
     filename = files{a};
@@ -175,7 +175,7 @@ for a = 1:length(files)
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
-    hdr.fname = [hdr.subject '_' hdr.session '_' task];
+    hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
     hdr.js = js;
@@ -1180,7 +1180,7 @@ for a = 1:length(files)
         disp(['WRITING ' fullname '.mat as FieldTrip file.'])
         run = 1;
         fullname = [fullname '_run-' num2str(run)];
-        while isfile(fullname)
+        while isfile([fullname '.mat'])
             run = run+1;
             fullname = [fullname(1:end-1) num2str(run)];
         end
@@ -1207,99 +1207,99 @@ for a = 1:length(files)
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
            if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
-            figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
-            subplot(2,2,1)
-            yyaxis left
-            plot(fulldata.time{1},fulldata.trial{1}(1,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                subplot(2,2,1)
+                yyaxis left
+                plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                ylabel('Raw amplitude')
+                if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
                 pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
-            hold on
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                else
+                    error('neither Left nor Right TherapySnapshot present');
+                end
+                hold on
+                    
+                [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
+                mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                yyaxis right
+                ylabel('LFP and STIM amplitude')
+                plot(fulldata.time{1},fulldata.trial{1}(3,:))
+                xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                hold on
+                plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
+                plot(t,mpow.*1000)
+                title(strrep({fulldata.fname,fulldata.label{3},fulldata.label{5}},'_',' '))
+                axes('Position',[.34 .8 .1 .1])
+                box off
+                plot(f,nanmean(log(tf),2))
+                xlabel('F')
+                ylabel('P')
+                xlim([3 40])
+    
+    
+                axes('Position',[.16 .8 .1 .1])
+                box off
+                plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                xlabel('T'),ylabel('A')
+                xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
+                xlim([xx xx+1.5])
+               
+    
+                subplot(2,2,3)
+                imagesc(t,f,log(tf)),axis xy, 
+                xlabel('Time [s]')
+                ylabel('Frequency [Hz]')
+            
                 
-            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
-            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-            yyaxis right
-            ylabel('LFP and STIM amplitude')
-            plot(fulldata.time{1},fulldata.trial{1}(3,:))
-            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-            hold on
-            plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
-            plot(t,mpow.*1000)
-            title(strrep({fulldata.fname,fulldata.label{3},fulldata.label{5}},'_',' '))
-            axes('Position',[.34 .8 .1 .1])
-            box off
-            plot(f,nanmean(log(tf),2))
-            xlabel('F')
-            ylabel('P')
-            xlim([3 40])
-
-
-            axes('Position',[.16 .8 .1 .1])
-            box off
-            plot(fulldata.time{1},fulldata.trial{1}(1,:))
-            xlabel('T'),ylabel('A')
-            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
-            xlim([xx xx+1.5])
-           
-
-            subplot(2,2,3)
-            imagesc(t,f,log(tf)),axis xy, 
-            xlabel('Time [s]')
-            ylabel('Frequency [Hz]')
-        
-            
-            subplot(2,2,2)
-            yyaxis left
-            plot(fulldata.time{1},fulldata.trial{1}(2,:))
-            ylabel('Raw amplitude')
-            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-            else
-                error('neither Left nor Right TherapySnapshot present');
-            end
-            hold on
-            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
-            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-            yyaxis right
-            ylabel('LFP and STIM amplitude')
-            plot(fulldata.time{1},fulldata.trial{1}(4,:))
-            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-            hold on
-            plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
-            plot(t,mpow.*1000)
-            title(strrep({fulldata.label{4},fulldata.label{6}},'_',' '))
-            
-            axes('Position',[.78 .8 .1 .1])
-            box off
-            plot(f,nanmean(log(tf),2))
-            xlim([3 40])
-            xlabel('F')
-            ylabel('P')
-            
-            axes('Position',[.6 .8 .1 .1])
-            box off
-            plot(fulldata.time{1},fulldata.trial{1}(2,:))
-            xlabel('T'),ylabel('A')
-             xlim([xx xx+1.5])
-           
-            
-            subplot(2,2,4)
-            imagesc(t,f,log(tf)),axis xy, 
-            xlabel('Time [s]')
-            ylabel('Frequency [Hz]')
-           else
-            disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-            disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
-            disp('Please, review it.');
-            keyboard
+                subplot(2,2,2)
+                yyaxis left
+                plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                ylabel('Raw amplitude')
+                if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                    pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                else
+                    error('neither Left nor Right TherapySnapshot present');
+                end
+                hold on
+                [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
+                mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                yyaxis right
+                ylabel('LFP and STIM amplitude')
+                plot(fulldata.time{1},fulldata.trial{1}(4,:))
+                xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                hold on
+                plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
+                plot(t,mpow.*1000)
+                title(strrep({fulldata.label{4},fulldata.label{6}},'_',' '))
+                
+                axes('Position',[.78 .8 .1 .1])
+                box off
+                plot(f,nanmean(log(tf),2))
+                xlim([3 40])
+                xlabel('F')
+                ylabel('P')
+                
+                axes('Position',[.6 .8 .1 .1])
+                box off
+                plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                xlabel('T'),ylabel('A')
+                 xlim([xx xx+1.5])
+               
+                
+                subplot(2,2,4)
+                imagesc(t,f,log(tf)),axis xy, 
+                xlabel('Time [s]')
+                ylabel('Frequency [Hz]')
+               else
+                disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
+                disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
+                disp('Please, review it.');
+                keyboard
            end
 
             fullname = fullfile('.',hdr.fpath,fulldata.fname);
@@ -1312,6 +1312,12 @@ for a = 1:length(files)
                 fulldata=rmfield(fulldata,'keepfig');
             end
             data=fulldata;
+            run = 1;
+            fullname = [fullname '_run-' num2str(run)];
+            while isfile([fullname '.mat'])
+                run = run+1;
+                fullname = [fullname(1:end-1) num2str(run)];
+            end
             save([fullname '.mat'],'data')
         else
            perceive_plot_raw_signals(data);
