@@ -9,6 +9,16 @@ end
 if ~exist(fold,'dir')
     mkdir(fold);
 end
+if ~endsWith(file, '-1') && ~contains(file, 'run')
+    file = [file '-1'];
+end
+while isfile(fullfile(fold,[file '.' mode]))
+    if isstrprop(file(end),'digit')
+        file(end)=num2str(str2num(file(end))+1);
+    else
+        file = [file '-1'];
+    end
+end
 
 switch mode
     case 'png'
