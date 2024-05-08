@@ -200,6 +200,7 @@ for a = 1:length(files)
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
+    
     for b = 1:length(datafields)
         if isfield(js,datafields{b})
             data = js.(datafields{b});
@@ -208,7 +209,6 @@ for a = 1:length(files)
             end
             mod='';
             run=1;
-
             switch datafields{b}
                 case 'Impedance'
                     if extended
@@ -682,7 +682,7 @@ for a = 1:length(files)
                     
                     
                 case 'BrainSenseLfp'
-              
+                    counterBSL=  0;
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
@@ -739,8 +739,10 @@ for a = 1:length(files)
                         d.hdr.realtime = d.realtime;
                         
                         %% set the name for BSL and STIM
+                        counterBSL=  counterBSL+1;
                         mod = 'mod-BSL';
                         d.fname = [hdr.fname '_' mod ];
+                        d.fname = strrep(d.fname,'task-Rest',['task-TASK' num2str(counterBSL)]);
                         if contains(d.label(3),'STIM_L')
                             LAmp=d.trial{1}(3,:);
                         elseif contains(d.label(4),'STIM_L')
@@ -1219,15 +1221,15 @@ for a = 1:length(files)
             data.fname = strrep(data.fname,'BSTD','BrainSenseBip');
             data.fname = strrep(data.fname,'task-Rest',['task-TASK' num2str(counterBrainSense)]);
             fulldata = data;
-            bslfile = strrep(fullname,'BSTD','BSL');
-             
-            try
-                bsl=load(bslfile);
-            catch
-                   [x,x,bslfile] = perceive_ffind([bslfile(1:end-3) '*.mat']);
-                   bslfile = bslfile{1}; 
-                   bsl=load(bslfile);
-            end
+
+            [folder,~,~]=fileparts(fullname);
+            [~,~,list_of_BSLfiles]=perceive_ffind([folder, filesep, '*BSL','*.mat']);
+
+            bsl=load(list_of_BSLfiles{counterBrainSense});
+            
+            if ~isequal(bsl.data.hdr.SessionDate, data.hdr.SessionDate)
+            warning('BSL file could not be matched BSTD data to create BrainSense.')
+            else
             fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
             fulldata.label(3:6) = bsl.data.label;
             fulldata.time{1}=fulldata.time{1};
@@ -1235,7 +1237,7 @@ for a = 1:length(files)
             for c =1:4
                 fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
             end
-           if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
+            if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
                 figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                 subplot(2,2,1)
                 yyaxis left
@@ -1306,7 +1308,7 @@ for a = 1:length(files)
                 plot(t,mpow.*1000)
                 %% determine StimOff or StimOn
                 
-                acq=regexp(bslfile,'Stim.*(?=_mod)','match');
+                acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match');
                 fulldata.fname = strrep(fulldata.fname,'StimOff',acq{1});
                 title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
                 %%
@@ -1357,6 +1359,7 @@ for a = 1:length(files)
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data')
             MetaT= metadata_to_table(MetaT,data);
+            end
         %% no BSTD, so save the data
         else
 
