@@ -1316,7 +1316,7 @@ for a = 1:length(files)
                 xlabel('Time [s]')
                 ylabel('Frequency [Hz]')
 
-                perceive_print(fulldata.fname)
+                perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
            else
                 disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
                 disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
@@ -1343,6 +1343,18 @@ for a = 1:length(files)
             save([fullname '.mat'],'data')
         %% no BSTD, so save the data
         else
+
+            %% create plot for LMTD and change name
+            if contains(fullname,'LMTD') || any(extended)
+               fullname = strrep(fullname,'task-Rest','task-TASK');
+               data.fname = strrep(data.fname,'task-Rest','task-TASK');
+               mod_ext=check_mod_ext(data.label);
+               fullname = strrep(fullname,'mod-LMTD',['mod_LMTD' mod_ext]);
+               data.fname = strrep(data.fname,'mod-LMTD',['mod_LMTD' mod_ext]);
+               perceive_plot_raw_signals(data); % for LMTD
+               perceive_print(fullname);
+            end
+
             run = 1;
             fullname = [fullname '_run-' num2str(run)];
             while isfile([fullname '.mat'])
@@ -1352,11 +1364,7 @@ for a = 1:length(files)
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data');
             
-            %% create plot for LMTD
-            if contains(fullname,'LMTD') || any(extended)
-               perceive_plot_raw_signals(data); % for LMTD
-               perceive_print(fullname);
-            end
+            
            %savefig([fullname '.fig'])
             % close the figure if should not be kept open
             if isfield(data,'keepfig')
@@ -1388,5 +1396,23 @@ function acq=check_stim(LAmp, RAmp)
         acq='StimOnR';
     else
         acq='StimOff';
+    end
+end
+
+function mod_ext=check_mod_ext(labels)
+    if sum(contains(labels,'LEFT_RING'))==6
+        mod_ext = 'RingL';
+    elseif sum(contains(labels,'LEFT_SEGMENT'))==6
+        mod_ext = 'SegmIntraL';
+    elseif sum(contains(labels,'LEFT_SEGMENT'))==3
+        mod_ext = 'SegmInterL';
+    elseif sum(contains(labels,'RIGHT_RING'))==6
+        mod_ext = 'RingR';
+    elseif sum(contains(labels,'RIGHT_SEGMENT'))==6
+        mod_ext = 'SegmIntraR';
+    elseif sum(contains(labels,'RIGHT_SEGMENT'))==3
+        mod_ext = 'SegmInterR';
+    else
+        mod_ext = 'Unknown';
     end
 end
