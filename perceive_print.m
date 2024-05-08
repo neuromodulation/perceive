@@ -9,8 +9,10 @@ end
 if ~exist(fold,'dir')
     mkdir(fold);
 end
-if ~endsWith(file, '-1') && ~contains(file, 'run')
-    file = [file '-1'];
+if ~contains(file, 'run')
+    if ~endsWith(file, '-1')
+        file = [file '-1'];
+    end
 end
 while isfile(fullfile(fold,[file '.' mode]))
     if isstrprop(file(end),'digit')

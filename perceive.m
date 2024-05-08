@@ -1,4 +1,4 @@
-function perceive(files, sub, sesMedOffOn01,extended)
+function perceive(files, sub, sesMedOffOn01, extended)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
@@ -9,9 +9,8 @@ function perceive(files, sub, sesMedOffOn01,extended)
 % INPUT:
 % file          ["", 'Report_Json_Session_Report_20200115T123657.json', {'Report_Json_Session_Report_20200115T123657.json','Report_Json_Session_Report_20200115T123658.json'}, ...]
 % sub           ["", 7, 21 , "021", ... ]
-% sesFu99m      ["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"]
 % sesMedOffOn01 ["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"]
-
+% extended      ["","yes"] %% gives an extensive output of chronic, calibration, lastsignalcheck, diagnostic, impedance and snapshot data
 %% INPUT
 arguments
     files {mustBeA(files,["char","cell"])} = '';
@@ -29,7 +28,6 @@ arguments
 % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
 % if unspecified or left empy, the subjectID will be created from:
 % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    %sesFu99m {mustBeMember(sesFu99m,["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"])} = ''; %Postop Fu3m Fu12m
     sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB
@@ -169,8 +167,11 @@ for a = 1:length(files)
         hdr.subject = sub{1};
     end
     %% preset session
-    tt=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'))
-    diffmonths=num2str(abs(calmonths(tt)));
+    diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
+    diffmonths=abs(calmonths(diffmonths));
+    presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
+    diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
+    diffmonths=num2str(diffmonths);
     %% create session
     ses = ['ses-', 'Fu' pad(diffmonths,2,'left','0'), 'm' , sesMedOffOn01];
 
@@ -192,10 +193,6 @@ for a = 1:length(files)
     hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
-
-    
-
-    
 
     hdr.js = js;
     if ~exist('datafields','var')
@@ -550,11 +547,8 @@ for a = 1:length(files)
                                 end
                             end
                             writetable(Tpow,fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']))
-                       
-                            
                         end
                     end
-                    
                 case 'BrainSenseTimeDomain'
 
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
@@ -1205,7 +1199,7 @@ for a = 1:length(files)
     %nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
     %copyfile(files{a},nfile)
     
-    
+    counterBrainSense=0;
     %% save all data
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
@@ -1220,9 +1214,11 @@ for a = 1:length(files)
 
         %% handle BSTD and BSL files to BrainSenseBip
         if regexp(data.fname,'BSTD')
-            fulldata = data;
-            fulldata.fname = strrep(data.fname,'BSTD','BrainSenseBip');
+            counterBrainSense=counterBrainSense+1;
             
+            data.fname = strrep(data.fname,'BSTD','BrainSenseBip');
+            data.fname = strrep(data.fname,'task-Rest',['task-TASK' num2str(counterBrainSense)]);
+            fulldata = data;
             bslfile = strrep(fullname,'BSTD','BSL');
              
             try
@@ -1260,7 +1256,7 @@ for a = 1:length(files)
                 yyaxis right
                 ylabel('LFP and STIM amplitude')
                 plot(fulldata.time{1},fulldata.trial{1}(3,:))
-                LAmp = fulldata.trial{1}(3,:);
+                %LAmp = fulldata.trial{1}(3,:);
                 xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
                 hold on
                 plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
@@ -1303,14 +1299,15 @@ for a = 1:length(files)
                 yyaxis right
                 ylabel('LFP and STIM amplitude')
                 plot(fulldata.time{1},fulldata.trial{1}(4,:))
-                RAmp = fulldata.trial{1}(4,:);
+                %RAmp = fulldata.trial{1}(4,:);
                 xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
                 hold on
                 plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
                 plot(t,mpow.*1000)
                 %% determine StimOff or StimOn
-                acq=check_stim(LAmp, RAmp);
-                fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
+                
+                acq=regexp(bslfile,'Stim.*(?=_mod)','match');
+                fulldata.fname = strrep(fulldata.fname,'StimOff',acq{1});
                 title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
                 %%
 
@@ -1365,8 +1362,6 @@ for a = 1:length(files)
 
             %% create plot for LMTD and change name
             if contains(fullname,'LMTD') || any(extended)
-               fullname = strrep(fullname,'task-Rest','task-TASK');
-               data.fname = strrep(data.fname,'task-Rest','task-TASK');
                mod_ext=check_mod_ext(data.label);
                fullname = strrep(fullname,'mod-LMTD',['mod-LMTD' mod_ext]);
                data.fname = strrep(data.fname,'mod-LMTD',['mod-LMTD' mod_ext]);
@@ -1399,7 +1394,7 @@ for a = 1:length(files)
     close all
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
-    writetable(MetaT,[ sub{1} '_' ses '_metadata.xlsx'])
+    writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata.xlsx']));
 
     disp('all done!')
 end
@@ -1443,7 +1438,7 @@ function MetaT =  metadata_to_table(MetaT, data)
     fname=data.fname;
     if contains(fname, ["LMTD","BrainSense","ISRing"])
         splitted_fname=split(fname,'_');
-        ses = splitted_fname{2}(5:9);
+        ses = lower(splitted_fname{2}(5:9));
         if contains(splitted_fname{2}, 'MedOnOff')
             med = 'm9';
         elseif contains(splitted_fname{2}, 'MedOn')
@@ -1470,8 +1465,9 @@ function MetaT =  metadata_to_table(MetaT, data)
                 nomatch = false;
             end
         end
-
-        cellarr = {data.hdr.OriginalFile, fname,  ses, cond, task, contacts, fname(end)};
+        
+        [~, ori, ~] = fileparts(data.hdr.OriginalFile);
+        cellarr = {[ori '.json'], [fname '.mat'],  ses, cond, task, contacts, fname(end)};
         MetaT = [MetaT; cellarr];
     end
 end
