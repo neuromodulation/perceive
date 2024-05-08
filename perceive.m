@@ -1,4 +1,4 @@
-function perceive(files, sub, sesFu99m, sesMedOffOn01,extended)
+function perceive(files, sub, sesMedOffOn01,extended)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
@@ -29,7 +29,7 @@ arguments
 % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
 % if unspecified or left empy, the subjectID will be created from:
 % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesFu99m {mustBeMember(sesFu99m,["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"])} = ''; %Postop Fu3m Fu12m
+    %sesFu99m {mustBeMember(sesFu99m,["","Fu00m","Fu03m","Fu06m","Fu12m","Fu18m","Fu24m","Fu36m"])} = ''; %Postop Fu3m Fu12m
     sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB
@@ -102,8 +102,6 @@ if exist('sub','var')
     end
 end
 
-%% create session
-ses = ['ses-', sesFu99m, sesMedOffOn01];
 
 %% create task
 task = 'task-Rest';
@@ -158,6 +156,7 @@ for a = 1:length(files)
     hdr.BatteryPercentage = js.BatteryInformation.BatteryPercentage;
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     
+    %% preset subject
     if ~exist('sub','var') | isempty(sub{1})
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
@@ -169,11 +168,23 @@ for a = 1:length(files)
     elseif length(sub) == 1
         hdr.subject = sub{1};
     end
+    %% preset session
+    tt=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'))
+    diffmonths=num2str(abs(calmonths(tt)));
+    %% create session
+    ses = ['ses-', 'Fu' pad(diffmonths,2,'left','0'), 'm' , sesMedOffOn01];
+
+
     if isempty(ses)
         hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     else
         hdr.session = ses;
     end
+
+    %% create metatable
+    MetaT = cell2table(cell(0,7),'VariableNames', {'report','perceiveFilename','session','condition','task','contacts','run'});
+
+    %% create dirs and path
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
@@ -181,6 +192,11 @@ for a = 1:length(files)
     hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq];
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionDate(1:10));
+
+    
+
+    
+
     hdr.js = js;
     if ~exist('datafields','var')
         datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
@@ -1339,8 +1355,11 @@ for a = 1:length(files)
                 run = run+1;
                 fullname = [fullname(1:end-1) num2str(run)];
             end
+            [~,fname,~] = fileparts(fullname);
+            data.fname = fname;
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data')
+            MetaT= metadata_to_table(MetaT,data);
         %% no BSTD, so save the data
         else
 
@@ -1349,8 +1368,8 @@ for a = 1:length(files)
                fullname = strrep(fullname,'task-Rest','task-TASK');
                data.fname = strrep(data.fname,'task-Rest','task-TASK');
                mod_ext=check_mod_ext(data.label);
-               fullname = strrep(fullname,'mod-LMTD',['mod_LMTD' mod_ext]);
-               data.fname = strrep(data.fname,'mod-LMTD',['mod_LMTD' mod_ext]);
+               fullname = strrep(fullname,'mod-LMTD',['mod-LMTD' mod_ext]);
+               data.fname = strrep(data.fname,'mod-LMTD',['mod-LMTD' mod_ext]);
                perceive_plot_raw_signals(data); % for LMTD
                perceive_print(fullname);
             end
@@ -1361,9 +1380,11 @@ for a = 1:length(files)
                 run = run+1;
                 fullname = [fullname(1:end-1) num2str(run)];
             end
+            [~,fname,~] = fileparts(fullname);
+            data.fname = fname;
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data');
-            
+            MetaT= metadata_to_table(MetaT,data);
             
            %savefig([fullname '.fig'])
             % close the figure if should not be kept open
@@ -1378,6 +1399,7 @@ for a = 1:length(files)
     close all
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
+    writetable(MetaT,[ sub{1} '_' ses '_metadata.xlsx'])
 
     disp('all done!')
 end
@@ -1414,5 +1436,42 @@ function mod_ext=check_mod_ext(labels)
         mod_ext = 'SegmInterR';
     else
         mod_ext = 'Unknown';
+    end
+end
+
+function MetaT =  metadata_to_table(MetaT, data)
+    fname=data.fname;
+    if contains(fname, ["LMTD","BrainSense","ISRing"])
+        splitted_fname=split(fname,'_');
+        ses = splitted_fname{2}(5:9);
+        if contains(splitted_fname{2}, 'MedOnOff')
+            med = 'm9';
+        elseif contains(splitted_fname{2}, 'MedOn')
+            med = 'm1';
+        elseif contains(splitted_fname{2}, 'MedOff')
+            med = 'm0';
+        end
+        if contains(splitted_fname{4}, 'StimOn')
+            stim = 's1';
+        elseif contains(splitted_fname{4}, 'StimOff')
+            stim = 's0';
+        else
+            stim = 's9';
+        end
+        cond = [med stim];
+        task = splitted_fname{3}(6:end);
+        nomatch = true;
+        i=0;
+        tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring"];
+        while nomatch
+            i=i+1;
+            if contains(fname, tobefound(i))
+                contacts = tobefound(i);
+                nomatch = false;
+            end
+        end
+
+        cellarr = {data.hdr.OriginalFile, fname,  ses, cond, task, contacts, fname(end)};
+        MetaT = [MetaT; cellarr];
     end
 end
