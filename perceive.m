@@ -1397,7 +1397,7 @@ for a = 1:length(files)
     close all
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
-    writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata.xlsx']));
+    writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' filename '.xlsx']));
 
     disp('all done!')
 end
