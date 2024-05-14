@@ -91,7 +91,7 @@ if exist('sub','var')
     if isnumeric(sub)
         sub=num2str(sub);
     end
-    if ischar(sub)
+    if ischar(sub) && ~isempty(sub)
         if length(sub) == sum(isstrprop(sub,'digit'))
             sub=pad(sub,3,'left','0');
             sub=['sub-' sub];
@@ -166,19 +166,20 @@ for a = 1:length(files)
     elseif length(sub) == 1
         hdr.subject = sub{1};
     end
-    %% preset session
-    diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
-    diffmonths=abs(calmonths(diffmonths));
-    presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
-    diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
-    diffmonths=num2str(diffmonths);
-    %% create session
-    ses = ['ses-', 'Fu' pad(diffmonths,2,'left','0'), 'm' , sesMedOffOn01];
+    
 
-
-    if isempty(ses)
+    % determine session
+    if isempty(sesMedOffOn01)
         hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
     else
+        %% preset session
+        diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
+        diffmonths=abs(calmonths(diffmonths));
+        presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
+        diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
+        diffmonths=num2str(diffmonths);
+        %% create session
+        ses = ['ses-', 'Fu' pad(diffmonths,2,'left','0'), 'm' , sesMedOffOn01];
         hdr.session = ses;
     end
 
@@ -1408,7 +1409,7 @@ function acq=check_stim(LAmp, RAmp)
     RAmp(isnan(RAmp))=0;
     LAmp=abs(LAmp);
     RAmp=abs(RAmp);
-    if (mean(LAmp) > 1) && (mean(RAmp) > 1)
+    if (mean(LAmp) > 0.5) && (mean(RAmp) > 0.5)
         acq='StimOnB';
     elseif (mean(LAmp) > 1)
         acq='StimOnL';
