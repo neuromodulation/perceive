@@ -155,12 +155,14 @@ for a = 1:length(files)
     hdr.LeadLocation = strsplit(hdr.LeadConfiguration.Final(1).LeadLocation,'.');hdr.LeadLocation=hdr.LeadLocation{2};
     
     %% preset subject
-    if ~exist('sub','var') | isempty(sub{1})
+    
+    if isempty(sub)
         if ~isempty(hdr.ImplantDate) &&  ~isnan(str2double(hdr.ImplantDate(1)))
             hdr.subject = ['sub-' strrep(strtok(hdr.ImplantDate,'_'),'-','') hdr.Diagnosis(1) hdr.LeadLocation];
         else
             hdr.subject = ['sub-000' hdr.Diagnosis(1) hdr.LeadLocation];
         end
+        sub = {hdr.subject};
     elseif iscell(sub) && length(sub) == length(files)
         hdr.subject = sub{a};
     elseif length(sub) == 1
@@ -170,7 +172,8 @@ for a = 1:length(files)
 
     % determine session
     if isempty(sesMedOffOn01)
-        hdr.session = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+        ses = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+        hdr.session = ses;
     else
         %% preset session
         diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
@@ -1310,7 +1313,8 @@ for a = 1:length(files)
                 %% determine StimOff or StimOn
                 
                 acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match');
-                fulldata.fname = strrep(fulldata.fname,'StimOff',acq{1});
+                acq=acq{1};
+                fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
                 title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
                 %%
 
@@ -1359,7 +1363,9 @@ for a = 1:length(files)
             data.fname = fname;
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data')
-            MetaT= metadata_to_table(MetaT,data);
+            if sesMedOffOn01
+                MetaT= metadata_to_table(MetaT,data);
+            end
             end
         %% no BSTD, so save the data
         else
@@ -1383,8 +1389,9 @@ for a = 1:length(files)
             data.fname = fname;
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data');
-            MetaT= metadata_to_table(MetaT,data);
-            
+            if sesMedOffOn01
+                MetaT= metadata_to_table(MetaT,data);
+            end
            %savefig([fullname '.fig'])
             % close the figure if should not be kept open
             if isfield(data,'keepfig')
@@ -1398,8 +1405,9 @@ for a = 1:length(files)
     close all
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
-    writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' filename '.xlsx']));
-
+    if sesMedOffOn01
+        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' filename '.xlsx']));
+    end
     disp('all done!')
 end
 end
