@@ -176,6 +176,9 @@ for a = 1:length(files)
         hdr.session = ses;
     else
         %% preset session
+        if ~ischar(sesMedOffOn01)
+            sesMedOffOn01=char(sesMedOffOn01);
+        end
         diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
         diffmonths=abs(calmonths(diffmonths));
         presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
