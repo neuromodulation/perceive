@@ -1408,7 +1408,17 @@ for a = 1:length(files)
     close all
     
     hdr.DeviceInformation.Final.NeurostimulatorLocation %what to do with this?
-    if sesMedOffOn01
+    if ~isempty(sesMedOffOn01) && height(MetaT)>1
+        MetaTOld = MetaT;
+        app=update_tasks(MetaT);
+        waitfor(app.saveandcontinueButton,'UserData')
+        MetaT=app.MetaT;
+        app.delete;
+        for i = 1:height(MetaT)
+            if ~isequal(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}))
+                   movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));   
+            end
+        end
         writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' filename '.xlsx']));
     end
     disp('all done!')
