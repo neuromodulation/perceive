@@ -1419,7 +1419,8 @@ for a = 1:length(files)
                    movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));   
             end
         end
-        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' filename '.xlsx']));
+
+        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' MetaT.report{1} '.xlsx']));
     end
     disp('all done!')
 end
