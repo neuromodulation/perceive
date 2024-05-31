@@ -655,11 +655,11 @@ for a = 1:length(files)
                         d.label=Channel(i);
                         d.trial{1} = raw;
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         
                         d.fsample = fsample;
                         
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         if firstsample<0
@@ -668,7 +668,7 @@ for a = 1:length(files)
                         d.trialinfo(1) = c;
                         mod = 'mod-BSTD';
                         d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
                       
@@ -763,7 +763,7 @@ for a = 1:length(files)
                         acq=check_stim(LAmp, RAmp);
                         d.fname = strrep(d.fname,'StimOff',acq);
 
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         %% plot integrated BSL plot
                         subplot(2,1,1)
                         yyaxis left
@@ -859,9 +859,9 @@ for a = 1:length(files)
                         d.trial{1} = [tmp];
                         d.label=Channel(i);
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
@@ -870,7 +870,7 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         mod = 'mod-LMTD';
                         d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -1061,9 +1061,9 @@ for a = 1:length(files)
                         d.trial{1} = [tmp;-refraw;];
                         d.label=[Channel(i);strcat(hdr.chan,'_',nchans')];
                         
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')));
+                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
@@ -1071,7 +1071,7 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         mod = 'mod-ISRing';
                         d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -1133,17 +1133,17 @@ for a = 1:length(files)
                             d.label=Channel(i);
                             d.trial{1} = raw;
                             
-                            d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                            d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                             
                             d.fsample = fsample;
-                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')));
+                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
                             lastsample = firstsample+size(d.trial{1},2);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             d.trialinfo(1) = c;
                             d.hdr.label = d.label;
                             d.hdr.Fs = d.fsample;
                             
-                            d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss')) '_' num2str(c)];
+                            d.fname = [hdr.fname '_run-CT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')) '_' num2str(c)];
                             % TODO: set if needed:
                             %d.keepfig = false; % do not keep figure with this signal open
                             alldata{length(alldata)+1} = d;
@@ -1186,16 +1186,16 @@ for a = 1:length(files)
                             d.trial{1} = [tmp];
                             d.label=Channel(i);
                             
-                            d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.scd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-hdr.scd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                            d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.scd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.scd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                             d.fsample = fsample;
-                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.sss')));
+                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
                             lastsample = firstsample+size(d.trial{1},2);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             d.trialinfo(1) = c;
                             
                             d.hdr.label = d.label;
                             d.hdr.Fs = d.fsample;
-                            d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.sss','format','yyyyMMddhhmmss'))];
+                            d.fname = [hdr.fname '_run-SCT' char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                             % TODO: set if needed:
                             %d.keepfig = false; % do not keep figure with this signal open
                             alldata{length(alldata)+1} = d;
@@ -1416,7 +1416,8 @@ for a = 1:length(files)
         app.delete;
         for i = 1:height(MetaT)
             if ~isequal(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}))
-                   movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));   
+                   movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));
+                   warning('update filename')
             end
         end
 
