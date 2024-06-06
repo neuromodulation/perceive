@@ -16,7 +16,13 @@ if ~contains(file, 'run')
 end
 while isfile(fullfile(fold,[file '.' mode]))
     if isstrprop(file(end),'digit')
-        file(end)=num2str(str2num(file(end))+1);
+        addition =num2str(str2num(file(end))+1);
+        if length(addition) == 1
+            file(end)=addition;
+        else
+            file(end:end+1)=addition;
+        end
+
     else
         file = [file '-1'];
     end
