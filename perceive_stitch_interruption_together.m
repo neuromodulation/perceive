@@ -54,10 +54,9 @@ end
 
 datanew.trialinfo = [recording1.trialinfo ; recording2.trialinfo];
 
-
 assert(strcmp(strrep(recording1.fname,'_part-1',''),strrep(recording2.fname,'_part-2','')))
-assert(strcmp(recording1.fname(end-7:end), '_part-1'), 'The file name of recording 1 does not end on _part-1 in data.fname and/or .mat file')
-assert(strcmp(recording1.fname(end-7:end), '_part-2'), 'The file name of recording 2 does not end on _part-2 in data.fname and/or .mat file')
+assert(strcmp(recording1.fname(end-10:end), '_part-1.mat'), 'The file name of recording 1 does not end on _part-1 in data.fname and/or .mat file')
+assert(strcmp(recording2.fname(end-10:end), '_part-2.mat'), 'The file name of recording 2 does not end on _part-2 in data.fname and/or .mat file')
 datanew.fname(1) = {strrep(recording1.fname,'_part-1','')};
 datanew.fname(2) = {recording1.fname};
 datanew.fname(3) = {recording2.fname};
