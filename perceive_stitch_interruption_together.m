@@ -1,15 +1,21 @@
 function datanew=perceive_stitch_interruption_together(recording1, recording2)
-
-% example
-% load('sub-001_ses-Fu12mMedOff03_task-TASK4_acq-StimOff_mod-BrainSenseBip_run-1.mat')
-% data4=data;
-% load('sub-001_ses-Fu12mMedOff03_task-TASK4_acq-StimOff_mod-BSL_run-1.mat')
-% dataBSL4=data;
-% load('sub-001_ses-Fu12mMedOff03_task-TASK5_acq-StimOff_mod-BrainSenseBip_run-1.mat')
-% data5=data;
-% load('sub-001_ses-Fu12mMedOff03_task-TASK5_acq-StimOff_mod-BSL_run-1.mat')
-% dataBSL5=data;
-
+% For questions contact Jojo Vanhoecke
+% 
+% This is a function to concatenate percept recordings by filling the gaps with NaN's, meant for
+% a technical interruption. It reads in the matlab structures, and will create fieldnames.
+% The first fieldname is the concatenated file, the second fieldname is the first recording, the third
+% fieldname is the second recording.
+% 
+% %% Example:
+% % name of the first recording
+% recording1 = 'sub-001_ses-Fu12mMedOff03_task-TASK4_acq-StimOff_mod-BrainSenseBip_run-1_part-1.mat';
+% % Make sure the recording filename ends on "part-1.mat". Apart from the "part" it must have the same
+% % naming as recording2. It needs to be in your path.
+% % name of the first recording
+% recording2 = 'sub-001_ses-Fu12mMedOff03_task-TASK5_acq-StimOff_mod-BrainSenseBip_run-1_part-2.mat';
+% % Make sure the recording filename ends on "part-2.mat". Apart from the "part" it must have the same
+% % naming as recording1.
+% datanew=perceive_stitch_interruption_together(recording1, recording2)
 load(recording1,'data')
 recording1=data;
 load(recording2,'data')
