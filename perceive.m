@@ -1445,12 +1445,12 @@ for a = 1:length(files)
             if strcmp(MetaTcopy.part{i},'1')
                 recording1 = MetaTcopy.perceiveFilename{i};
                 recording2 = strrep(MetaTcopy.perceiveFilename{i},'part-1','part-2');
-                ConcatenatedData = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
+                data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
 
                 MetaT = [MetaT(1:i+m,:); MetaT(i+m:end,:)];
                 MetaT.part{i+m}='';
-                MetaT.perceiveFilename{i+m}= ConcatenatedData.fname{1};
-                save(fullfile(hdr.fpath,ConcatenatedData.fname{1}),'ConcatenatedData');
+                MetaT.perceiveFilename{i+m}= data.fname{1};
+                save(fullfile(hdr.fpath,data.fname{1}),'data');
                 m=m+1;
             end
         end
