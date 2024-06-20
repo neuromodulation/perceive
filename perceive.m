@@ -142,7 +142,7 @@ for a = 1:length(files)
     disp(js.DeviceInformation.Final.NeurostimulatorLocation)
 
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' ')); %To Do
-    hdr.SessionDate = datetime(strrep(js.SessionDate(1:end-1),'T',' ')); %To Do
+    hdr.SessionEndDate = datetime(strrep(js.SessionDate(1:end-1),'T',' ')); %To Do
     if ~isempty(js.PatientInformation.Final.Diagnosis)
         hdr.Diagnosis = strsplit(js.PatientInformation.Final.Diagnosis,'.');hdr.Diagnosis=hdr.Diagnosis{2};
     else
@@ -172,14 +172,14 @@ for a = 1:length(files)
 
     % determine session
     if isempty(sesMedOffOn01)
-        ses = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
+        ses = ['ses-' char(datetime(hdr.SessionEndDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
         hdr.session = ses;
     else
         %% preset session
         if ~ischar(sesMedOffOn01)
             sesMedOffOn01=char(sesMedOffOn01);
         end
-        diffmonths=between(datetime(hdr.SessionDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
+        diffmonths=between(datetime(hdr.SessionEndDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
         diffmonths=abs(calmonths(diffmonths));
         presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
         diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
@@ -199,7 +199,7 @@ for a = 1:length(files)
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
     hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq];
     hdr.chan = ['LFP_' hdr.LeadLocation];
-    hdr.d0 = datetime(js.SessionDate(1:10));
+    hdr.d0 = datetime(js.SessionEndDate(1:10));
 
     hdr.js = js;
     if ~exist('datafields','var')
@@ -308,7 +308,7 @@ for a = 1:length(files)
                             end
                             xlabel('Frequency [Hz]')
                             ylabel('Power spectral density [uV^2/Hz]')
-                            title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
+                            title(strrep({hdr.subject,char(hdr.SessionEndDate),'RIGHT'},'_',' '))
                             legend(strrep(channels(ir),'_',' '))
                             il = perceive_ci([hdr.chan '_L'],channels);
                             subplot(1,2,1)
@@ -317,7 +317,7 @@ for a = 1:length(files)
                             hold on
                             plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
                             xlim([1 35])
-                            title(strrep({'MostRecentSignalCheck',hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
+                            title(strrep({'MostRecentSignalCheck',hdr.subject,char(hdr.SessionEndDate),'LEFT'},'_',' '))
                             plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                             xlabel('Frequency [Hz]')
                             ylabel('Power spectral density [uV^2/Hz]')
@@ -928,7 +928,7 @@ for a = 1:length(files)
                     end
                     xlabel('Frequency [Hz]')
                     ylabel('Power spectral density [uV^2/Hz]')
-                    title(strrep({hdr.subject,char(hdr.SessionDate),'RIGHT'},'_',' '))
+                    title(strrep({hdr.subject,char(hdr.SessionEndDate),'RIGHT'},'_',' '))
                     legend(strrep(channels(ir),'_',' '))
                     il = perceive_ci([hdr.chan '_L'],channels);
                     subplot(1,2,1)
@@ -937,7 +937,7 @@ for a = 1:length(files)
                     hold on
                     plot(freq,nanmean(pow(il,:)),'color','k','linewidth',2)
                     xlim([1 35])
-                    title(strrep({hdr.subject,char(hdr.SessionDate),'LEFT'},'_',' '))
+                    title(strrep({hdr.subject,char(hdr.SessionEndDate),'LEFT'},'_',' '))
                     plot(peaks(il,1),peaks(il,2),'LineStyle','none','Marker','.','MarkerSize',12)
                     xlabel('Frequency [Hz]')
                     ylabel('Power spectral density [uV^2/Hz]')
@@ -1248,7 +1248,7 @@ for a = 1:length(files)
 
             bsl=load(list_of_BSLfiles{counterBrainSense});
 
-            if ~isequal(bsl.data.hdr.SessionDate, data.hdr.SessionDate)
+            if ~isequal(bsl.data.hdr.SessionEndDate, data.hdr.SessionEndDate)
                 warning('BSL file could not be matched BSTD data to create BrainSense.')
             else
                 fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
