@@ -30,7 +30,7 @@ arguments
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
     sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
-    %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB
+    %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
     %run = ''; %numeric
 
@@ -139,8 +139,7 @@ for a = 1:length(files)
             hdr.(infofields{b})=js.(infofields{b});
         end
     end
-    disp(js.DeviceInformation.Final.NeurostimulatorLocation)
-
+    
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' ')); %To Do
     hdr.SessionEndDate = datetime(strrep(js.SessionDate(1:end-1),'T',' ')); %To Do
     if ~isempty(js.PatientInformation.Final.Diagnosis)
@@ -189,8 +188,8 @@ for a = 1:length(files)
         hdr.session = ses;
     end
 
-    %% create metatable
-    MetaT = cell2table(cell(0,8),'VariableNames', {'report','perceiveFilename','session','condition','task','contacts','run','part'});
+    %% create metatable %determine
+    MetaT = cell2table(cell(0,10),'VariableNames', {'report','perceiveFilename','session','condition','task','contacts','run','part','acq','remove'});
 
     %% create dirs and path
     if ~exist(fullfile(hdr.subject,hdr.session,'ieeg'),'dir')
@@ -763,7 +762,15 @@ for a = 1:length(files)
                         elseif contains(d.label(4),'STIM_R')
                             RAmp=d.trial{1}(4,:);
                         end
-                        acq=check_stim(LAmp, RAmp);
+                        
+                        % d.hdr.SessionDate
+                        % d.hdr.Groups
+                        % d.hdr.Groups.Initial(1).GroupSettings.Cycling
+                        % d.hdr.Groups.Initial(2).GroupSettings.Cycling
+                        % d.hdr.Groups.Initial(3).GroupSettings.Cycling
+                        % d.hdr.Groups.Initial(4).GroupSettings.Cycling
+                        % %d.hdr.Groups.Initial(5).GroupSettings.Cycling
+                        acq=check_stim(LAmp, RAmp, d.hdr);
                         d.fname = strrep(d.fname,'StimOff',acq);
 
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
@@ -1330,8 +1337,13 @@ for a = 1:length(files)
                     plot(t,mpow.*1000)
                     %% determine StimOff or StimOn
 
-                    acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match');
-                    acq=acq{1};
+                    acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match'); %Search for StimOff StimOn
+                    if ~isempty(acq)
+                        acq=acq{1};
+                    else
+                        acq=regexp(bsl.data.fname,'Burst.*(?=_mod)','match'); %Search for burst name
+                        acq=acq{1};
+                    end
                     fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
                     title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
                     %%
@@ -1428,24 +1440,35 @@ for a = 1:length(files)
         waitfor(app.saveandcontinueButton,'UserData')
         MetaT=app.MetaT;
         app.delete;
+        %do the file renaming according to the interface metatable
+        
+        rows_to_remove = [];
         for i = 1:height(MetaT)
-            if ~isequal(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}))
-
-                load(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), 'data');
-                data.fname = MetaT.perceiveFilename{i};
-                save(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), 'data')
-                movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));
-                warning('updating filename part')
+            if strcmp(MetaT.remove{i},'REMOVE')
+            % do nothing OR %%% when necessary we need to remove the old file
+                delete(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}))
+                rows_to_remove = [rows_to_remove, i];
+            elseif strcmp(MetaT.remove{i},'keep')
+                if ~isequal(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}))
+                    load(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), 'data');
+                    data.fname = MetaT.perceiveFilename{i};
+                    save(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), 'data')
+                    movefile(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}), fullfile(hdr.fpath,MetaT.perceiveFilename{i}));
+                    warning('updating filename part')
+                end
             end
         end
-
+        MetaT(rows_to_remove,:) = [];
         m=0;
         MetaTcopy=MetaT;
         for i = 1:height(MetaTcopy)
-            if strcmp(MetaTcopy.part{i},'1')
-                recording1 = MetaTcopy.perceiveFilename{i};
-                recording2 = strrep(MetaTcopy.perceiveFilename{i},'part-1','part-2');
-                data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
+            if strcmp(MetaTcopy.part{i},'1') % search only if the part is 1 to stich the other parts
+
+                %recording1 = MetaTcopy.perceiveFilename{i};
+                %recording2 = strrep(MetaTcopy.perceiveFilename{i},'part-1','part-2');
+                recording_basename = strrep(MetaTcopy.perceiveFilename{i},'part-1.mat','part-');
+                %data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
+                data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording_basename));
 
                 MetaT = [MetaT(1:i+m,:); MetaT(i+m:end,:)];
                 MetaT.part{i+m}='';
@@ -1461,19 +1484,57 @@ disp('all done!')
 end
 
 
-function acq=check_stim(LAmp, RAmp)
+function acq=check_stim(LAmp, RAmp, hdr)
+% check stim whether the recording was stim OFF or stim ON based on the amplitude
+% expand the acquisition to Burst
+
+% check Burst settings
+Cycling_mode = false;
+for i=1:length(hdr.Groups.Initial)
+    if hdr.Groups.Initial(i).GroupSettings.Cycling.Enabled
+        if Cycling_mode
+            error('Two different cycling modes not implemented, contact Jojo Vanhoecke')
+        else
+            Cycling_mode = true;
+            Cycling_OnDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
+            Cycling_OffDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
+            Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.RateInHertz;
+        end
+    elseif hdr.Groups.Final(i).GroupSettings.Cycling.Enabled
+        if Cycling_mode
+            error('Two different cycling modes not implemented, contact Jojo Vanhoecke')
+        else
+            Cycling_mode = true;
+            Cycling_OnDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
+            Cycling_OffDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
+            Cycling_Rate = hdr.Groups.Final(i).ProgramSettings.RateInHertz;
+        end
+    end
+end
+
 LAmp(isnan(LAmp))=0;
 RAmp(isnan(RAmp))=0;
 LAmp=abs(LAmp);
 RAmp=abs(RAmp);
-if (mean(LAmp) > 0.5) && (mean(RAmp) > 0.5)
-    acq='StimOnB';
-elseif (mean(LAmp) > 1)
-    acq='StimOnL';
-elseif (mean(RAmp) > 1)
-    acq='StimOnR';
-else
-    acq='StimOff';
+if Cycling_mode
+    if (sum(LAmp>0.1)) > (0.1*sum(LAmp==0)) && (sum(RAmp>0.1)) > (0.5*sum(RAmp==0))
+        acq=['BurstB' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+    elseif (sum(LAmp>0.1)) > (0.1*sum(LAmp==0))
+        acq=['BurstL' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+    elseif (sum(RAmp>0.1)) > (0.1*sum(RAmp==0))
+        acq=['BurstR' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+    end
+end
+if ~exist('acq','var')
+    if (mean(LAmp) > 0.5) && (mean(RAmp) > 0.5)
+        acq='StimOnB';
+    elseif (mean(LAmp) > 1)
+        acq='StimOnL';
+    elseif (mean(RAmp) > 1)
+        acq='StimOnR';
+    else
+        acq='StimOff';
+    end
 end
 end
 
@@ -1507,7 +1568,7 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
     elseif contains(splitted_fname{2}, 'MedOff')
         med = 'm0';
     end
-    if contains(splitted_fname{4}, 'StimOn')
+    if contains(splitted_fname{4}, ["StimOn","Burst"])
         stim = 's1';
     elseif contains(splitted_fname{4}, 'StimOff')
         stim = 's0';
@@ -1515,6 +1576,7 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
         stim = 's9';
     end
     cond = [med stim];
+    acq = splitted_fname{4}(5:end);
     task = splitted_fname{3}(6:end);
     nomatch = true;
     i=0;
@@ -1526,9 +1588,8 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
             nomatch = false;
         end
     end
-
     [~, ori, ~] = fileparts(data.hdr.OriginalFile);
-    cellarr = {[ori '.json'], fname,  ses, cond, task, contacts, fname(end-4), ''};
+    cellarr = {[ori '.json'], fname,  ses, cond, task, contacts, fname(end-4), '', acq, 'keep'}; %add parts and stim settings
     MetaT = [MetaT; cellarr];
 end
 end
