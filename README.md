@@ -10,14 +10,14 @@ v0.2 Contributors Tomas Sieger, Wolf-Julian Neumann, Gerd Tinkhauser
 v0.3 Contributor Jojo Vanhoecke
 This is an open research tool that is not intended for clinical purposes. 
 
-# What's new?
+## What's new?
 
 Interactive GUI provides the possibility to convert percept.json files into BIDS-like structures,
 including taks, acquistion, run and other handles.
 
 # INPUT
 
-perceive(files, sub, sesMedOffOn01, extended)
+perceive(files, sub, ses, extended)
 
 ## files:
 All input is optional, you can specify files as cell or character array
@@ -50,7 +50,7 @@ ieeg format specifier.
 All time series data are being exported as FieldTrip '.mat' files, as these require no additional dependencies for creation.
 You can reformat with FieldTrip and SPM to MNE python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
 
-# Recording type output naming
+## Recording type output naming
 Each of the FieldTrip data files correspond to a specific aspect of the Recording session: 
 LMTD = LFP Montage Time Domain - BrainSenseSurvey
 IS = Indefinite Streaming - BrainSenseStreaming
