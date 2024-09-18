@@ -7,14 +7,17 @@ perceive
 
 https://github.com/neuromodulation/perceive 
 v0.2 Contributors Tomas Sieger, Wolf-Julian Neumann, Gerd Tinkhauser
+v0.3 Contributor Jojo Vanhoecke
 This is an open research tool that is not intended for clinical purposes. 
 
 # What's new?
 
-Tomas Sieger has added support for unilateral implants!
-I have written some code for artefact detection and cleaning that is automatically run on all BrainSense TimeDomain signals. 
+Interactive GUI provides the possibility to convert percept.json files into BIDS-like structures,
+including taks, acquistion, run and other handles.
 
 # INPUT
+
+perceive(files, sub, sesMedOffOn01, extended)
 
 ## files:
 All input is optional, you can specify files as cell or character array
@@ -24,14 +27,23 @@ all files in the current working directory
 if no files in the current working directory are found, a you can choose
 files via the MATLAB uigetdir window.
 
-## subjectIDs:
-you can specify a subject ID for each file in case you want to follow an
-IRB approved naming scheme for file export e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
+## sub:
+SubjectID: you can specify a subject ID for each file in case you want to follow an IRB approved naming scheme for file export
+
+e.g. run perceive('Report_Json_Session_Report_20200115T123657.json',80) -> creates sub-080
+e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','080') -> also creates sub-080
+e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite001') -> creates sub-Charite001
+
 if unspecified or left empy, the subjectID will be created from
 ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
 
+## extended
+'Yes' or ''
+If 'Yes': saves all created files in between and in different formats
+default: ''
 
-## OUTPUT
+
+# OUTPUT
 
 The script generates BIDS bids.neuroimaging.io/ inspired subject and session folders with the
 ieeg format specifier. 
@@ -48,8 +60,10 @@ BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL file)
 
 ## TODO: 
 ADD BATTERY DRAIN information per sesssion
-ADD BSL data to BSTD ephys file
 ADD PATIENT SNAPSHOT EVENT READINGS
 ADD CHRONIC DIAGNOSTIC READINGS
 ADD Lead DBS Integration for electrode location
+
+## Contact:
+Jojo.vanhoecke@charite.de (under supervision of Prof. Dr. Julian Neumann)
 
