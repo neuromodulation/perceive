@@ -31,7 +31,9 @@ files via the MATLAB uigetdir window.
 SubjectID: you can specify a subject ID for each file in case you want to follow an IRB approved naming scheme for file export
 
 e.g. run perceive('Report_Json_Session_Report_20200115T123657.json',80) -> creates sub-080
+
 e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','080') -> also creates sub-080
+
 e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite001') -> creates sub-Charite001
 
 if unspecified or left empy, the subjectID will be created from
@@ -51,11 +53,16 @@ All time series data are being exported as FieldTrip '.mat' files, as these requ
 You can reformat with FieldTrip and SPM to MNE python and other formats (e.g. using fieldtrip2fiff([fullname '.fif'],data))
 
 ## Recording type output naming
-Each of the FieldTrip data files correspond to a specific aspect of the Recording session: 
+Each of the FieldTrip data files correspond to a specific aspect of the Recording session:
+
 LMTD = LFP Montage Time Domain - BrainSenseSurvey
+
 IS = Indefinite Streaming - BrainSenseStreaming
+
 CT = Calibration Testing - Calibration Tests
+
 BSL = BrainSense LFP (2 Hz power average + stimulation settings)
+
 BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL file)
 
 ## TODO: 
@@ -63,7 +70,4 @@ ADD BATTERY DRAIN information per sesssion
 ADD PATIENT SNAPSHOT EVENT READINGS
 ADD CHRONIC DIAGNOSTIC READINGS
 ADD Lead DBS Integration for electrode location
-
-## Contact:
-Jojo.vanhoecke@charite.de (under supervision of Prof. Dr. Julian Neumann)
 
