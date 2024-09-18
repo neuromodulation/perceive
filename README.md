@@ -37,7 +37,7 @@ e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite001'
 if unspecified or left empy, the subjectID will be created from
 ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
 
-## extended
+## extended:
 'Yes' or ''
 If 'Yes': saves all created files in between and in different formats
 default: ''
