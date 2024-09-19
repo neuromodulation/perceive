@@ -1266,111 +1266,116 @@ for a = 1:length(files)
                 for c =1:4
                     fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
                 end
-                if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
-                    figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
-                    subplot(2,2,1)
-                    yyaxis left
-                    plot(fulldata.time{1},fulldata.trial{1}(1,:))
-                    ylabel('Raw amplitude')
-                    if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                        pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                        pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                    elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                        pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-                    else
-                        error('neither Left nor Right TherapySnapshot present');
-                    end
-                    hold on
+                %% determine StimOff or StimOn
 
-                    [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
-                    mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-                    yyaxis right
-                    ylabel('LFP and STIM amplitude')
-                    plot(fulldata.time{1},fulldata.trial{1}(3,:))
-                    %LAmp = fulldata.trial{1}(3,:);
-                    xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-                    hold on
-                    plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
-                    plot(t,mpow.*1000)
-                    title(strrep({fulldata.label{3},fulldata.label{5}},'_',' '))
-                    axes('Position',[.34 .8 .1 .1])
-                    box off
-                    plot(f,nanmean(log(tf),2))
-                    xlabel('F')
-                    ylabel('P')
-                    xlim([3 40])
-
-
-                    axes('Position',[.16 .8 .1 .1])
-                    box off
-                    plot(fulldata.time{1},fulldata.trial{1}(1,:))
-                    xlabel('T'),ylabel('A')
-                    xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
-                    xlim([xx xx+1.5])
-
-                    subplot(2,2,3)
-                    imagesc(t,f,log(tf)),axis xy,
-                    xlabel('Time [s]')
-                    ylabel('Frequency [Hz]')
-
-                    subplot(2,2,2)
-                    yyaxis left
-                    plot(fulldata.time{1},fulldata.trial{1}(2,:))
-                    ylabel('Raw amplitude')
-                    if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                        pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-                    elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                        pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                    else
-                        error('neither Left nor Right TherapySnapshot present');
-                    end
-                    hold on
-                    [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
-                    mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-                    yyaxis right
-                    ylabel('LFP and STIM amplitude')
-                    plot(fulldata.time{1},fulldata.trial{1}(4,:))
-                    %RAmp = fulldata.trial{1}(4,:);
-                    xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-                    hold on
-                    plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
-                    plot(t,mpow.*1000)
-                    %% determine StimOff or StimOn
-
-                    acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match'); %Search for StimOff StimOn
-                    if ~isempty(acq)
-                        acq=acq{1};
-                    else
-                        acq=regexp(bsl.data.fname,'Burst.*(?=_mod)','match'); %Search for burst name
-                        acq=acq{1};
-                    end
-                    fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
-                    title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
-                    %%
-
-                    axes('Position',[.78 .8 .1 .1])
-                    box off
-                    plot(f,nanmean(log(tf),2))
-                    xlim([3 40])
-                    xlabel('F')
-                    ylabel('P')
-
-                    axes('Position',[.6 .8 .1 .1])
-                    box off
-                    plot(fulldata.time{1},fulldata.trial{1}(2,:))
-                    xlabel('T'),ylabel('A')
-                    xlim([xx xx+1.5])
-
-                    subplot(2,2,4)
-                    imagesc(t,f,log(tf)),axis xy,
-                    xlabel('Time [s]')
-                    ylabel('Frequency [Hz]')
-
-                    perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
+                acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match'); %Search for StimOff StimOn
+                if ~isempty(acq)
+                    acq=acq{1};
                 else
-                    disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-                    disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
-                    disp('Please, review it.');
+                    acq=regexp(bsl.data.fname,'Burst.*(?=_mod)','match'); %Search for burst name
+                    acq=acq{1};
+                end
+                fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
+                user = memory;
+                if user.MemUsedMATLAB < 9^10 %corresponds with 9MB
+
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
+                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                        subplot(2,2,1)
+                        yyaxis left
+                        plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                        ylabel('Raw amplitude')
+                        if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                        elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                        else
+                            error('neither Left nor Right TherapySnapshot present');
+                        end
+                        hold on
+
+                        [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
+                        mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                        yyaxis right
+                        ylabel('LFP and STIM amplitude')
+                        plot(fulldata.time{1},fulldata.trial{1}(3,:))
+                        %LAmp = fulldata.trial{1}(3,:);
+                        xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                        hold on
+                        plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
+                        plot(t,mpow.*1000)
+                        title(strrep({fulldata.label{3},fulldata.label{5}},'_',' '))
+                        axes('Position',[.34 .8 .1 .1])
+                        box off
+                        plot(f,nanmean(log(tf),2))
+                        xlabel('F')
+                        ylabel('P')
+                        xlim([3 40])
+
+                        axes('Position',[.16 .8 .1 .1])
+                        box off
+                        plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                        xlabel('T'),ylabel('A')
+                        xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
+                        xlim([xx xx+1.5])
+
+                        subplot(2,2,3)
+                        imagesc(t,f,log(tf)),axis xy,
+                        xlabel('Time [s]')
+                        ylabel('Frequency [Hz]')
+
+                        subplot(2,2,2)
+                        yyaxis left
+                        plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                        ylabel('Raw amplitude')
+                        if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                        elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                        else
+                            error('neither Left nor Right TherapySnapshot present');
+                        end
+                        hold on
+                        [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
+                        mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                        yyaxis right
+                        ylabel('LFP and STIM amplitude')
+                        plot(fulldata.time{1},fulldata.trial{1}(4,:))
+                        %RAmp = fulldata.trial{1}(4,:);
+                        xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                        hold on
+                        plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
+                        plot(t,mpow.*1000)
+
+                        title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
+                        %%
+                        axes('Position',[.78 .8 .1 .1])
+                        box off
+                        plot(f,nanmean(log(tf),2))
+                        xlim([3 40])
+                        xlabel('F')
+                        ylabel('P')
+
+                        axes('Position',[.6 .8 .1 .1])
+                        box off
+                        plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                        xlabel('T'),ylabel('A')
+                        xlim([xx xx+1.5])
+
+                        subplot(2,2,4)
+                        imagesc(t,f,log(tf)),axis xy,
+                        xlabel('Time [s]')
+                        ylabel('Frequency [Hz]')
+
+                        perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
+                    else
+                        disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
+                        disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
+                        disp('Please, review it.');
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 end
                 %% save data of BSTD
                 fullname = fullfile('.',hdr.fpath,fulldata.fname);
@@ -1493,16 +1498,19 @@ Cycling_mode = false;
 for i=1:length(hdr.Groups.Initial)
     if hdr.Groups.Initial(i).GroupSettings.Cycling.Enabled
         if Cycling_mode
-            error('Two different cycling modes not implemented, contact Jojo Vanhoecke')
+            error('Two different cycling modes not in 1 json file implemented, contact Jojo Vanhoecke')
         else
             Cycling_mode = true;
             Cycling_OnDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
             Cycling_OffDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
             Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.RateInHertz;
         end
-    elseif hdr.Groups.Final(i).GroupSettings.Cycling.Enabled
+    end
+end
+for i=1:length(hdr.Groups.Final)
+    if hdr.Groups.Final(i).GroupSettings.Cycling.Enabled
         if Cycling_mode
-            error('Two different cycling modes not implemented, contact Jojo Vanhoecke')
+            error('Two different cycling modes in 1 json file not implemented, contact Jojo Vanhoecke')
         else
             Cycling_mode = true;
             Cycling_OnDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
@@ -1511,6 +1519,7 @@ for i=1:length(hdr.Groups.Initial)
         end
     end
 end
+
 
 LAmp(isnan(LAmp))=0;
 RAmp(isnan(RAmp))=0;
@@ -1539,20 +1548,37 @@ end
 end
 
 function mod_ext=check_mod_ext(labels)
-if sum(contains(labels,'LEFT_RING'))==6
+ %03, 13, 02, 12 are Ring contacts
+ %1A_2A, 1B_2B, 1C_2C LEFT are SegmInter
+ %1A_1B, 1A_1C, 1B_1C, 2A_2B, 2B_2C are SegmIntraL
+if sum(contains(labels,'LEFT_RING'))>3 %usually 6 or 4
     mod_ext = 'RingL';
 elseif sum(contains(labels,'LEFT_SEGMENT'))==6
     mod_ext = 'SegmIntraL';
 elseif sum(contains(labels,'LEFT_SEGMENT'))==3
     mod_ext = 'SegmInterL';
-elseif sum(contains(labels,'RIGHT_RING'))==6
+elseif sum(contains(labels,'RIGHT_RING'))>3 %usually 6 or 4
     mod_ext = 'RingR';
 elseif sum(contains(labels,'RIGHT_SEGMENT'))==6
     mod_ext = 'SegmIntraR';
 elseif sum(contains(labels,'RIGHT_SEGMENT'))==3
     mod_ext = 'SegmInterR';
 else
-    mod_ext = 'Unknown';
+    if any(contains(labels,'0'))
+        mod_ext = 'Ring';
+    elseif sum(contains(labels,'A'))==3
+        mod_ext = 'SegmIntra';
+    elseif sum(contains(labels,'A'))==1
+        mod_ext = 'SegmInter';
+    else
+        mod_ext = 'notspec';
+        warning('the LMTD has no known modus: Bip,RingL,RingR,SegmInterL,SegmInterR,SegmIntraL,SegmIntraR,Ring')
+    end
+    if any(contains(labels,'LEFT')) && ~contains(mod_ext,'notspec')
+        mod_ext = [mod_ext , 'L'];
+    else 
+        mod_ext = [mod_ext , 'R'];
+    end
 end
 end
 
@@ -1580,7 +1606,7 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
     task = splitted_fname{3}(6:end);
     nomatch = true;
     i=0;
-    tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring"];
+    tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring", "notspec"];
     while nomatch
         i=i+1;
         if contains(fname, tobefound(i))
