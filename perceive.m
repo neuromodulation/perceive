@@ -216,6 +216,7 @@ for a = 1:length(files)
             mod='';
             run=1;
             switch datafields{b}
+                %% add csv files by default
                 case 'Impedance'
                     if extended
                         mod = 'mod-Impedance';
@@ -825,6 +826,7 @@ for a = 1:length(files)
                     writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod '.csv']))
 
                 case 'LfpMontageTimeDomain'
+                    %% add perceive ecg add figures cleaning
 
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
@@ -841,8 +843,11 @@ for a = 1:length(files)
 
                     fsample = data.SampleRateInHz;
                     gain=[data(:).Gain]';
-                    [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
-                    [tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
+
+                    %if contains()
+                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|(?<!.*_.*)_"));
+                    %[tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
+                    %[tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
 
                     % ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     ch1 = strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
@@ -960,7 +965,8 @@ for a = 1:length(files)
 
 
                 case 'IndefiniteStreaming'
-
+                    %% add ecg-cleaning perceive
+                    %% add figures ecg cleaning
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     fsample = data.SampleRateInHz;
@@ -1441,7 +1447,7 @@ for a = 1:length(files)
 
     if ~isempty(sesMedOffOn01) && height(MetaT)>1
         MetaTOld = MetaT;
-        app=update_tasks(MetaT);
+        app=perceive_gui(MetaT);
         waitfor(app.saveandcontinueButton,'UserData')
         MetaT=app.MetaT;
         app.delete;
