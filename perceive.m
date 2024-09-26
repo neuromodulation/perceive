@@ -52,6 +52,11 @@ end
 % CT = Calibration Testing - Calibration Tests
 % BSL = BrainSense LFP (2 Hz power average + stimulation settings)
 % BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL file)
+% BrainSenseBip = combination of BSL and BSTD into Brainsense with LFP signal/stim settings.
+
+% for modalities see white paper:
+% Jimenez-Shahed, J. (2021). Expert Review of Medical Devices, 18(4), 319–332. https://doi.org/10.1080/17434440.2021.1909471
+% Yohann Thenaisie et al (2021) J. Neural Eng. 18 042002 DOI https://doi.org/10.1088/1741-2552/ac1d5b
 
 %% TODO:
 % ADD DEIDENTIFICATION OF COPIED JSON -> remove copied json, OK
@@ -848,7 +853,6 @@ for a = 1:length(files)
                     [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|(?<!.*_.*)_"));
                     %[tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
                     %[tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
-
                     % ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     ch1 = strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
 
@@ -1398,7 +1402,8 @@ for a = 1:length(files)
                 fullname = [fullname '_run-' num2str(run)];
                 while isfile([fullname '.mat'])
                     run = run+1;
-                    fullname = [fullname(1:end-1) num2str(run)];
+                    fullname = (regexp(fulname, '.*_run-','match'));
+                    fullname = [fullname{1} num2str(run)];
                 end
                 [~,fname,~] = fileparts(fullname);
                 data.fname = [fname '.mat'];
@@ -1412,10 +1417,13 @@ for a = 1:length(files)
         else
 
             %% create plot for LMTD and change name
-            if contains(fullname,'LMTD') || any(extended)
+            if contains(fullname,'LMTD') 
                 mod_ext=check_mod_ext(data.label);
                 fullname = strrep(fullname,'mod-LMTD',['mod-LMTD' mod_ext]);
                 data.fname = strrep(data.fname,'mod-LMTD',['mod-LMTD' mod_ext]);
+                perceive_plot_raw_signals(data); % for LMTD
+                perceive_print(fullname);
+            elseif any(extended)
                 perceive_plot_raw_signals(data); % for LMTD
                 perceive_print(fullname);
             end
@@ -1489,7 +1497,9 @@ for a = 1:length(files)
             end
         end
     end
-    writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' MetaT.report{1} '.xlsx']));
+    if ~isempty(MetaT)
+        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' MetaT.report{1} '.xlsx']));
+    end
 end
 disp('all done!')
 end
