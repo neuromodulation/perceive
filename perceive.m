@@ -371,6 +371,7 @@ for a = 1:length(files)
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                     firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod= 'mod-ChronicLeft';
+                                    hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
                                     d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                     d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -409,6 +410,7 @@ for a = 1:length(files)
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                     firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod = 'mod-ChronicRight';
+                                    hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
                                     d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                     d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -455,6 +457,7 @@ for a = 1:length(files)
                             lastsample = d.time{1}(end);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             mod = 'mod-Chronic';
+                            hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
                             d.fname = [hdr.fname '_' mod];
                             d.fnamedate = [char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
                             % TODO: set if needed::
@@ -1402,7 +1405,7 @@ for a = 1:length(files)
                 fullname = [fullname '_run-' num2str(run)];
                 while isfile([fullname '.mat'])
                     run = run+1;
-                    fullname = (regexp(fulname, '.*_run-','match'));
+                    fullname = (regexp(fullname, '.*_run-','match'));
                     fullname = [fullname{1} num2str(run)];
                 end
                 [~,fname,~] = fileparts(fullname);
@@ -1432,7 +1435,8 @@ for a = 1:length(files)
             fullname = [fullname '_run-' num2str(run)];
             while isfile([fullname '.mat'])
                 run = run+1;
-                fullname = [fullname(1:end-1) num2str(run)];
+                fullname = (regexp(fullname, '.*_run-','match'));
+                fullname = [fullname{1} num2str(run)];
             end
             [~,fname,~] = fileparts(fullname);
             data.fname = [fname '.mat'];
