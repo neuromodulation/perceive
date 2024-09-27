@@ -682,17 +682,9 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
+                        
+                        d=call_ecg_cleaning(d,hdr,raw);
 
-                        d.ecg=[];
-                        d.ecg_cleaned=[];
-                        for e = 1:size(raw,1)
-                            d.ecg{e} = perceive_ecg(raw(e,:));
-                            title(strrep(d.label{e},'_',' '))
-                            xlabel(strrep(d.fname,'_',' '))
-                            %savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
-                            perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
-                            d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
-                        end
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
                         alldata{length(alldata)+1} = d;
@@ -895,6 +887,7 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
+                        d=call_ecg_cleaning(d,hdr,d.trial{1});
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseSurvey'
@@ -972,8 +965,7 @@ for a = 1:length(files)
 
 
                 case 'IndefiniteStreaming'
-                    %% add ecg-cleaning perceive
-                    %% add figures ecg cleaning
+                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     fsample = data.SampleRateInHz;
@@ -1108,6 +1100,7 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
+                        d=call_ecg_cleaning(d,hdr,d.trial{1});
                         alldata{length(alldata)+1} = d;
                     end
 
@@ -1641,5 +1634,18 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
     [~, ori, ~] = fileparts(data.hdr.OriginalFile);
     cellarr = {[ori '.json'], fname,  ses, cond, task, contacts, fname(end-4), '', acq, 'keep'}; %add parts and stim settings
     MetaT = [MetaT; cellarr];
+end
+end
+
+function d=call_ecg_cleaning(d,hdr,raw)
+d.ecg=[];
+d.ecg_cleaned=[];
+for e = 1:size(raw,1)
+    d.ecg{e} = perceive_ecg(raw(e,:));
+    title(strrep(d.label{e},'_',' '))
+    xlabel(strrep(d.fname,'_',' '))
+    %savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
+    perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
+    d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
 end
 end
