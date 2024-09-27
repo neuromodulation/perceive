@@ -54,7 +54,7 @@ end
 % BSTD = BrainSense Time Domain (250 Hz raw data corresponding to the BSL file)
 % BrainSenseBip = combination of BSL and BSTD into Brainsense with LFP signal/stim settings.
 
-% for modalities see white paper:
+% for modalities see white paper: https://www.medtronic.com/content/dam/medtronic-wide/public/western-europe/products/neurological/percept-pc-neurostimulator-whitepaper.pdf
 % Jimenez-Shahed, J. (2021). Expert Review of Medical Devices, 18(4), 319–332. https://doi.org/10.1080/17434440.2021.1909471
 % Yohann Thenaisie et al (2021) J. Neural Eng. 18 042002 DOI https://doi.org/10.1088/1741-2552/ac1d5b
 
@@ -371,7 +371,7 @@ for a = 1:length(files)
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                     firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod= 'mod-ChronicLeft';
-                                    hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
+                                    hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
                                     d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                     d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -410,7 +410,7 @@ for a = 1:length(files)
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
                                     firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod = 'mod-ChronicRight';
-                                    hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
+                                    hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
                                     d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
                                     d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
@@ -457,7 +457,7 @@ for a = 1:length(files)
                             lastsample = d.time{1}(end);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             mod = 'mod-Chronic';
-                            hdr.fname = strrep(hdr.fname, 'task-Resk', 'task-None');
+                            hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
                             d.fname = [hdr.fname '_' mod];
                             d.fnamedate = [char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
                             % TODO: set if needed::
