@@ -1512,7 +1512,8 @@ if isfield(hdr.Groups, 'Initial')
     for i=1:length(hdr.Groups.Initial)
         if hdr.Groups.Initial(i).GroupSettings.Cycling.Enabled
             if Cycling_mode
-                error('Two different cycling modes not in 1 json file implemented, contact Jojo Vanhoecke')
+                warning('Two different cycling modes: Settings Initial do not match Settings Final. Select no-cycling mode.')
+                Cycling_mode = 'Contradiction';
             else
                 Cycling_mode = true;
                 Cycling_OnDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
@@ -1526,7 +1527,8 @@ if isfield(hdr.Groups, 'Final')
     for i=1:length(hdr.Groups.Final)
         if hdr.Groups.Final(i).GroupSettings.Cycling.Enabled
             if Cycling_mode
-                error('Two different cycling modes in 1 json file not implemented, contact Jojo Vanhoecke')
+                warning('Two different cycling modes: Settings Initial do not match Settings Final. Select no-cycling mode.')
+                Cycling_mode = 'Contradiction';
             else
                 Cycling_mode = true;
                 Cycling_OnDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
@@ -1536,7 +1538,9 @@ if isfield(hdr.Groups, 'Final')
         end
     end
 end
-
+if strcmp(Cycling_mode, 'Contradiction')
+    Cycling_mode = false;
+end
 
 LAmp(isnan(LAmp))=0;
 RAmp(isnan(RAmp))=0;
