@@ -845,7 +845,7 @@ for a = 1:length(files)
                     gain=[data(:).Gain]';
 
                     %if contains()
-                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|(?<!.*_.*)_"));
+                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
                     %[tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
                     %[tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
                     % ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
