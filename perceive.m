@@ -757,11 +757,15 @@ for a = 1:length(files)
                             LAmp=d.trial{1}(3,:);
                         elseif contains(d.label(4),'STIM_L')
                             LAmp=d.trial{1}(4,:);
+                        else
+                            LAmp=0;
                         end
                         if contains(d.label(3),'STIM_R')
                             RAmp=d.trial{1}(3,:);
                         elseif contains(d.label(4),'STIM_R')
                             RAmp=d.trial{1}(4,:);
+                        else
+                            RAmp=0;
                         end
                         
                         % d.hdr.SessionDate
