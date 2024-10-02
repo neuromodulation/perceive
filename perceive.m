@@ -779,14 +779,15 @@ for a = 1:length(files)
                         d.fname = strrep(d.fname,'StimOff',acq);
 
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
-                        %% plot integrated BSL plot
+                        %% plot integrated BrainSense plot
                         subplot(2,1,1)
                         yyaxis left
                         lp=plot(d.realtime,d.trial{1}(1,:),'linewidth',2);
                         ylabel('LFP Amplitude')
                         yyaxis right
                         sp=plot(d.realtime,d.trial{1}(3,:),'linewidth',2,'linestyle','--');
-                        title(strrep(strrep(d.fname,'_','-'),'_',' '))
+                        sgtitle(strrep(strrep(strrep(d.fname,'_','-'),'_',' '),'BSL','BrainSenseBIP'))
+                        title('LEFT')
                         ylabel('Stimulation Amplitude')
                         legend([lp sp],strrep(d.label([1 3]),'_',' '),'location','northoutside')
                         xlabel('Time')
@@ -812,7 +813,7 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
 
                         %savefig(fullfile(hdr.fpath,[d.fname '.fig']))
-                        perceive_print(fullfile(hdr.fpath,[d.fname]))
+                        perceive_print(fullfile(hdr.fpath,[strrep(d.fname, 'BSL','BrainSenseBip')]))
 
 
                     end
@@ -1286,8 +1287,8 @@ for a = 1:length(files)
                     acq=acq{1};
                 end
                 fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
-                user = memory;
-                if user.MemUsedMATLAB < 9^10 %corresponds with 9MB
+                %user = memory; user.MemUsedMATLAB < 9^100 %corresponds with 9MB
+                if extended
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
