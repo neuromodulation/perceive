@@ -201,7 +201,7 @@ for a = 1:length(files)
         mkdir(fullfile(hdr.subject,hdr.session,'ieeg'));
     end
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
-    hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq];
+    hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq mod]; % do not add extra '_'
     hdr.chan = ['LFP_' hdr.LeadLocation];
     hdr.d0 = datetime(js.SessionEndDate(1:10));
 
@@ -1291,7 +1291,7 @@ for a = 1:length(files)
                 if extended
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    if size(fulldata.trial{1},2) > 250*2  %% code edited by Mansoureh Fahimi (changed 250 to 250*2)
+                    if size(fulldata.trial{1},2) > 250*20  %% code edited by Mansoureh Fahimi (changed 250 to 250*20)
                         figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
                         subplot(2,2,1)
                         yyaxis left
@@ -1382,9 +1382,8 @@ for a = 1:length(files)
 
                         perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
                     else
-                        disp('There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-                        disp('Perhaps, the code printing the figure should be placed inside the ''size(fulldata.trial{1},2) > 250'' branch?');
-                        disp('Please, review it.');
+                        disp('The recording was less than 20 seconds. There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
+                        disp('Please, review it when missing.');
                     end
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 end
