@@ -203,7 +203,14 @@ for a = 1:length(files)
     hdr.fpath = fullfile(hdr.subject,hdr.session,'ieeg');
     hdr.fname = [hdr.subject '_' hdr.session '_' task '_' acq mod]; % do not add extra '_'
     hdr.chan = ['LFP_' hdr.LeadLocation];
-    hdr.d0 = datetime(js.SessionEndDate(1:10));
+    AbnormalEnd = js.AbnormalEnd;
+    if ~AbnormalEnd
+        hdr.d0 = datetime(js.SessionEndDate(1:10));
+    else
+        warning('This recording had an abnormal end')
+        hdr.d0 = datetime(js.DeviceInformation.Final.DeviceDateTime(1:10));
+    end
+
 
     hdr.js = js;
     if ~exist('datafields','var')
