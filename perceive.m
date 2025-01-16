@@ -1,4 +1,4 @@
-function perceive(files, sub, sesMedOffOn01, extended)
+function perceive(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
@@ -11,6 +11,7 @@ function perceive(files, sub, sesMedOffOn01, extended)
 % sub           ["", 7, 21 , "021", ... ]
 % sesMedOffOn01 ["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"]
 % extended      ["","yes"] %% gives an extensive output of chronic, calibration, lastsignalcheck, diagnostic, impedance and snapshot data
+% gui           ["","yes"] %% gives option to skip gui by default settings
 %% INPUT
 arguments
     files {mustBeA(files,["char","cell"])} = '';
@@ -28,14 +29,17 @@ arguments
     % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
     % if unspecified or left empy, the subjectID will be created from:
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
     %run = ''; %numeric
-
     extended {mustBeMember(extended,["","yes"])} = '';
-
+    % '' means not extended, 'yes' means extended (default no)
+    gui {mustBeMember(gui,["","yes"])} = 'yes';
+    % '' means no gui, 'yes' means gui (default yes)
+    datafields {mustBeMember(datafields,["","BrainSenseLfp","BrainSenseSurvey","BrainSenseTimeDomain","CalibrationTests","DiagnosticData","EventSummary","Impedance","IndefiniteStreaming","LfpMontageTimeDomain","MostRecentInSessionSignalCheck","PatientEvents"])} ='';
+    localsettings ='';
 end
 
 %% OUTPUT
@@ -67,7 +71,7 @@ end
 % IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
-if exist('datafields') && ischar(datafields)
+if exist('datafields','var') && ischar(datafields) && ~isempty(datafields)
     datafields = {datafields};
 end
 
@@ -90,6 +94,15 @@ end
 if ischar(files)
     files = {files};
 end
+%% load local settings
+check_followup_time=false;
+if isfield(localsettings,'name')
+    if strcmp(localsettings.name, 'Charite')
+        check_followup_time=true;
+        datafields = {"IndefiniteStreaming","LfpMontageTimeDomain"}; %delete this section
+    end
+end
+
 
 %% create subject
 if exist('sub','var')
@@ -118,25 +131,7 @@ for a = 1:length(files)
     disp(['RUNNING ' filename])
 
     js = jsondecode(fileread(filename));
-    try
-        js.PatientInformation.Initial.PatientFirstName ='';
-        js.PatientInformation.Initial.PatientLastName ='';
-        js.PatientInformation.Initial.PatientDateOfBirth ='';
-        js.PatientInformation.Final.PatientFirstName ='';
-        js.PatientInformation.Final.PatientLastName ='';
-        js.PatientInformation.Final.PatientDateOfBirth ='';
-    catch
-        js = rmfield(js,'PatientInformation');
-        js.PatientInformation.Initial.PatientFirstName ='';
-        js.PatientInformation.Initial.PatientLastName ='';
-        js.PatientInformation.Initial.PatientDateOfBirth ='';
-        js.PatientInformation.Initial.Diagnosis ='';
-        js.PatientInformation.Final.PatientFirstName ='';
-        js.PatientInformation.Final.PatientLastName ='';
-        js.PatientInformation.Final.PatientDateOfBirth ='';
-        js.PatientInformation.Final.Diagnosis = '';
-    end
-
+    js = pseudonymize(js);
 
     infofields = {'SessionDate','SessionEndDate','PatientInformation','DeviceInformation','BatteryInformation','LeadConfiguration','Stimulation','Groups','Stimulation','Impedance','PatientEvents','EventSummary','DiagnosticData'};
     for b = 1:length(infofields)
@@ -144,7 +139,7 @@ for a = 1:length(files)
             hdr.(infofields{b})=js.(infofields{b});
         end
     end
-    
+
     hdr.SessionEndDate = datetime(strrep(js.SessionEndDate(1:end-1),'T',' ')); %To Do
     hdr.SessionEndDate = datetime(strrep(js.SessionDate(1:end-1),'T',' ')); %To Do
     if ~isempty(js.PatientInformation.Final.Diagnosis)
@@ -169,7 +164,7 @@ for a = 1:length(files)
         sub = {hdr.subject};
     elseif iscell(sub) && length(sub) == length(files)
         hdr.subject = sub{a};
-    elseif length(sub) == 1
+    elseif isscalar(sub)
         hdr.subject = sub{1};
     end
 
@@ -188,6 +183,18 @@ for a = 1:length(files)
         presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
         diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
         diffmonths=num2str(diffmonths);
+        if check_followup_time
+            loc_diffmonths=localsettings.followup{1}(3:end-1);
+            assert(~contains(loc_diffmonths,lettersPattern, 'IgnoreCase',true))
+            if ~strcmp(loc_diffmonths,diffmonths)
+                 warning('needed to update the Fu time')
+                 fid = fopen('update_followup_time.txt', 'a+');
+                 [~, jsfile, ~] = fileparts(filename);
+                 fprintf(fid, [hdr.subject ' ' jsfile ' ' diffmonths ' ' loc_diffmonths '\n']);
+                 fclose(fid);
+                 diffmonths= loc_diffmonths;
+            end
+        end
         %% create session
         ses = ['ses-', 'Fu' pad(diffmonths,2,'left','0'), 'm' , sesMedOffOn01];
         hdr.session = ses;
@@ -211,9 +218,8 @@ for a = 1:length(files)
         hdr.d0 = datetime(js.DeviceInformation.Final.DeviceDateTime(1:10));
     end
 
-
     hdr.js = js;
-    if ~exist('datafields','var')
+    if isempty(datafields)
         datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
     end
     alldata = {};
@@ -227,43 +233,13 @@ for a = 1:length(files)
             end
             mod='';
             run=1;
+            counterBSL=0;
             switch datafields{b}
                 %% add csv files by default
                 case 'Impedance'
                     if extended
-                        mod = 'mod-Impedance';
-                        T=table;
-                        save_impedance=1;
-                        for c = 1:length(data.Hemisphere)
-                            tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
-                            side = tmp{2}(1);
-                            electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
-                            e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
-                            e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
-                            if ~ischar([data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue]) && ~ischar([data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue])
-                                imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
-                                for e = 1:length(imp)
-                                    if strcmp(e1{e},'Case')
-                                        T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
-                                    else
-                                        T.([hdr.chan '_' side e2{e}(end) e1{e}(end)]) = imp(e);
-                                    end
-                                end
-                            else
-                                warning('impedance values too high, not being saved...')
-                                save_impedance=0;
-                            end
-
-                        end
-                        if save_impedance
-                            figure
-                            barh(table2array(T(1,:))')
-                            set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
-                            xlabel('Impedance')
-                            title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
-                            perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
-                            writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod '.csv']));
-                        end
+                        perceive_impedance()
+                        
                     end
 
                 case 'PatientEvents'
@@ -511,7 +487,7 @@ for a = 1:length(files)
                                     events{c} = lfp.EventName;
                                     if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
                                         tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
-                                        if isempty(tmp{1}) || length(tmp) == 1
+                                        if isempty(tmp{1}) || isscalar(tmp)
                                             tmp = {'','unknown'};
                                         end
                                         ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
@@ -520,7 +496,7 @@ for a = 1:length(files)
                                     end
                                     if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
                                         tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
-                                        if isempty(tmp{1}) || length(tmp) == 1
+                                        if isempty(tmp{1}) || isscalar(tmp)
                                             tmp = {'','unknown'};
                                         end
                                         ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
@@ -579,9 +555,9 @@ for a = 1:length(files)
 
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
-                    for c = 1:length(tmp)
+                    for c = 1:length(tmp) %missing
                         GlobalSequences{c,:} = str2num(tmp{c});
-                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2);
+                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2); 
                         nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
                     tmp =  {data(:).TicksInMses};
@@ -591,15 +567,12 @@ for a = 1:length(files)
                     end
 
                     tmp =  {data(:).GlobalPacketSizes};
-                    for c = 1:length(tmp)
+                    for c = 1:length(tmp) %missing
                         GlobalPacketSizes{c,:} = str2num(tmp{c});
                         isDataMissing(c)= logical(TicksInS{c,:}(end) >= sum(GlobalPacketSizes{c,:})/fsample);
                         time_real{c,:} = TicksInS{c,:}(1):1/fsample:TicksInS{c,:}(end)+(GlobalPacketSizes{c,:}(end)-1)/fsample;
                         time_real{c,:} = round(time_real{c,:},3);
                     end
-
-
-
 
                     gain=[data(:).Gain]';
                     [tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
@@ -609,57 +582,70 @@ for a = 1:length(files)
                     ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
                     side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
                     Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    
+                    
                     d=[];
                     for c = 1:length(runs)
-                        i=perceive_ci(runs{c},FirstPacketDateTime);
-                        try
-                            x=find(ismember(i, find(isDataMissing)));
-                            if ~isempty(x)
-                                warning('missing packages detected, will interpolate to replace missing data')
-                                for k=1:numel(x)
-                                    isReceived = zeros(size(time_real{i(k),:}, 2), 1);
-                                    nPackets = numel(GlobalPacketSizes{i(k),:});
-                                    for packetId = 1:nPackets
-                                        timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
-                                        [~, packetIdx] = min(timeTicksDistance);
-                                        if isReceived(packetIdx) == 1
-                                            packetIdx = packetIdx +1;
-                                        end
-                                        isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
-                                        %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
-                                    end
-                                    data_temp = NaN(size(time_real{i(k),:}, 2), 1);
-                                    data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
-                                    ind_interp=find(diff(isReceived));
-                                    if isReceived(ind_interp(1)+1)==1
-                                        ind_interp=[1 ind_interp];
-                                        data_temp(1)=0;
-                                    end
-                                    if isReceived(ind_interp(end)+1)==0
-                                        ind_interp=[ind_interp size(data_temp,1)-1];
-                                        data_temp(end)=0;
-                                    end
-                                    for mm=1:2:numel(ind_interp/2)
-                                        data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
-                                            linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
-                                    end
-                                    raw_temp(x(k),:)=data_temp';
-                                end
-                                raw=raw_temp;
-                            else
-                                raw=[data(i).TimeDomainData]';
-                            end
-                        catch unmatched_samples
-                            for xi=1:length(i)
-                                sl(xi)=length(data(i(xi)).TimeDomainData);
-                            end
-                            smin=min(sl);
-                            raw=[];
-                            for xi = 1:length(xi)
-                                raw(xi,:) = data(i(xi)).TimeDomainData(1:smin);
-                            end
-                            warning('Sample size differed between channels. Check session affiliation.')
+                        % time correction Jeroen Habets
+                        %
+                        
+                    %perceive time correction
+                    % '''
+                         i=perceive_ci(runs{c},FirstPacketDateTime);
+                    %     try
+                    %         x=find(ismember(i, find(isDataMissing))); %missing
+                    %         if ~isempty(x)
+                    %             warning('missing packages detected, will interpolate to replace missing data') %missing
+                    %             for k=1:numel(x)
+                    %                 isReceived = zeros(size(time_real{i(k),:}, 2), 1);
+                    %                 nPackets = numel(GlobalPacketSizes{i(k),:});
+                    %                 for packetId = 1:nPackets
+                    %                     timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
+                    %                     [~, packetIdx] = min(timeTicksDistance);
+                    %                     if isReceived(packetIdx) == 1
+                    %                         packetIdx = packetIdx +1;
+                    %                     end
+                    %                     isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
+                    %                     %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
+                    %                 end
+                    %                 data_temp = NaN(size(time_real{i(k),:}, 2), 1);
+                    %                 data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
+                    %                 ind_interp=find(diff(isReceived));
+                    %                 if isReceived(ind_interp(1)+1)==1
+                    %                     ind_interp=[1 ind_interp];
+                    %                     data_temp(1)=0;
+                    %                 end
+                    %                 if isReceived(ind_interp(end)+1)==0
+                    %                     ind_interp=[ind_interp size(data_temp,1)-1];
+                    %                     data_temp(end)=0;
+                    %                 end
+                    %                 for mm=1:2:numel(ind_interp/2)
+                    %                     data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
+                    %                         linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
+                    %                 end
+                    %                 raw_temp(x(k),:)=data_temp';
+                    %             end
+                    %             raw=raw_temp;
+                    %         else
+                                 raw1=[data(i).TimeDomainData]';
+                    %         end
+                    %     catch unmatched_samples
+                    %         for xi=1:length(i)
+                    %             sl(xi)=length(data(i(xi)).TimeDomainData);
+                    %         end
+                    %         smin=min(sl);
+                    %         raw=[];
+                    %         for xi = 1:length(xi)
+                    %             raw(xi,:) = data(i(xi)).TimeDomainData(1:smin);
+                    %         end
+                    %         warning('Sample size differed between channels. Check session affiliation.')
+                    %     end
+                        
+                        for ii=1:length(i)
+                        raw(ii,:)=check_and_correct_lfp_missingData_in_json(data,ii, hdr);
                         end
+
+                        assert(size(raw1,1)==size(raw,1));
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.CT.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
@@ -671,6 +657,7 @@ for a = 1:length(files)
                         d.trial{1} = raw;
 
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time_real = time_real{i,1}; %insert real time here
 
                         d.fsample = fsample;
 
@@ -689,7 +676,7 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
-                        
+
                         d=call_ecg_cleaning(d,hdr,raw);
 
                         % TODO: set if needed:
@@ -697,9 +684,8 @@ for a = 1:length(files)
                         alldata{length(alldata)+1} = d;
                     end
 
-
                 case 'BrainSenseLfp'
-                    counterBSL=  0;
+                    
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     bsldata=[];bsltime=[];bslchannels=[];
@@ -774,7 +760,7 @@ for a = 1:length(files)
                         else
                             RAmp=0;
                         end
-                        
+
                         % d.hdr.SessionDate
                         % d.hdr.Groups
                         % d.hdr.Groups.Initial(1).GroupSettings.Cycling
@@ -977,16 +963,16 @@ for a = 1:length(files)
 
 
                 case 'IndefiniteStreaming'
-                    
+
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     fsample = data.SampleRateInHz;
 
                     Pass = {data(:).Pass};
                     tmp =  {data(:).GlobalSequences};
-                    for c = 1:length(tmp)
+                    for c = 1:length(tmp) %missing
                         GlobalSequences{c,:} = str2num(tmp{c});
-                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2);
+                        missingPackages{c,:} = (diff(str2num(tmp{c}))==2); 
                         nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
                     tmp =  {data(:).TicksInMses};
@@ -999,7 +985,7 @@ for a = 1:length(files)
                     end
 
                     tmp =  {data(:).GlobalPacketSizes};
-                    for c = 1:length(tmp)
+                    for c = 1:length(tmp) %missing
                         GlobalPacketSizes_temp = str2num(tmp{c});
                         for kk=1:max(ci{c,:})
                             GPS_temp(kk)=sum(GlobalPacketSizes_temp(find(ci{c,:}==kk)));
@@ -1030,68 +1016,68 @@ for a = 1:length(files)
                         d.hdr.IS.FirstPacketDateTime = runs{c};
                         x=find(ismember(i, find(isDataMissing)));
                         if ~isempty(x)
-                            warning('missing packages detected, will interpolate to replace missing data')
+                            warning('missing packages detected, will interpolate to replace missing data') %missing
                             try
-                            for k=1:numel(x)
-                                isReceived = zeros(size(time_real{i(k),:}, 2), 1);
-                                nPackets = numel(GlobalPacketSizes{i(k),:});
-                                for packetId = 1:nPackets
-                                    timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
-                                    [~, packetIdx] = min(timeTicksDistance);
-                                    if isReceived(packetIdx) == 1
-                                        packetIdx = packetIdx +1;
+                                for k=1:numel(x)
+                                    isReceived = zeros(size(time_real{i(k),:}, 2), 1);
+                                    nPackets = numel(GlobalPacketSizes{i(k),:});
+                                    for packetId = 1:nPackets
+                                        timeTicksDistance = abs(time_real{i(k),:} - TicksInS{i(k),:}(packetId));
+                                        [~, packetIdx] = min(timeTicksDistance);
+                                        if isReceived(packetIdx) == 1
+                                            packetIdx = packetIdx +1;
+                                        end
+                                        %                                     if packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1>size(isReceived,1)
+                                        %                                         cut_sampl=size(isReceived,1)-packetIdx+GlobalPacketSizes{i(k),:}(packetId);
+                                        %                                         isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl)+1;
+                                        %                                     else
+                                        isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
+                                        %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
+                                        %                                     end
                                     end
-                                    %                                     if packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1>size(isReceived,1)
-                                    %                                         cut_sampl=size(isReceived,1)-packetIdx+GlobalPacketSizes{i(k),:}(packetId);
-                                    %                                         isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-cut_sampl)+1;
-                                    %                                     else
-                                    isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1) = isReceived(packetIdx:packetIdx+GlobalPacketSizes{i(k),:}(packetId)-1)+1;
-                                    %             figure; plot(isReceived, '.'); yticks([0 1]); yticklabels({'not received', 'received'}); ylim([-1 10])
-                                    %                                     end
-                                end
 
-                                %If there are pseudo double-received samples, compensate non-received samples
-                                %                                 numel(find(logical(isReceived)))+nDoubles
-                                doublesIdx = find(isReceived == 2);
-                                nDoubles = numel(doublesIdx);
-                                for doubleId = 1:nDoubles
-                                    missingIdx = find(isReceived == 0);
-                                    [~, idxOfidx] = min(abs(missingIdx - doublesIdx(doubleId)));
-                                    isReceived(missingIdx(idxOfidx)) = 1;
-                                    isReceived(doublesIdx(doubleId)) = 1;
-                                end
+                                    %If there are pseudo double-received samples, compensate non-received samples
+                                    %                                 numel(find(logical(isReceived)))+nDoubles
+                                    doublesIdx = find(isReceived == 2);
+                                    nDoubles = numel(doublesIdx);
+                                    for doubleId = 1:nDoubles
+                                        missingIdx = find(isReceived == 0);
+                                        [~, idxOfidx] = min(abs(missingIdx - doublesIdx(doubleId)));
+                                        isReceived(missingIdx(idxOfidx)) = 1;
+                                        isReceived(doublesIdx(doubleId)) = 1;
+                                    end
 
-                                data_temp = NaN(size(time_real{i(k),:}, 2), 1);
-                                data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
-                                ind_interp=find(diff(isReceived));
-                                if isReceived(ind_interp(1)+1)==1
-                                    ind_interp=[1 ind_interp];
-                                    data_temp(1)=0;
+                                    data_temp = NaN(size(time_real{i(k),:}, 2), 1);
+                                    data_temp(logical(isReceived), :) = data(i(k)).TimeDomainData;
+                                    ind_interp=find(diff(isReceived));
+                                    if isReceived(ind_interp(1)+1)==1
+                                        ind_interp=[1 ind_interp];
+                                        data_temp(1)=0;
+                                    end
+                                    if isReceived(ind_interp(end)+1)==0
+                                        ind_interp=[ind_interp size(data_temp,1)-1];
+                                        data_temp(end)=0;
+                                    end
+                                    for mm=1:2:numel(ind_interp/2)
+                                        data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
+                                            linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
+                                    end
+                                    raw_temp(x(k),:)=data_temp';
                                 end
-                                if isReceived(ind_interp(end)+1)==0
-                                    ind_interp=[ind_interp size(data_temp,1)-1];
-                                    data_temp(end)=0;
-                                end
-                                for mm=1:2:numel(ind_interp/2)
-                                    data_temp(ind_interp(mm)+1:ind_interp(mm+1))=...
-                                        linspace(data_temp(ind_interp(mm)), data_temp(ind_interp(mm+1)+1), ind_interp(mm+1)-ind_interp(mm));
-                                end
-                                raw_temp(x(k),:)=data_temp';
-                            end
-                            tmp=raw_temp;
+                                tmp=raw_temp;
                             catch
-                                warning('The missing packages could not be computed. Interpolation failed.')
+                                warning('The missing packages could not be computed. Interpolation failed.') %missing
                             end
                         else
                             tmp=[data(i).TimeDomainData]';
                         end
-                        
+
                         try
-                        xchans = perceive_ci({'L_03','L_13','L_02','R_03','R_13','R_02'},Channel(i));
-                        nchans = {'L_01','L_12','L_23','R_01','R_12','R_23'};
-                        refraw = [tmp(xchans(1),:)-tmp(xchans(2),:);(tmp(xchans(1),:)-tmp(xchans(2),:))-tmp(xchans(3),:);tmp(xchans(3),:)-tmp(xchans(1),:);
-                            tmp(xchans(4),:)-tmp(xchans(5),:);(tmp(xchans(4),:)-tmp(xchans(5),:))-tmp(xchans(6),:);tmp(xchans(6),:)-tmp(xchans(4),:)];
-                        d.trial{1} = [tmp;-refraw;];
+                            xchans = perceive_ci({'L_03','L_13','L_02','R_03','R_13','R_02'},Channel(i));
+                            nchans = {'L_01','L_12','L_23','R_01','R_12','R_23'};
+                            refraw = [tmp(xchans(1),:)-tmp(xchans(2),:);(tmp(xchans(1),:)-tmp(xchans(2),:))-tmp(xchans(3),:);tmp(xchans(3),:)-tmp(xchans(1),:);
+                                tmp(xchans(4),:)-tmp(xchans(5),:);(tmp(xchans(4),:)-tmp(xchans(5),:))-tmp(xchans(6),:);tmp(xchans(6),:)-tmp(xchans(4),:)];
+                            d.trial{1} = [tmp;-refraw;];
                         catch
                             d.trial{1} = [tmp];
                             warning('The calculated packages could not be added. Data for Indefinite Streaming failed.')
@@ -1248,6 +1234,13 @@ for a = 1:length(files)
     %copyfile(files{a},nfile)
 
     counterBrainSense=0;
+    % check counterBSL
+    counterBSL=0;
+    for b = 1:length(alldata)
+        if(contains(alldata{b}.fname,'BSL'))
+            counterBSL=counterBSL+1;
+        end
+    end
     %% save all data
     for b = 1:length(alldata)
         fullname = fullfile('.',hdr.fpath,alldata{b}.fname);
@@ -1261,7 +1254,8 @@ for a = 1:length(files)
         data=alldata{b};
 
         %% handle BSTD and BSL files to BrainSenseBip
-        if regexp(data.fname,'BSTD')
+        if any(regexp(data.fname,'BSTD'))
+            assert(counterBrainSense<=counterBSL)
             counterBrainSense=counterBrainSense+1;
 
             data.fname = strrep(data.fname,'BSTD','BrainSenseBip');
@@ -1270,161 +1264,162 @@ for a = 1:length(files)
 
             [folder,~,~]=fileparts(fullname);
             [~,~,list_of_BSLfiles]=perceive_ffind([folder, filesep, '*BSL','*.mat']);
+            if ~isempty(list_of_BSLfiles)
+                bsl=load(list_of_BSLfiles{counterBrainSense});
 
-            bsl=load(list_of_BSLfiles{counterBrainSense});
-
-            if ~isequal(bsl.data.hdr.SessionEndDate, data.hdr.SessionEndDate)
-                warning('BSL file could not be matched BSTD data to create BrainSense.')
-            else
-                fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
-
-                fulldata.label(3:6) = bsl.data.label;
-                fulldata.time{1}=fulldata.time{1};
-                otime = bsl.data.time{1};
-                for c =1:4
-                    fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
-                end
-                %% determine StimOff or StimOn
-
-                acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match'); %Search for StimOff StimOn
-                if ~isempty(acq)
-                    acq=acq{1};
+                if ~isequal(bsl.data.hdr.SessionEndDate, data.hdr.SessionEndDate)
+                    warning('BSL file could not be matched BSTD data to create BrainSense.')
                 else
-                    acq=regexp(bsl.data.fname,'Burst.*(?=_mod)','match'); %Search for burst name
-                    acq=acq{1};
-                end
-                fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
-                %user = memory; user.MemUsedMATLAB < 9^100 %corresponds with 9MB
-                if extended
+                    fulldata.BSLDateTime = [bsl.data.realtime(1) bsl.data.realtime(end)];
 
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    if size(fulldata.trial{1},2) > 250*20  %% code edited by Mansoureh Fahimi (changed 250 to 250*20)
-                        figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
-                        subplot(2,2,1)
-                        yyaxis left
-                        plot(fulldata.time{1},fulldata.trial{1}(1,:))
-                        ylabel('Raw amplitude')
-                        if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                        elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-                        else
-                            error('neither Left nor Right TherapySnapshot present');
-                        end
-                        hold on
+                    fulldata.label(3:6) = bsl.data.label;
+                    fulldata.time{1}=fulldata.time{1};
+                    otime = bsl.data.time{1};
+                    for c =1:4
+                        fulldata.trial{1}(c+2,:) = interp1(otime-otime(1),bsl.data.trial{1}(c,:),fulldata.time{1}-fulldata.time{1}(1),'nearest');
+                    end
+                    %% determine StimOff or StimOn
 
-                        [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
-                        mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-                        yyaxis right
-                        ylabel('LFP and STIM amplitude')
-                        plot(fulldata.time{1},fulldata.trial{1}(3,:))
-                        %LAmp = fulldata.trial{1}(3,:);
-                        xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-                        hold on
-                        plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
-                        plot(t,mpow.*1000)
-                        title(strrep({fulldata.label{3},fulldata.label{5}},'_',' '))
-                        axes('Position',[.34 .8 .1 .1])
-                        box off
-                        plot(f,nanmean(log(tf),2))
-                        xlabel('F')
-                        ylabel('P')
-                        xlim([3 40])
-
-                        axes('Position',[.16 .8 .1 .1])
-                        box off
-                        plot(fulldata.time{1},fulldata.trial{1}(1,:))
-                        xlabel('T'),ylabel('A')
-                        xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
-                        xlim([xx xx+1.5])
-
-                        subplot(2,2,3)
-                        imagesc(t,f,log(tf)),axis xy,
-                        xlabel('Time [s]')
-                        ylabel('Frequency [Hz]')
-
-                        subplot(2,2,2)
-                        yyaxis left
-                        plot(fulldata.time{1},fulldata.trial{1}(2,:))
-                        ylabel('Raw amplitude')
-                        if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
-                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
-                        elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
-                            pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
-                        else
-                            error('neither Left nor Right TherapySnapshot present');
-                        end
-                        hold on
-                        [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
-                        mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
-                        yyaxis right
-                        ylabel('LFP and STIM amplitude')
-                        plot(fulldata.time{1},fulldata.trial{1}(4,:))
-                        %RAmp = fulldata.trial{1}(4,:);
-                        xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
-                        hold on
-                        plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
-                        plot(t,mpow.*1000)
-
-                        title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
-                        %%
-                        axes('Position',[.78 .8 .1 .1])
-                        box off
-                        plot(f,nanmean(log(tf),2))
-                        xlim([3 40])
-                        xlabel('F')
-                        ylabel('P')
-
-                        axes('Position',[.6 .8 .1 .1])
-                        box off
-                        plot(fulldata.time{1},fulldata.trial{1}(2,:))
-                        xlabel('T'),ylabel('A')
-                        xlim([xx xx+1.5])
-
-                        subplot(2,2,4)
-                        imagesc(t,f,log(tf)),axis xy,
-                        xlabel('Time [s]')
-                        ylabel('Frequency [Hz]')
-
-                        perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
+                    acq=regexp(bsl.data.fname,'Stim.*(?=_mod)','match'); %Search for StimOff StimOn
+                    if ~isempty(acq)
+                        acq=acq{1};
                     else
-                        disp('The recording was less than 20 seconds. There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
-                        disp('Please, review it when missing.');
+                        acq=regexp(bsl.data.fname,'Burst.*(?=_mod)','match'); %Search for burst name
+                        acq=acq{1};
                     end
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                end
-                %% save data of BSTD
-                fullname = fullfile('.',hdr.fpath,fulldata.fname);
-                %perceive_print(fullname) %% no useful information
-                % close the figure if should not be kept open
-                if isfield(fulldata,'keepfig')
-                    if ~fulldata.keepfig
-                        close();
+                    fulldata.fname = strrep(fulldata.fname,'StimOff',acq);
+                    %user = memory; user.MemUsedMATLAB < 9^100 %corresponds with 9MB
+                    if extended
+
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        if size(fulldata.trial{1},2) > 250*20  %% code edited by Mansoureh Fahimi (changed 250 to 250*20)
+                            figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
+                            subplot(2,2,1)
+                            yyaxis left
+                            plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                            ylabel('Raw amplitude')
+                            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                            else
+                                error('neither Left nor Right TherapySnapshot present');
+                            end
+                            hold on
+
+                            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(1,:),fulldata.fsample,128,.3);
+                            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                            yyaxis right
+                            ylabel('LFP and STIM amplitude')
+                            plot(fulldata.time{1},fulldata.trial{1}(3,:))
+                            %LAmp = fulldata.trial{1}(3,:);
+                            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                            hold on
+                            plot(fulldata.time{1},fulldata.trial{1}(5,:).*1000)
+                            plot(t,mpow.*1000)
+                            title(strrep({fulldata.label{3},fulldata.label{5}},'_',' '))
+                            axes('Position',[.34 .8 .1 .1])
+                            box off
+                            plot(f,nanmean(log(tf),2))
+                            xlabel('F')
+                            ylabel('P')
+                            xlim([3 40])
+
+                            axes('Position',[.16 .8 .1 .1])
+                            box off
+                            plot(fulldata.time{1},fulldata.trial{1}(1,:))
+                            xlabel('T'),ylabel('A')
+                            xx = randi(round([fulldata.time{1}(1),fulldata.time{1}(end)]),1);
+                            xlim([xx xx+1.5])
+
+                            subplot(2,2,3)
+                            imagesc(t,f,log(tf)),axis xy,
+                            xlabel('Time [s]')
+                            ylabel('Frequency [Hz]')
+
+                            subplot(2,2,2)
+                            yyaxis left
+                            plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                            ylabel('Raw amplitude')
+                            if isfield(bsl.data.hdr.BSL.TherapySnapshot,'Right')
+                                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Right.FrequencyInHertz;
+                            elseif isfield(bsl.data.hdr.BSL.TherapySnapshot,'Left')
+                                pkfreq = bsl.data.hdr.BSL.TherapySnapshot.Left.FrequencyInHertz;
+                            else
+                                error('neither Left nor Right TherapySnapshot present');
+                            end
+                            hold on
+                            [tf,t,f]=perceive_raw_tf(fulldata.trial{1}(2,:),fulldata.fsample,fulldata.fsample,.5);
+                            mpow=nanmean(tf(perceive_sc(f,pkfreq-4):perceive_sc(f,pkfreq+4),:));
+                            yyaxis right
+                            ylabel('LFP and STIM amplitude')
+                            plot(fulldata.time{1},fulldata.trial{1}(4,:))
+                            %RAmp = fulldata.trial{1}(4,:);
+                            xlim([fulldata.time{1}(1),fulldata.time{1}(end)])
+                            hold on
+                            plot(fulldata.time{1},fulldata.trial{1}(6,:).*1000)
+                            plot(t,mpow.*1000)
+
+                            title(strrep({fulldata.fname,fulldata.label{4},fulldata.label{6}},'_',' '))
+                            %%
+                            axes('Position',[.78 .8 .1 .1])
+                            box off
+                            plot(f,nanmean(log(tf),2))
+                            xlim([3 40])
+                            xlabel('F')
+                            ylabel('P')
+
+                            axes('Position',[.6 .8 .1 .1])
+                            box off
+                            plot(fulldata.time{1},fulldata.trial{1}(2,:))
+                            xlabel('T'),ylabel('A')
+                            xlim([xx xx+1.5])
+
+                            subplot(2,2,4)
+                            imagesc(t,f,log(tf)),axis xy,
+                            xlabel('Time [s]')
+                            ylabel('Frequency [Hz]')
+
+                            perceive_print(fullfile('.',hdr.fpath, fulldata.fname))
+                        else
+                            disp('The recording was less than 20 seconds. There is a potential problem: a figure got not created, but the code below would print the current figure (which holds something else than the current ''data'')!');
+                            disp('Please, review it when missing.');
+                        end
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     end
-                    fulldata=rmfield(fulldata,'keepfig');
-                end
-                data=fulldata;
-                run = 1;
-                fullname = [fullname '_run-' num2str(run)];
-                while isfile([fullname '.mat'])
-                    run = run+1;
-                    fullname = (regexp(fullname, '.*_run-','match'));
-                    fullname = [fullname{1} num2str(run)];
-                end
-                [~,fname,~] = fileparts(fullname);
-                data.fname = [fname '.mat'];
-                disp(['WRITING ' fullname '.mat as FieldTrip file.'])
-                save([fullname '.mat'],'data')
-                if sesMedOffOn01
-                    MetaT= metadata_to_table(MetaT,data);
+                    %% save data of BSTD
+                    fullname = fullfile('.',hdr.fpath,fulldata.fname);
+                    %perceive_print(fullname) %% no useful information
+                    % close the figure if should not be kept open
+                    if isfield(fulldata,'keepfig')
+                        if ~fulldata.keepfig
+                            close();
+                        end
+                        fulldata=rmfield(fulldata,'keepfig');
+                    end
+                    data=fulldata;
+                    run = 1;
+                    fullname = [fullname '_run-' num2str(run)];
+                    while isfile([fullname '.mat'])
+                        run = run+1;
+                        fullname = (regexp(fullname, '.*_run-','match'));
+                        fullname = [fullname{1} num2str(run)];
+                    end
+                    [~,fname,~] = fileparts(fullname);
+                    data.fname = [fname '.mat'];
+                    disp(['WRITING ' fullname '.mat as FieldTrip file.'])
+                    save([fullname '.mat'],'data')
+                    if sesMedOffOn01
+                        MetaT= metadata_to_table(MetaT,data);
+                    end
                 end
             end
             %% no BSTD, so save the data
         else
 
             %% create plot for LMTD and change name
-            if contains(fullname,'LMTD') 
+            if contains(fullname,'LMTD')
                 mod_ext=check_mod_ext(data.label);
                 fullname = strrep(fullname,'mod-LMTD',['mod-LMTD' mod_ext]);
                 data.fname = strrep(data.fname,'mod-LMTD',['mod-LMTD' mod_ext]);
@@ -1463,16 +1458,22 @@ for a = 1:length(files)
 
     if ~isempty(sesMedOffOn01) && height(MetaT)>1
         MetaTOld = MetaT;
-        app=perceive_gui(MetaT);
-        waitfor(app.saveandcontinueButton,'UserData')
-        MetaT=app.MetaT;
-        app.delete;
+
+        if gui
+            app=perceive_gui(MetaT);
+            waitfor(app.saveandcontinueButton,'UserData')
+            MetaT=app.MetaT;
+            app.delete;
+        else
+            %%
+        end
+
         %do the file renaming according to the interface metatable
-        
+
         rows_to_remove = [];
         for i = 1:height(MetaT)
             if strcmp(MetaT.remove{i},'REMOVE')
-            % do nothing OR %%% when necessary we need to remove the old file
+                % do nothing OR %%% when necessary we need to remove the old file
                 delete(fullfile(hdr.fpath,MetaTOld.perceiveFilename{i}))
                 rows_to_remove = [rows_to_remove, i];
             elseif strcmp(MetaT.remove{i},'keep')
@@ -1506,7 +1507,7 @@ for a = 1:length(files)
         end
     end
     if ~isempty(MetaT)
-        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_metadata_' MetaT.report{1} '.xlsx']));
+        writetable(MetaT,fullfile(hdr.fpath,[ sub{1} '_' ses '_' MetaT.report{1} '.xlsx']));
     end
 end
 disp('all done!')
@@ -1580,9 +1581,9 @@ end
 end
 
 function mod_ext=check_mod_ext(labels)
- %03, 13, 02, 12 are Ring contacts
- %1A_2A, 1B_2B, 1C_2C LEFT are SegmInter
- %1A_1B, 1A_1C, 1B_1C, 2A_2B, 2B_2C are SegmIntraL
+%03, 13, 02, 12 are Ring contacts
+%1A_2A, 1B_2B, 1C_2C LEFT are SegmInter
+%1A_1B, 1A_1C, 1B_1C, 2A_2B, 2B_2C are SegmIntraL
 if sum(contains(labels,'LEFT_RING'))>3 %usually 6 or 4
     mod_ext = 'RingL';
 elseif sum(contains(labels,'LEFT_SEGMENT'))==6
@@ -1608,7 +1609,7 @@ else
     end
     if any(contains(labels,'LEFT')) && ~contains(mod_ext,'notspec')
         mod_ext = [mod_ext , 'L'];
-    else 
+    else
         mod_ext = [mod_ext , 'R'];
     end
 end
@@ -1663,4 +1664,154 @@ for e = 1:size(raw,1)
     perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
     d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
 end
+end
+
+function js=pseudonymize(js)
+try
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+catch
+    js = rmfield(js,'PatientInformation');
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Initial.Diagnosis ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+    js.PatientInformation.Final.Diagnosis = '';
+end
+end
+
+function []=perceive_impedance(data)
+mod = 'mod-Impedance';
+T=table;
+save_impedance=1;
+for c = 1:length(data.Hemisphere)
+    tmp=strsplit(data.Hemisphere(c).Hemisphere,'.');
+    side = tmp{2}(1);
+    %electrodes = unique([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1}]);
+    e1 = strrep([{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode1} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode1}],'ElectrodeDef.','') ;
+    e2 = [{data.Hemisphere(c).SessionImpedance.Monopolar.Electrode2} {data.Hemisphere(c).SessionImpedance.Bipolar.Electrode2}];
+    if ~ischar([data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue]) && ~ischar([data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue])
+        imp = [[data.Hemisphere(c).SessionImpedance.Monopolar.ResultValue] [data.Hemisphere(c).SessionImpedance.Bipolar.ResultValue]];
+        for e = 1:length(imp)
+            if strcmp(e1{e},'Case')
+                T.([hdr.chan '_' side e2{e}(end)]) = imp(e);
+            else
+                T.([hdr.chan '_' side e2{e}(end) e1{e}(end)]) = imp(e);
+            end
+        end
+    else
+        warning('impedance values too high, not being saved...')
+        save_impedance=0;
+    end
+
+end
+
+%plot impedance
+if save_impedance
+    figure
+    barh(table2array(T(1,:))')
+    set(gca,'YTick',1:length(T.Properties.VariableNames),'YTickLabel',strrep(T.Properties.VariableNames,'_',' '))
+    xlabel('Impedance')
+    title(strrep({hdr.subject, hdr.session,'Impedances'},'_',' '))
+    perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
+    writetable(T,fullfile(hdr.fpath,[hdr.fname '_' mod '.csv']));
+end
+end
+
+function new_lfp_arr = check_and_correct_lfp_missingData_in_json(data,select, hdr)
+    % from Jeroen Habets
+    % https://github.com/jgvhabets/PyPerceive/blob/dev/code/PerceiveImport/methods/load_rawfile.py
+
+    % Function checks missing packets based on start and endtime
+    % of first and last received packets, and the time-differences
+    % between consecutive packets. In case of a missing packet,
+    % the missing time window is filled with NaNs.
+    % 
+    % TODO: debug for BRAINSENSELFP OR SURVEY, STREAMING?
+    % BRAINSENSETIMEDOMAIN DATA STRUCTURE works?
+   
+    try
+   
+    Fs= data(select).SampleRateInHz; %Fs = data.hdr.Fs;
+    GlobalPacketSizes=str2num(hdr.js.BrainSenseTimeDomain(select).GlobalPacketSizes);
+    ticksMsec=str2num(hdr.js.BrainSenseTimeDomain(select).TicksInMses);
+    TicksInS = (ticksMsec - ticksMsec(1))/1000;
+    ticksDiffs = -(ticksMsec(1:end-1)-ticksMsec(2:end));
+    data_is_missing = logical(1);
+    packetSizes = GlobalPacketSizes;
+    lfp_data = data(select).TimeDomainData; %data.trial{:,:}(1,:);
+
+    if data_is_missing
+        disp('LFP Data is missing!! perform function to fill NaNs in')
+    else
+        disp('No LFP data missing based on timestamp differences between data-packets')
+    end
+
+    data_length_ms = ticksMsec(end) + 250 - ticksMsec(1);  % length of a pakcet in milliseconds is always 250
+    data_length_samples = round(data_length_ms / 1000 * Fs) + 1 ; % add one to calculate for 63 packet at end
+    new_lfp_arr = nan(data_length_samples,1);
+
+    % fill nan array with real LFP values, use tickDiffs to decide start-points (and where to leave NaN)
+
+    % Add first packet (data always starts with present packet)
+    current_packetSize = round(packetSizes(1));
+    if current_packetSize > 63
+        disp('UNKNOWN TOO LARGE DATAPACKET IS CUTDOWN BY {current_packetSize - 63} samples')
+        current_packetSize = 63 ; % if there is UNKNOWN TOO MANY DATA, only the first 63 samples of the too large packets are included
+    end
+    new_lfp_arr(1:current_packetSize) = lfp_data(1:current_packetSize);
+    % loop over every distance (index for packetsize is + 1 because first difference corresponds to seconds packet)
+    i_lfp = current_packetSize;  % index to track which lfp values are already used
+    i_arr = current_packetSize;  % index to track of new array index
+    
+    i_packet = 1;
+
+    for diff = ticksDiffs
+        if diff == 250
+            % only lfp values, no nans if distance was 250 ms
+            current_packetSize = round(packetSizes(i_packet));
+
+            % in case of very rare TOO LARGE packetsize (there is MORE DATA than expected based on the first and last timestamps)
+            if current_packetSize > 63
+                disp('UNKNOWN TOO LARGE DATAPACKET IS CUTDOWN BY {current_packetSize - 63} samples')
+                current_packetSize = 63;
+            end
+            new_lfp_arr(i_arr:round(i_arr + current_packetSize)) = lfp_data(i_lfp:round(i_lfp + current_packetSize));
+            i_lfp = i_lfp + current_packetSize;
+            i_arr = i_arr + current_packetSize;
+            i_packet = i_packet + 1;
+        else
+            disp('add NaNs by skipping')
+            msecs_missing = (diff - 250);  % difference if one packet is missing is 500 ms
+
+            secs_missing = msecs_missing / 1000;
+            samples_missing = round(secs_missing * Fs);
+            % no filling with NaNs, bcs array is created full with NaNs
+            i_arr = i_arr + samples_missing;  % shift array index up by number of NaNs left in the array
+        end
+    end
+    
+    % correct in case one sample too many was in array shape
+    if isnan(new_lfp_arr(end))
+        new_lfp_arr = new_lfp_arr(1:end);
+    end
+    % plot the correction
+    % plot(1:length(new_lfp_arr),new_lfp_arr)
+    % na=double(isnan(new_lfp_arr));
+    % na(na==0)=NaN;
+    % hold on
+    % plot(1:length(na),na,"r*")
+    % title(data.fname, "Interpreter","none")
+    hold off
+    catch
+        new_lfp_arr=size((i_lfp + current_packetSize),1);
+    end
+    new_lfp_arr=new_lfp_arr';
 end

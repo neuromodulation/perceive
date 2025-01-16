@@ -66,10 +66,12 @@ else
     folder = outfolders;
 end
 ris = logical(sum([ismember(files,'.') ,ismember(files,'..')],2));
-files(ris)=[];
-folder(ris)=[];
-[files,x]=unique(files);
-folder = folder(x);
+if ris
+    files(ris)=[];
+    folder(ris)=[];
+    [files,x]=unique(files);
+    folder = folder(x);
+end
 % keyboard
 if ~isempty(files)
     if ~cell && length(files) == 1
@@ -86,7 +88,7 @@ if ~isempty(files)
     end
 else
     folder = [];
-    fullfnames = [];
+    fullfname = [];
 end
     
 
