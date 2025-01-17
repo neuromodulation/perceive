@@ -96,10 +96,12 @@ if ischar(files)
 end
 %% load local settings
 check_followup_time=false;
+check_gui_tasks=false;
 if isfield(localsettings,'name')
     if strcmp(localsettings.name, 'Charite')
         check_followup_time=true;
-        datafields = {"IndefiniteStreaming","LfpMontageTimeDomain"}; %delete this section
+        check_gui_tasks=true;
+        datafields = {"IndefiniteStreaming","LfpMontageTimeDomain","BrainSenseTimeDomain"}; %delete this section
     end
 end
 
@@ -1466,6 +1468,15 @@ for a = 1:length(files)
             app.delete;
         else
             %%
+            if check_gui_tasks
+                assert( height(MetaT)==length(localsettings.mod))
+                for i = 1:height(MetaT)
+                    if contains(MetaT.perceiveFilename{i},'TASK')
+                        assert(contains(MetaT.perceiveFilename{i},localsettings.mod{i}))
+                        MetaT.perceiveFilename{i}=replace(MetaT.perceiveFilename{i},['TASK' digitsPattern(1) '_'],localsettings.task{i});
+                    end
+                end
+            end
         end
 
         %do the file renaming according to the interface metatable
