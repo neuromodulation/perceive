@@ -97,6 +97,7 @@ end
 %% load local settings
 check_followup_time=false;
 check_gui_tasks=false;
+check_gui_med=false;
 if isfield(localsettings,'name')
     if strcmp(localsettings.name, 'Charite')
         check_followup_time=true;
