@@ -101,6 +101,7 @@ if isfield(localsettings,'name')
     if strcmp(localsettings.name, 'Charite')
         check_followup_time=true;
         check_gui_tasks=true;
+        check_gui_med=true;
         datafields = {"IndefiniteStreaming","LfpMontageTimeDomain","BrainSenseTimeDomain"}; %delete this section
     end
 end
@@ -195,6 +196,8 @@ for a = 1:length(files)
                  fprintf(fid, [hdr.subject ' ' jsfile ' ' diffmonths ' ' loc_diffmonths '\n']);
                  fclose(fid);
                  diffmonths= loc_diffmonths;
+            else
+                diffmonths= loc_diffmonths; % always take the FU input
             end
         end
         %% create session
@@ -1470,10 +1473,20 @@ for a = 1:length(files)
             %%
             if check_gui_tasks
                 assert( height(MetaT)==length(localsettings.mod))
-                for i = 1:height(MetaT)
+                for i = 1:height(MetaT) %update the task name
                     if contains(MetaT.perceiveFilename{i},'TASK')
                         assert(contains(MetaT.perceiveFilename{i},localsettings.mod{i}))
                         MetaT.perceiveFilename{i}=replace(MetaT.perceiveFilename{i},['TASK' digitsPattern(1) '_'],localsettings.task{i});
+                    end
+                end
+            end
+            if check_gui_med %remove the recordings with different medication settings
+                if any(localsettings.remove_med)
+                    assert( height(MetaT)==length(localsettings.remove_med))
+                    for i = 1:height(MetaT)
+                        if localsettings.remove_med(i)
+                            MetaT.remove{i}=replace('keep','REMOVE');
+                        end
                     end
                 end
             end
@@ -1739,7 +1752,7 @@ end
 function new_lfp_arr = check_and_correct_lfp_missingData_in_json(data,select, hdr)
     % from Jeroen Habets
     % https://github.com/jgvhabets/PyPerceive/blob/dev/code/PerceiveImport/methods/load_rawfile.py
-
+    disp('check_and_correct_lfp_missingData by Jeroen Habets')
     % Function checks missing packets based on start and endtime
     % of first and last received packets, and the time-differences
     % between consecutive packets. In case of a missing packet,
