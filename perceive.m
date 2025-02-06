@@ -660,12 +660,12 @@ for a = 1:length(files)
                     %         end
                     %         warning('Sample size differed between channels. Check session affiliation.')
                     %     end
-                        raw=[];
-                        for ii=1:length(i)
-                            raw(ii,:)=check_and_correct_lfp_missingData_in_json(data,ii, hdr);
-                        end
-
-                        assert(size(raw1,1)==size(raw,1));
+                        % % % raw=[];
+                        % % % for ii=1:length(i)
+                        % % %     raw(ii,:)=check_and_correct_lfp_missingData_in_json(data,ii, hdr);
+                        % % % end
+                        % % % 
+                        % % % assert(size(raw1,1)==size(raw,1));
                         d.hdr = hdr;
                         d.datatype = datafields{b};
                         d.hdr.CT.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
@@ -674,8 +674,8 @@ for a = 1:length(files)
                         d.hdr.CT.FirstPacketDateTime = runs{c};
 
                         d.label=Channel(i);
-                        d.trial{1} = raw;
-
+                        d.trial{1} = raw1;
+                        size(raw1)
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.time_real = time_real{i,1}; %insert real time here
 
@@ -704,6 +704,30 @@ for a = 1:length(files)
 
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
+
+                        %%%Gaetanon pseudocode
+                        
+                        tmp = strsplit(data(c,:).TicksInMses, ',');
+                        tmp(end)=[];
+                        TicksInMses= cellfun(@(x)str2double(x), tmp);
+                       
+                        tmp = strsplit(data(c,:).GlobalPacketSizes, ',');
+                        tmp(end)=[];
+                        GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
+
+                        TDtime = TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample : 1/fsample : TicksInMses(end);
+                        for i=length(GlobalPacketSize):-1:2
+                            if TicksInMses(i)-TicksInMses(i-1) > (1 + GlobalPacketSize(i))/ fsample;
+                                Prev_packet = TicksInMses(i-1)- (GlobalPacketSize(i-1)-1)/ fsample : 1/fsample : TicksInMses(i-1);
+                                TDtime = [Prev_packet,TDtime];
+                            else
+                                Prev_packet = TDtime(1)- GlobalPacketSize(i-1)/ fsample: 1/fsample : TDtime(1) - 1/fsample;
+                                TDtime = [Prev_packet,TDtime];
+                            end
+                        end
+                        d.TDtime = TDtime;
+                        d.sampleinfo(1,:) = [firstsample lastsample];
+                        %%%
                         alldata{length(alldata)+1} = d;
                     end
 
@@ -1646,6 +1670,7 @@ for a = 1:length(files)
                 recording_basename = strrep(MetaTcopy.perceiveFilename{i},'part-1.mat','part-');
                 %data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
                 data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording_basename));
+                data = perceive_stitch_interruption_together_TDtime(fullfile(hdr.fpath,recording_basename));
 
                 MetaT = [MetaT(1:i+m,:); MetaT(i+m:end,:)];
                 MetaT.part{i+m}='';
@@ -1969,6 +1994,6 @@ end
 
 function firstsample = set_firstsample(string_of_TicksInMses)
     parts = strsplit(string_of_TicksInMses, ',');
-    % Extract the first part and convert it to a number
+    % Extract the first part and convert it to a number, divide by 50ms
     firstsample = str2num(parts{1})/50;
 end
