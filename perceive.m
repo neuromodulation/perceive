@@ -29,7 +29,7 @@ arguments
     % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
     % if unspecified or left empy, the subjectID will be created from:
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01"])} = '';
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
@@ -224,9 +224,19 @@ for a = 1:length(files)
         hdr.d0 = datetime(js.DeviceInformation.Final.DeviceDateTime(1:10));
     end
 
+    if isfield(js, 'DataVersion')
+        assert(strcmp(js.DataVersion, '1.2'), 'Version implentation until 1.2, contact Jojo Vanhoecke for update')
+        DataVersion = 1.2;
+    else
+        DataVersion = 0;
+    end
+
     hdr.js = js;
     if isempty(datafields)
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData'});
+        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData','BrainSenseSurveysTimeDomain','BrainSenseSurveys'});
+        %if DataVersion
+        %    datafields = sort({'BrainSenseSurveysTimeDomain','BrainSenseSurveys'});
+        %end
     end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
@@ -966,6 +976,105 @@ for a = 1:length(files)
                     %savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
                     %pause(2)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
+                case 'BrainSenseSurveys'
+                    %continue
+                    %
+                    %
+
+
+
+                case 'BrainSenseSurveysTimeDomain'
+                    ElectrodeSurvey=data{1};
+                    ElectrodeIdentifier=data{2};
+                    assert(strcmp(ElectrodeSurvey.SurveyMode,'ElectrodeSurvey'))
+                    assert(strcmp(ElectrodeIdentifier.SurveyMode,'ElectrodeIdentifier'))
+                    data=ElectrodeSurvey.ElectrodeSurvey;
+
+                    FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
+                    runs = unique(FirstPacketDateTime);
+
+                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
+                    ch1 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_A','A'),'_B','B'),'_C','C'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
+                    ch2 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'LEFTS','L'),'RIGHTS','R'),'_A','A'),'_B','B'),'_C','C'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
+
+                    % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
+                    % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
+
+                    fsample = data.SampleRateInHz;
+
+                    for c = 1:length(runs)
+                        i=perceive_ci(runs{c},FirstPacketDateTime);
+                        d=[];
+                        d.hdr = hdr;
+                        d.datatype = datafields{b};
+                        d.fsample = fsample;
+                        tmp = [data(i).TimeDomainDatainMicroVolts]';
+                        d.trial{1} = [tmp];
+                        d.label=Channel(i);
+                        d.hdr.label = d.label;
+                        d.hdr.Fs = d.fsample;
+                        d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time={d.time};
+                        mod = 'mod-ES';
+                        mod_ext=check_mod_ext(d.label);
+                        mod = [mod mod_ext];
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
+                        %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        perceive_plot_raw_signals(d);
+                        perceive_print(fullfile(hdr.fpath,d.fname));
+                        alldata{length(alldata)+1} = d;
+                    end
+
+                    data=ElectrodeIdentifier.ElectrodeIdentifier;
+                    for c = 1:length(data)
+                        str=data(c).Channel;
+                        idx = find(str == '_', 1, 'last');
+                        data(c).Channel = [str(1:idx-1), ['_' upper(data(c).Hemisphere) '_'], str(idx+1:end)];
+                    end
+
+                    FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
+                    runs = unique(FirstPacketDateTime);
+
+                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
+                    ch1 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_A','A'),'_B','B'),'_C','C'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
+                    ch2 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'LEFTS','L'),'RIGHTS','R'),'_A','A'),'_B','B'),'_C','C'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
+
+                    % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
+                    % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                    Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
+
+                    fsample = data.SampleRateInHz;
+
+                    for c = 1:length(runs)
+                        i=perceive_ci(runs{c},FirstPacketDateTime);
+                        d=[];
+                        d.hdr = hdr;
+                        d.datatype = datafields{b};
+                        d.fsample = fsample;
+                        tmp = [data(i).TimeDomainDatainMicroVolts]';
+                        d.trial{1} = [tmp];
+                        d.label=Channel(i);
+                        d.hdr.label = d.label;
+                        d.hdr.Fs = d.fsample;
+                        d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                        d.time={d.time};
+                        mod = 'mod-EI';
+                        mod_ext=check_mod_ext(d.label);
+                        mod = [mod mod_ext];
+                        d.fname = [hdr.fname '_' mod];
+                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                        % TODO: set if needed:
+                        %d.keepfig = false; % do not keep figure with this signal open
+                        %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        perceive_plot_raw_signals(d);
+                        perceive_print(fullfile(hdr.fpath,d.fname));
+                        alldata{length(alldata)+1} = d;
+                    end
+                    
 
 
                 case 'IndefiniteStreaming'
@@ -1628,6 +1737,8 @@ else
         mod_ext = 'SegmIntra';
     elseif sum(contains(labels,'A'))==1
         mod_ext = 'SegmInter';
+    elseif sum(contains(labels,'ELECTRODE'))==6
+        mod_ext = 'Segm';
     else
         mod_ext = 'notspec';
         warning('the LMTD has no known modus: Bip,RingL,RingR,SegmInterL,SegmInterR,SegmIntraL,SegmIntraR,Ring')
@@ -1642,7 +1753,7 @@ end
 
 function MetaT =  metadata_to_table(MetaT, data)
 fname=data.fname;
-if contains(fname, ["LMTD","BrainSense","ISRing"])
+if contains(fname, ["LMTD","BrainSense","ISRing","EI","ES"])
     splitted_fname=split(fname,'_');
     ses = lower(splitted_fname{2}(5:9));
     if contains(splitted_fname{2}, 'MedOnOff')
@@ -1664,7 +1775,7 @@ if contains(fname, ["LMTD","BrainSense","ISRing"])
     task = splitted_fname{3}(6:end);
     nomatch = true;
     i=0;
-    tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring", "notspec"];
+    tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring", "SegmR", "SegmL", "notspec"];
     while nomatch
         i=i+1;
         if contains(fname, tobefound(i))
