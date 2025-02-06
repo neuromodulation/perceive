@@ -106,6 +106,8 @@ if isfield(localsettings,'name')
         datafields = {"IndefiniteStreaming","LfpMontageTimeDomain","BrainSenseTimeDomain"}; %delete this section
     end
 end
+%% disable ecg cleaning
+ecg_cleaning = false;
 
 
 %% create subject
@@ -368,7 +370,8 @@ for a = 1:length(files)
                                         d.fsample = 1/600; % 10*60 sec = 10 minutes
                                     end
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
-                                    firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
+                                    firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
+                                    lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod= 'mod-ChronicLeft';
                                     hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
@@ -407,7 +410,8 @@ for a = 1:length(files)
                                         d.fsample = 1/600; % 10*60 sec = 10 minutes
                                     end
                                     d.hdr.Fs = d.fsample; d.hdr.label = d.label;
-                                    firstsample = d.time{1}(1); lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
+                                    firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
+                                    lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
                                     mod = 'mod-ChronicRight';
                                     hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
                                     d.fname = [hdr.fname '_' mod];
@@ -452,7 +456,7 @@ for a = 1:length(files)
                             d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
                             d.time{1} = DT;
                             d.fsample = diff(DT);
-                            firstsample = d.time{1}(1);
+                            firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
                             lastsample = d.time{1}(end);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             mod = 'mod-Chronic';
@@ -656,9 +660,9 @@ for a = 1:length(files)
                     %         end
                     %         warning('Sample size differed between channels. Check session affiliation.')
                     %     end
-                        
+                        raw=[];
                         for ii=1:length(i)
-                        raw(ii,:)=check_and_correct_lfp_missingData_in_json(data,ii, hdr);
+                            raw(ii,:)=check_and_correct_lfp_missingData_in_json(data,ii, hdr);
                         end
 
                         assert(size(raw1,1)==size(raw,1));
@@ -677,7 +681,8 @@ for a = 1:length(files)
 
                         d.fsample = fsample;
 
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0));
+                        %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0));
+                        firstsample = set_firstsample(data(c).TicksInMses);
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         if firstsample<0
@@ -693,7 +698,9 @@ for a = 1:length(files)
                         d.hdr.Fs = d.fsample;
                         d.hdr.label = d.label;
 
-                        d=call_ecg_cleaning(d,hdr,raw);
+                        if ecg_cleaning
+                            d=call_ecg_cleaning(d,hdr,raw);
+                        end
 
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
@@ -889,7 +896,8 @@ for a = 1:length(files)
 
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                        %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                        firstsample = set_firstsample(data(c).TicksInMses);
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
@@ -901,7 +909,9 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
-                        d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        if ecg_cleaning
+                            d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        end
                         alldata{length(alldata)+1} = d;
                     end
                 case 'BrainSenseSurvey'
@@ -1202,7 +1212,8 @@ for a = 1:length(files)
 
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
-                        firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                        %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                        firstsample = set_firstsample(data(c).TicksInMses);
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
@@ -1213,7 +1224,9 @@ for a = 1:length(files)
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
-                        d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        if ecg_cleaning
+                            d=call_ecg_cleaning(d,hdr,d.trial{1});
+                        end
                         alldata{length(alldata)+1} = d;
                     end
 
@@ -1276,7 +1289,8 @@ for a = 1:length(files)
                             d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
 
                             d.fsample = fsample;
-                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                            %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                            firstsample = set_firstsample(data(c).TicksInMses);
                             lastsample = firstsample+size(d.trial{1},2);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             d.trialinfo(1) = c;
@@ -1328,7 +1342,8 @@ for a = 1:length(files)
 
                             d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.scd0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.scd0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                             d.fsample = fsample;
-                            firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                            %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
+                            firstsample = set_firstsample(data(c).TicksInMses);
                             lastsample = firstsample+size(d.trial{1},2);
                             d.sampleinfo(1,:) = [firstsample lastsample];
                             d.trialinfo(1) = c;
@@ -1950,4 +1965,10 @@ function new_lfp_arr = check_and_correct_lfp_missingData_in_json(data,select, hd
         new_lfp_arr=size((i_lfp + current_packetSize),1);
     end
     new_lfp_arr=new_lfp_arr';
+end
+
+function firstsample = set_firstsample(string_of_TicksInMses)
+    parts = strsplit(string_of_TicksInMses, ',');
+    % Extract the first part and convert it to a number
+    firstsample = str2num(parts{1})/50;
 end
