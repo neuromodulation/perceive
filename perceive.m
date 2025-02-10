@@ -71,7 +71,7 @@ end
 % IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
-ubersichtzeit = table('Size',[1 8],'VariableNames',{'fname','FirstPackagetime','TicksMSecStart','TicksMSecEnd','TDTimeStart','TDTimeEnd','SumGlobalPackages','Triallength'},'VariableTypes',{'string','string','double','double','double','double','double','double'}) 
+%ubersichtzeit = table('Size',[1 8],'VariableNames',{'fname','FirstPackagetime','TicksMSecStart','TicksMSecEnd','TDTimeStart','TDTimeEnd','SumGlobalPackages','Triallength'},'VariableTypes',{'string','string','double','double','double','double','double','double'}) 
 
 if exist('datafields','var') && ischar(datafields) && ~isempty(datafields)
     datafields = {datafields};
@@ -731,14 +731,14 @@ for a = 1:length(files)
                         d.TDtime = TDtime;
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         %%% track time
-                        ubersichtzeit.fname(end+1)=d.fname;
-                        ubersichtzeit.FirstPackagetime(end)=FirstPacketDateTime(i(1));
-                        ubersichtzeit.TicksMSecStart(end)     =TicksInMses(1);
-                        ubersichtzeit.TicksMSecEnd(end)     = TicksInMses(end);
-                        ubersichtzeit.TDTimeStart(end)     = TDtime(1);
-                        ubersichtzeit.TDTimeEnd(end)     =TDtime(end);
-                        ubersichtzeit.SumGlobalPackages(end)     =sum(GlobalPacketSize);
-                        ubersichtzeit.Triallength(end)     = length(d.trial{1});
+                        %ubersichtzeit.fname(end+1)=d.fname;
+                        %ubersichtzeit.FirstPackagetime(end)=FirstPacketDateTime(i(1));
+                        %ubersichtzeit.TicksMSecStart(end)     =TicksInMses(1);
+                        %ubersichtzeit.TicksMSecEnd(end)     = TicksInMses(end);
+                        %ubersichtzeit.TDTimeStart(end)     = TDtime(1);
+                        %ubersichtzeit.TDTimeEnd(end)     =TDtime(end);
+                        %ubersichtzeit.SumGlobalPackages(end)     =sum(GlobalPacketSize);
+                        %ubersichtzeit.Triallength(end)     = length(d.trial{1});
                         %%%
                         alldata{length(alldata)+1} = d;
                     end
@@ -1697,7 +1697,7 @@ for a = 1:length(files)
     end
 end
 disp('all done!')
-ubersichtzeit
+%ubersichtzeit
 end
 
 
