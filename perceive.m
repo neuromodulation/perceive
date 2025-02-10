@@ -71,6 +71,8 @@ end
 % IMPROVE CHRONIC DIAGNOSTIC READINGS
 % ADD Lead DBS Integration for electrode location
 
+ubersichtzeit = table('Size',[1 8],'VariableNames',{'fname','FirstPackagetime','TicksMSecStart','TicksMSecEnd','TDTimeStart','TDTimeEnd','SumGlobalPackages','Triallength'},'VariableTypes',{'string','string','double','double','double','double','double','double'}) 
+
 if exist('datafields','var') && ischar(datafields) && ~isempty(datafields)
     datafields = {datafields};
 end
@@ -675,14 +677,15 @@ for a = 1:length(files)
 
                         d.label=Channel(i);
                         d.trial{1} = raw1;
-                        size(raw1)
+                        
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.time_real = time_real{i,1}; %insert real time here
 
                         d.fsample = fsample;
 
                         %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0));
-                        firstsample = set_firstsample(data(c).TicksInMses);
+                        firstsample = set_firstsample(data(i(1)).TicksInMses);
+                        assert(firstsample==set_firstsample(data(i(2)).TicksInMses))
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         if firstsample<0
@@ -707,26 +710,35 @@ for a = 1:length(files)
 
                         %%%Gaetanon pseudocode
                         
-                        tmp = strsplit(data(c,:).TicksInMses, ',');
+                        tmp = strsplit(data(i(1),:).TicksInMses, ',');
                         tmp(end)=[];
                         TicksInMses= cellfun(@(x)str2double(x), tmp);
                        
-                        tmp = strsplit(data(c,:).GlobalPacketSizes, ',');
+                        tmp = strsplit(data(i(1),:).GlobalPacketSizes, ',');
                         tmp(end)=[];
                         GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
 
-                        TDtime = TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample : 1/fsample : TicksInMses(end);
-                        for i=length(GlobalPacketSize):-1:2
-                            if TicksInMses(i)-TicksInMses(i-1) > (1 + GlobalPacketSize(i))/ fsample;
-                                Prev_packet = TicksInMses(i-1)- (GlobalPacketSize(i-1)-1)/ fsample : 1/fsample : TicksInMses(i-1);
+                        TDtime = (TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample) : 1/fsample : TicksInMses(end);
+                        for m=length(GlobalPacketSize):-1:2
+                            if TicksInMses(m)-TicksInMses(m-1) > (1 + GlobalPacketSize(m))/ fsample
+                                Prev_packet = (TicksInMses(m-1)- (GlobalPacketSize(m-1)-1)/ fsample) : 1/fsample : TicksInMses(m-1);
                                 TDtime = [Prev_packet,TDtime];
                             else
-                                Prev_packet = TDtime(1)- GlobalPacketSize(i-1)/ fsample: 1/fsample : TDtime(1) - 1/fsample;
+                                Prev_packet = (TDtime(1)- GlobalPacketSize(m-1)/ fsample): 1/fsample : TDtime(1) - 1/fsample;
                                 TDtime = [Prev_packet,TDtime];
                             end
                         end
                         d.TDtime = TDtime;
                         d.sampleinfo(1,:) = [firstsample lastsample];
+                        %%% track time
+                        ubersichtzeit.fname(end+1)=d.fname;
+                        ubersichtzeit.FirstPackagetime(end)=FirstPacketDateTime(i(1));
+                        ubersichtzeit.TicksMSecStart(end)     =TicksInMses(1);
+                        ubersichtzeit.TicksMSecEnd(end)     = TicksInMses(end);
+                        ubersichtzeit.TDTimeStart(end)     = TDtime(1);
+                        ubersichtzeit.TDTimeEnd(end)     =TDtime(end);
+                        ubersichtzeit.SumGlobalPackages(end)     =sum(GlobalPacketSize);
+                        ubersichtzeit.Triallength(end)     = length(d.trial{1});
                         %%%
                         alldata{length(alldata)+1} = d;
                     end
@@ -921,9 +933,9 @@ for a = 1:length(files)
                         d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                         d.fsample = fsample;
                         %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
-                        firstsample = set_firstsample(data(c).TicksInMses);
+                        firstsample = set_firstsample(data(i(1)).TicksInMses);
                         lastsample = firstsample+size(d.trial{1},2);
-                        d.sampleinfo(1,:) = [firstsample lastsample];
+                        %%fix later%d.sampleinfo(1,:) = [firstsample lastsample];
                         d.trialinfo(1) = c;
 
                         d.hdr.label = d.label;
@@ -1670,7 +1682,7 @@ for a = 1:length(files)
                 recording_basename = strrep(MetaTcopy.perceiveFilename{i},'part-1.mat','part-');
                 %data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording1),fullfile(hdr.fpath,recording2));
                 data = perceive_stitch_interruption_together(fullfile(hdr.fpath,recording_basename));
-                data = perceive_stitch_interruption_together_TDtime(fullfile(hdr.fpath,recording_basename));
+                %data = perceive_stitch_interruption_together_TDtime(fullfile(hdr.fpath,recording_basename));
 
                 MetaT = [MetaT(1:i+m,:); MetaT(i+m:end,:)];
                 MetaT.part{i+m}='';
@@ -1685,6 +1697,7 @@ for a = 1:length(files)
     end
 end
 disp('all done!')
+ubersichtzeit
 end
 
 

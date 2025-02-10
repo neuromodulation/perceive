@@ -49,6 +49,7 @@ end
     data.trial={data.trial};
     data.time={recording_part(1).data.time{1}(1):1/recording_part(1).data.fsample:recording_part(last_part).data.time{1}(end)};
     data.TDtime={recording_part(1).data.TDtime(1):1/recording_part(1).data.fsample:recording_part(last_part).data.TDtime(end)};
+    data.TDtime_intermission={recording_part(1).data.TDtime(end):1/recording_part(1).data.fsample:recording_part(last_part).data.TDtime(1)};
         
     assert(isequal(recording_part(1).data.fsample,recording_part(2).data.fsample))
     data.fsample=recording_part(1).data.fsample;
