@@ -27,7 +27,7 @@ for a= 1:size(data,1)
     ny=exp(yl-polyval(polyfit(fvector,yvector,1),fl));
     nyd(:,a)=ny;
 end
-warning('off','last')
+%warning('off','last')
 
 % 
 % figure;

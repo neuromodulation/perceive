@@ -176,7 +176,6 @@ for a = 1:length(files)
         hdr.subject = sub{1};
     end
 
-
     % determine session
     if isempty(sesMedOffOn01)
         ses = ['ses-' char(datetime(hdr.SessionEndDate,'format','yyyyMMddhhmmss')) num2str(hdr.BatteryPercentage)];
@@ -1033,49 +1032,51 @@ for a = 1:length(files)
                     ElectrodeIdentifier=data{2};
                     assert(strcmp(ElectrodeSurvey.SurveyMode,'ElectrodeSurvey'))
                     assert(strcmp(ElectrodeIdentifier.SurveyMode,'ElectrodeIdentifier'))
-                    data=ElectrodeSurvey.ElectrodeSurvey;
-
-                    FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
-                    runs = unique(FirstPacketDateTime);
-
-                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
-                    ch1 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_A','A'),'_B','B'),'_C','C'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
-                    ch2 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'LEFTS','L'),'RIGHTS','R'),'_A','A'),'_B','B'),'_C','C'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
-
-                    % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-                    % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-                    Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
-
-                    fsample = data.SampleRateInHz;
-
-                    if length(runs)>1 %assert that data is not empty
-                        for c = 1:length(runs)
-                            i=perceive_ci(runs{c},FirstPacketDateTime);
-                            d=[];
-                            d.hdr = hdr;
-                            d.datatype = datafields{b};
-                            d.fsample = fsample;
-                            tmp = [data(i).TimeDomainDatainMicroVolts]';
-                            d.trial{1} = [tmp];
-                            d.label=Channel(i);
-                            d.hdr.label = d.label;
-                            d.hdr.Fs = d.fsample;
-                            d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
-                            d.time={d.time};
-                            mod = 'mod-ES';
-                            mod_ext=check_mod_ext(d.label);
-                            mod = [mod mod_ext];
-                            d.fname = [hdr.fname '_' mod];
-                            d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
-                            % TODO: set if needed:
-                            %d.keepfig = false; % do not keep figure with this signal open
-                            %d=call_ecg_cleaning(d,hdr,d.trial{1});
-                            perceive_plot_raw_signals(d);
-                            perceive_print(fullfile(hdr.fpath,d.fname));
-                            alldata{length(alldata)+1} = d;
+                    
+                    if ~isfield(js, 'LfpMontageTimeDomain') %ElectrodeSurvey is the same as LMTD
+                        data=ElectrodeSurvey.ElectrodeSurvey;
+    
+                        FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
+                        runs = unique(FirstPacketDateTime);
+    
+                        [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
+                        ch1 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_A','A'),'_B','B'),'_C','C'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
+                        ch2 = strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'LEFTS','L'),'RIGHTS','R'),'_A','A'),'_B','B'),'_C','C'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
+    
+                        % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
+                        % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
+                        Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
+    
+                        fsample = data.SampleRateInHz;
+    
+                        if length(runs)>1 %assert that data is not empty
+                            for c = 1:length(runs)
+                                i=perceive_ci(runs{c},FirstPacketDateTime);
+                                d=[];
+                                d.hdr = hdr;
+                                d.datatype = datafields{b};
+                                d.fsample = fsample;
+                                tmp = [data(i).TimeDomainDatainMicroVolts]';
+                                d.trial{1} = [tmp];
+                                d.label=Channel(i);
+                                d.hdr.label = d.label;
+                                d.hdr.Fs = d.fsample;
+                                d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                                d.time={d.time};
+                                mod = 'mod-ES';
+                                mod_ext=check_mod_ext(d.label);
+                                mod = [mod mod_ext];
+                                d.fname = [hdr.fname '_' mod];
+                                d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                                % TODO: set if needed:
+                                %d.keepfig = false; % do not keep figure with this signal open
+                                %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                                perceive_plot_raw_signals(d);
+                                perceive_print(fullfile(hdr.fpath,d.fname));
+                                alldata{length(alldata)+1} = d;
+                            end
                         end
                     end
-
                     data=ElectrodeIdentifier.ElectrodeIdentifier;
                     for c = 1:length(data)
                         str=data(c).Channel;
@@ -1792,11 +1793,11 @@ else
         mod_ext = 'SegmIntra';
     elseif sum(contains(labels,'A'))==1
         mod_ext = 'SegmInter';
-    elseif sum(contains(labels,'ELECTRODE'))==6
+    elseif sum(contains(labels,'1'))==3 && sum(contains(labels,'2'))==3
         mod_ext = 'Segm';
     else
         mod_ext = 'notspec';
-        warning('the LMTD has no known modus: Bip,RingL,RingR,SegmInterL,SegmInterR,SegmIntraL,SegmIntraR,Ring')
+        warning('the LMTD/ES has no known modus, it needs to be: Bip,RingL,RingR,SegmInterL,SegmInterR,SegmIntraL,SegmIntraR,Ring\n the EI needs to be Segm or Ring.')
     end
     if any(contains(labels,'LEFT')) && ~contains(mod_ext,'notspec')
         mod_ext = [mod_ext , 'L'];
