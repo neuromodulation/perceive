@@ -684,7 +684,7 @@ for a = 1:length(files)
 
                         %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0));
                         firstsample = set_firstsample(data(i(1)).TicksInMses);
-                        assert(firstsample==set_firstsample(data(i(2)).TicksInMses))
+                        assert(firstsample==set_firstsample(data(i(end)).TicksInMses))
                         lastsample = firstsample+size(d.trial{1},2);
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         if firstsample<0
