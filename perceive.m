@@ -258,8 +258,7 @@ for a = 1:length(files)
                 %% add csv files by default
                 case 'Impedance'
                     if extended
-                        perceive_impedance()
-                        
+                        perceive_impedance(data, hdr)
                     end
 
                 case 'PatientEvents'
@@ -1080,8 +1079,8 @@ for a = 1:length(files)
                     data=ElectrodeIdentifier.ElectrodeIdentifier;
                     for c = 1:length(data)
                         str=data(c).Channel;
-                        idx = find(str == '_', 1, 'last');
-                        data(c).Channel = [str(1:idx-1), ['_' upper(data(c).Hemisphere) '_'], str(idx+1:end)];
+                        str=strrep(str, 'ELECTRODE_', '');
+                        data(c).Channel = [str '_' upper(data(c).Hemisphere) ];
                     end
 
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
@@ -1127,7 +1126,7 @@ for a = 1:length(files)
 
 
                 case 'IndefiniteStreaming'
-
+                    clear TicksInMses
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
                     fsample = data.SampleRateInHz;
@@ -1879,7 +1878,7 @@ catch
 end
 end
 
-function []=perceive_impedance(data)
+function []=perceive_impedance(data, hdr)
 mod = 'mod-Impedance';
 T=table;
 save_impedance=1;
@@ -2012,4 +2011,7 @@ function firstsample = set_firstsample(string_of_TicksInMses)
     parts = strsplit(string_of_TicksInMses, ',');
     % Extract the first part and convert it to a number, divide by 50ms
     firstsample = str2num(parts{1})/50;
+    if isempty(firstsample)
+        firstsample=1;
+    end
 end
