@@ -1624,7 +1624,7 @@ for a = 1:length(files)
     end
     close all
 
-    if ~isempty(sesMedOffOn01) && height(MetaT)>1
+    if ~isempty(sesMedOffOn01) && height(MetaT)>0
         MetaTOld = MetaT;
 
         if gui
