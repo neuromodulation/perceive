@@ -1049,30 +1049,32 @@ for a = 1:length(files)
 
                     fsample = data.SampleRateInHz;
 
-                    for c = 1:length(runs)
-                        i=perceive_ci(runs{c},FirstPacketDateTime);
-                        d=[];
-                        d.hdr = hdr;
-                        d.datatype = datafields{b};
-                        d.fsample = fsample;
-                        tmp = [data(i).TimeDomainDatainMicroVolts]';
-                        d.trial{1} = [tmp];
-                        d.label=Channel(i);
-                        d.hdr.label = d.label;
-                        d.hdr.Fs = d.fsample;
-                        d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
-                        d.time={d.time};
-                        mod = 'mod-ES';
-                        mod_ext=check_mod_ext(d.label);
-                        mod = [mod mod_ext];
-                        d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
-                        %d=call_ecg_cleaning(d,hdr,d.trial{1});
-                        perceive_plot_raw_signals(d);
-                        perceive_print(fullfile(hdr.fpath,d.fname));
-                        alldata{length(alldata)+1} = d;
+                    if length(runs)>1 %assert that data is not empty
+                        for c = 1:length(runs)
+                            i=perceive_ci(runs{c},FirstPacketDateTime);
+                            d=[];
+                            d.hdr = hdr;
+                            d.datatype = datafields{b};
+                            d.fsample = fsample;
+                            tmp = [data(i).TimeDomainDatainMicroVolts]';
+                            d.trial{1} = [tmp];
+                            d.label=Channel(i);
+                            d.hdr.label = d.label;
+                            d.hdr.Fs = d.fsample;
+                            d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                            d.time={d.time};
+                            mod = 'mod-ES';
+                            mod_ext=check_mod_ext(d.label);
+                            mod = [mod mod_ext];
+                            d.fname = [hdr.fname '_' mod];
+                            d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                            % TODO: set if needed:
+                            %d.keepfig = false; % do not keep figure with this signal open
+                            %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                            perceive_plot_raw_signals(d);
+                            perceive_print(fullfile(hdr.fpath,d.fname));
+                            alldata{length(alldata)+1} = d;
+                        end
                     end
 
                     data=ElectrodeIdentifier.ElectrodeIdentifier;
@@ -1094,31 +1096,32 @@ for a = 1:length(files)
                     Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
 
                     fsample = data.SampleRateInHz;
-
-                    for c = 1:length(runs)
-                        i=perceive_ci(runs{c},FirstPacketDateTime);
-                        d=[];
-                        d.hdr = hdr;
-                        d.datatype = datafields{b};
-                        d.fsample = fsample;
-                        tmp = [data(i).TimeDomainDatainMicroVolts]';
-                        d.trial{1} = [tmp];
-                        d.label=Channel(i);
-                        d.hdr.label = d.label;
-                        d.hdr.Fs = d.fsample;
-                        d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
-                        d.time={d.time};
-                        mod = 'mod-EI';
-                        mod_ext=check_mod_ext(d.label);
-                        mod = [mod mod_ext];
-                        d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
-                        %d=call_ecg_cleaning(d,hdr,d.trial{1});
-                        perceive_plot_raw_signals(d);
-                        perceive_print(fullfile(hdr.fpath,d.fname));
-                        alldata{length(alldata)+1} = d;
+                    if length(runs)>1 %assert that data is not empty
+                        for c = 1:length(runs)
+                            i=perceive_ci(runs{c},FirstPacketDateTime);
+                            d=[];
+                            d.hdr = hdr;
+                            d.datatype = datafields{b};
+                            d.fsample = fsample;
+                            tmp = [data(i).TimeDomainDatainMicroVolts]';
+                            d.trial{1} = [tmp];
+                            d.label=Channel(i);
+                            d.hdr.label = d.label;
+                            d.hdr.Fs = d.fsample;
+                            d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
+                            d.time={d.time};
+                            mod = 'mod-EI';
+                            mod_ext=check_mod_ext(d.label);
+                            mod = [mod mod_ext];
+                            d.fname = [hdr.fname '_' mod];
+                            d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+                            % TODO: set if needed:
+                            %d.keepfig = false; % do not keep figure with this signal open
+                            %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                            perceive_plot_raw_signals(d);
+                            perceive_print(fullfile(hdr.fpath,d.fname));
+                            alldata{length(alldata)+1} = d;
+                        end
                     end
                     
 
