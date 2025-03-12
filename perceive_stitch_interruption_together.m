@@ -28,10 +28,16 @@ while i<10
     end
 end
 
+%compute sampleinfotime based on the time
+for i = 1:length(recording_part)
+    recording_part(i).data.sampleinfotime = [round(recording_part(i).data.time{1}(1)*250) , round(recording_part(i).data.time{1}(end)*250)];
+end
+
+
 last_part = length(recording_part);
 for i = 1:last_part-1
-    intermission(i).part=[recording_part(i).data.sampleinfo(2)+1 recording_part(i+1).data.sampleinfo(1)-1];
-    intermission_length(i).part = recording_part(i+1).data.sampleinfo(1) - recording_part(i).data.sampleinfo(2) + 1;
+    intermission(i).part=[recording_part(i).data.sampleinfotime(2)+1 recording_part(i+1).data.sampleinfotime(1)-1];
+    intermission_length(i).part = recording_part(i+1).data.sampleinfotime(1) - recording_part(i).data.sampleinfotime(2) + 1;
 end
 
     data=struct();
@@ -52,10 +58,10 @@ end
     assert(isequal(recording_part(1).data.fsample,recording_part(2).data.fsample))
     data.fsample=recording_part(1).data.fsample;
     
-    data.sampleinfo = [recording_part(1).data.sampleinfo(1) recording_part(last_part).data.sampleinfo(2)];
+    data.sampleinfotime = [recording_part(1).data.sampleinfotime(1) recording_part(last_part).data.sampleinfotime(2)];
     
-    data.sampleinfo_intermission = intermission;
-    data.sampleinfo_intermission_length = intermission_length;
+    data.sampleinfotime_intermission = intermission;
+    data.sampleinfotime_intermission_length = intermission_length;
     
     if isfield(recording_part(1).data,'BrainSenseDateTime')
         data.BrainSenseDateTime=[recording_part(1).data.BrainSenseDateTime(1) recording_part(last_part).data.BrainSenseDateTime(2)];
