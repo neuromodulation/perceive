@@ -29,7 +29,7 @@ arguments
     % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
     % if unspecified or left empy, the subjectID will be created from:
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03", "Unknown"])} = '';
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03", "MedOffPostOpExt","MedOnPostOpExt","MedOnSupramaxExt","MedOnPostOpIPG","MedOffPostOpIPG","Unknown"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
@@ -586,6 +586,7 @@ for a = 1:length(files)
                         nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
                     tmp =  {data(:).TicksInMses};
+                    clear TicksInMses
                     for c = 1:length(tmp)
                         TicksInMses{c,:}= str2num(tmp{c});
                         TicksInS{c,:} = (TicksInMses{c,:} - TicksInMses{c,:}(1))/1000;
@@ -788,7 +789,11 @@ for a = 1:length(files)
                             end
                             if ~isempty(acq_freq)
                                 assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
-                                assert(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'um']))
+                                if ~(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'um']))
+                                    if tmp.PulseWidthInMicroSecond ~= 60
+                                        acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'] %update acq pulse if this side is different from default 60 um;
+                                    end
+                                end
                             else
                             acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
                             acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'];
@@ -813,11 +818,14 @@ for a = 1:length(files)
                                 end
                             end
                            if ~isempty(acq_freq)
-                                assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
-                                assert(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'um']))
-                            else
+                               assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
+                               if tmp.PulseWidthInMicroSecond ~= 60
+                                   acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'] %update acq pulse if this side is different from default 60 um;
+                               end
+                           else
                             acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
                             acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'];
+                            
                             end
 
                         else
