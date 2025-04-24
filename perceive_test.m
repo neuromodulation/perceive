@@ -29,7 +29,7 @@ arguments
     % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
     % if unspecified or left empy, the subjectID will be created from:
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03", "MedOffPostOpExt","MedOnPostOpExt","MedOnSupramaxExt","MedOnPostOpIPG","MedOffPostOpIPG","Unknown"])} = '';
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03","MedOnPostOpIPG","MedOffPostOpIPG","Unknown"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
