@@ -789,14 +789,14 @@ for a = 1:length(files)
                             end
                             if ~isempty(acq_freq)
                                 assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
-                                if ~(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'um']))
+                                if ~(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'us']))
                                     if tmp.PulseWidthInMicroSecond ~= 60
-                                        acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'] %update acq pulse if this side is different from default 60 um;
+                                        acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'] %update acq pulse if this side is different from default 60 us;
                                     end
                                 end
                             else
                             acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
-                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'];
+                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'];
                             end
 
                         else
@@ -820,11 +820,11 @@ for a = 1:length(files)
                            if ~isempty(acq_freq)
                                assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
                                if tmp.PulseWidthInMicroSecond ~= 60
-                                   acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'] %update acq pulse if this side is different from default 60 um;
+                                   acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'] %update acq pulse if this side is different from default 60 us;
                                end
                            else
                             acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
-                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'um'];
+                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'];
                             
                             end
 
