@@ -1,4 +1,4 @@
-function perceive_test(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
+function perceive(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
