@@ -1494,8 +1494,10 @@ for a = 1:length(files)
             data.fname = strrep(data.fname,'task-Rest',['task-TASK' num2str(counterBrainSense)]);
             fulldata = data;
 
-            [folder,~,~]=fileparts(fullname);
-            [~,~,list_of_BSLfiles]=perceive_ffind([folder, filesep, '*BSL','*.mat']);
+            [folder,~,~] = fileparts(fullname);
+            pattern = fullfile(folder, '*BSL*.mat');
+            list_of_BSLfiles = perceive_ffind(pattern);
+
             if ~isempty(list_of_BSLfiles)
                 bsl=load(list_of_BSLfiles{counterBrainSense});
 
