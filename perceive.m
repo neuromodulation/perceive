@@ -1495,7 +1495,8 @@ for a = 1:length(files)
             fulldata = data;
 
             [folder,~,~]=fileparts(fullname);
-            [~,~,list_of_BSLfiles]=perceive_ffind([folder, filesep, '*BSL','*.mat']);
+            pattern = fullfile(folder, '*BSL*.mat');
+            list_of_BSLfiles = perceive_ffind(pattern);
             if ~isempty(list_of_BSLfiles)
                 bsl=load(list_of_BSLfiles{counterBrainSense});
 
