@@ -1,11 +1,11 @@
-function perceive(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
+function perceive_test(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
 % v1.0 update by J Vanhoecke
 % Merge requests from Jennifer Behnke and Mansoureh Fahimi
 % Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser
 % This is an open research tool that is not intended for clinical purposes.
-%
+%F
 % INPUT:
 % file          ["", 'Report_Json_Session_Report_20200115T123657.json', {'Report_Json_Session_Report_20200115T123657.json','Report_Json_Session_Report_20200115T123658.json'}, ...]
 % sub           ["", 7, 21 , "021", ... ]
@@ -29,7 +29,7 @@ arguments
     % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
     % if unspecified or left empy, the subjectID will be created from:
     % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
-    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03"])} = '';
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03","MedOnPostOpIPG","MedOffPostOpIPG","Unknown"])} = '';
     %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
     %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
     %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
@@ -72,7 +72,7 @@ end
 % ADD Lead DBS Integration for electrode location
 
 %ubersichtzeit = table('Size',[1 8],'VariableNames',{'fname','FirstPackagetime','TicksMSecStart','TicksMSecEnd','TDTimeStart','TDTimeEnd','SumGlobalPackages','Triallength'},'VariableTypes',{'string','string','double','double','double','double','double','double'}) 
-
+%% perceive input
 if exist('datafields','var') && ischar(datafields) && ~isempty(datafields)
     datafields = {datafields};
 end
@@ -105,7 +105,8 @@ if isfield(localsettings,'name')
         check_followup_time=true;
         check_gui_tasks=true;
         check_gui_med=true;
-        datafields = {"IndefiniteStreaming","LfpMontageTimeDomain","BrainSenseTimeDomain"}; %delete this section
+        datafields = {"IndefiniteStreaming","LfpMontageTimeDomain"}; %delete this section
+        localsettings.convert2bids = 1;
     end
 end
 %% disable ecg cleaning
@@ -185,11 +186,15 @@ for a = 1:length(files)
         if ~ischar(sesMedOffOn01)
             sesMedOffOn01=char(sesMedOffOn01);
         end
-        diffmonths=between(datetime(hdr.SessionEndDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
-        diffmonths=abs(calmonths(diffmonths));
-        presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
-        diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
-        diffmonths=num2str(diffmonths);
+        if ~contains(string(hdr.SessionEndDate), '█') && ~contains(string(hdr.ImplantDate), '█')
+            diffmonths=between(datetime(hdr.SessionEndDate,'format','yyyyMMdd') , datetime(strrep(strtok(hdr.ImplantDate,'_'),'-',''),'format','yyyyMMdd'));
+            diffmonths=abs(calmonths(diffmonths));
+            presetmonths=[0,1,2,3,6,12,18,24,30,36,42,48,60,72,84,96,108,120];
+            diffmonths = interp1(presetmonths,presetmonths,diffmonths,'nearest');
+            diffmonths=num2str(diffmonths);
+        else
+            diffmonths=999;
+        end
         if check_followup_time
             loc_diffmonths=localsettings.followup{1}(3:end-1);
             assert(~contains(loc_diffmonths,lettersPattern, 'IgnoreCase',true))
@@ -581,6 +586,7 @@ for a = 1:length(files)
                         nummissinPackages(c) = numel(find(diff(str2num(tmp{c}))==2));
                     end
                     tmp =  {data(:).TicksInMses};
+                    clear TicksInMses
                     for c = 1:length(tmp)
                         TicksInMses{c,:}= str2num(tmp{c});
                         TicksInS{c,:} = (TicksInMses{c,:} - TicksInMses{c,:}(1))/1000;
@@ -706,27 +712,27 @@ for a = 1:length(files)
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
 
-                        %%%Gaetanon pseudocode
+                        %%%Gaetano pseudocode
                         
-                        tmp = strsplit(data(i(1),:).TicksInMses, ',');
-                        tmp(end)=[];
-                        TicksInMses= cellfun(@(x)str2double(x), tmp);
-                       
-                        tmp = strsplit(data(i(1),:).GlobalPacketSizes, ',');
-                        tmp(end)=[];
-                        GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
-
-                        TDtime = (TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample) : 1/fsample : TicksInMses(end);
-                        for m=length(GlobalPacketSize):-1:2
-                            if TicksInMses(m)-TicksInMses(m-1) > (1 + GlobalPacketSize(m))/ fsample
-                                Prev_packet = (TicksInMses(m-1)- (GlobalPacketSize(m-1)-1)/ fsample) : 1/fsample : TicksInMses(m-1);
-                                TDtime = [Prev_packet,TDtime];
-                            else
-                                Prev_packet = (TDtime(1)- GlobalPacketSize(m-1)/ fsample): 1/fsample : TDtime(1) - 1/fsample;
-                                TDtime = [Prev_packet,TDtime];
-                            end
-                        end
-                        d.TDtime = TDtime;
+                        % tmp = strsplit(data(i(1),:).TicksInMses, ',');
+                        % tmp(end)=[];
+                        % TicksInMses= cellfun(@(x)str2double(x), tmp);
+                        % 
+                        % tmp = strsplit(data(i(1),:).GlobalPacketSizes, ',');
+                        % tmp(end)=[];
+                        % GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
+                        % 
+                        % TDtime = (TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample) : 1/fsample : TicksInMses(end);
+                        % for m=length(GlobalPacketSize):-1:2
+                        %     if TicksInMses(m)-TicksInMses(m-1) > (1 + GlobalPacketSize(m))/ fsample
+                        %         Prev_packet = (TicksInMses(m-1)- (GlobalPacketSize(m-1)-1)/ fsample) : 1/fsample : TicksInMses(m-1);
+                        %         TDtime = [Prev_packet,TDtime];
+                        %     else
+                        %         Prev_packet = (TDtime(1)- GlobalPacketSize(m-1)/ fsample): 1/fsample : TDtime(1) - 1/fsample;
+                        %         TDtime = [Prev_packet,TDtime];
+                        %     end
+                        % end
+                        % d.TDtime = TDtime;
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         %%% track time
                         %ubersichtzeit.fname(end+1)=d.fname;
@@ -764,10 +770,35 @@ for a = 1:length(files)
                         d=[];
                         d.hdr = hdr;
                         d.hdr.BSL.TherapySnapshot = cdata.TherapySnapshot;
+
+                        acq_stimcontact = '';
+                        acq_freq = '';
+                        acq_pulse = '';
                         if isfield(d.hdr.BSL.TherapySnapshot,'Left')
                             tmp = d.hdr.BSL.TherapySnapshot.Left;
                             lfpsettings{1,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = ['STIM_L_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us'];
+
+                            for el = 1:length(tmp.ElectrodeState)
+                                elstate = tmp.ElectrodeState{el};
+                                if isfield(elstate, 'ElectrodeAmplitudeInMilliAmps')
+                                    if elstate.ElectrodeAmplitudeInMilliAmps > 0.5
+                                    acq_stimcontact = [acq_stimcontact , elstate.Electrode(end-1:end)];
+                                    end
+                                end
+                            end
+                            if ~isempty(acq_freq)
+                                assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
+                                if ~(strcmp(acq_pulse,[num2str(tmp.PulseWidthInMicroSecond) 'us']))
+                                    if tmp.PulseWidthInMicroSecond ~= 60
+                                        acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us']; %update acq pulse if this side is different from default 60 us;
+                                    end
+                                end
+                            else
+                            acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
+                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'];
+                            end
+
                         else
                             lfpsettings{1,1}='LFP n/a';
                             stimchannels = 'STIM n/a';
@@ -776,6 +807,27 @@ for a = 1:length(files)
                             tmp = d.hdr.BSL.TherapySnapshot.Right;
                             lfpsettings{2,1} = ['PEAK' num2str(round(tmp.FrequencyInHertz)) 'Hz_THR' num2str(tmp.LowerLfpThreshold) '-' num2str(tmp.UpperLfpThreshold) '_AVG' num2str(round(tmp.AveragingDurationInMilliSeconds)) 'ms'];
                             stimchannels = {stimchannels,['STIM_R_' num2str(tmp.RateInHertz) 'Hz_' num2str(tmp.PulseWidthInMicroSecond) 'us']};
+
+                            
+                            for el = 1:length(tmp.ElectrodeState)
+                                elstate = tmp.ElectrodeState{el};
+                                if isfield(elstate, 'ElectrodeAmplitudeInMilliAmps')
+                                    if elstate.ElectrodeAmplitudeInMilliAmps > 0.5
+                                    acq_stimcontact = [acq_stimcontact , elstate.Electrode(end-1:end)];
+                                    end
+                                end
+                            end
+                           if ~isempty(acq_freq)
+                               assert(strcmp(acq_freq,[num2str(tmp.RateInHertz) 'Hz']))
+                               if tmp.PulseWidthInMicroSecond ~= 60
+                                   acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us']; %update acq pulse if this side is different from default 60 us;
+                               end
+                           else
+                            acq_freq = [num2str(tmp.RateInHertz) 'Hz'];
+                            acq_pulse = [num2str(tmp.PulseWidthInMicroSecond) 'us'];
+                            
+                            end
+
                         else
                             lfpsettings{2,1} = 'LFP n/a';
                             stimchannels = {stimchannels,'STIM n/a'};
@@ -826,6 +878,15 @@ for a = 1:length(files)
                         % d.hdr.Groups.Initial(4).GroupSettings.Cycling
                         % %d.hdr.Groups.Initial(5).GroupSettings.Cycling
                         acq=check_stim(LAmp, RAmp, d.hdr);
+                        
+                        %assemble the acq label
+                        if ~strcmp(acq,'StimOff')
+                            acq=[acq,acq_stimcontact,acq_freq, acq_pulse];
+                        end
+                        assert(ischar(acq))
+
+
+
                         d.fname = strrep(d.fname,'StimOff',acq);
 
                         d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'))];
@@ -1402,6 +1463,7 @@ for a = 1:length(files)
     %nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
     %copyfile(files{a},nfile)
 
+    %% count BrainSense files
     counterBrainSense=0;
     % check counterBSL
     counterBSL=0;
@@ -1424,7 +1486,7 @@ for a = 1:length(files)
 
         %% handle BSTD and BSL files to BrainSenseBip
         if any(regexp(data.fname,'BSTD'))
-            assert(counterBrainSense<=counterBSL)
+            assert(counterBrainSense<=counterBSL, 'BrainSense could not be matched with BSL')
             counterBrainSense=counterBrainSense+1;
 
             data.fname = strrep(data.fname,'BSTD','BrainSenseBip');
@@ -1625,6 +1687,7 @@ for a = 1:length(files)
     end
     close all
 
+    %% post-labelling
     if ~isempty(sesMedOffOn01) && height(MetaT)>0
         MetaTOld = MetaT;
 
@@ -1636,12 +1699,21 @@ for a = 1:length(files)
         else
             %%
             if check_gui_tasks
-                assert( height(MetaT)==length(localsettings.mod))
-                for i = 1:height(MetaT) %update the task name
-                    if contains(MetaT.perceiveFilename{i},'TASK')
-                        assert(contains(MetaT.perceiveFilename{i},localsettings.mod{i}))
-                        MetaT.perceiveFilename{i}=replace(MetaT.perceiveFilename{i},['TASK' digitsPattern(1) '_'],localsettings.task{i});
+                if height(MetaT)==length(localsettings.mod)
+                
+                    for i = 1:height(MetaT) %update the task name
+                        if contains(MetaT.perceiveFilename{i},'TASK')
+                            assert(contains(MetaT.perceiveFilename{i},localsettings.mod{i}))
+                            MetaT.perceiveFilename{i}=replace(MetaT.perceiveFilename{i},['TASK' digitsPattern(1) '_'],localsettings.task{i});
+                        end
                     end
+                elseif all(strcmp(localsettings.task, 'Rest'))
+                    for i = 1:height(MetaT) 
+                          assert(contains(MetaT.perceiveFilename{i},'Rest'))
+                    
+                    end
+                else
+                    assert( height(MetaT)==length(localsettings.mod), 'Tasks and mods not listed the same as in json file')
                 end
             end
             if check_gui_med %remove the recordings with different medication settings
@@ -1692,6 +1764,37 @@ for a = 1:length(files)
                 MetaT.perceiveFilename{i+m}= data.fname{1};
                 save(fullfile(hdr.fpath,data.fname{1}),'data');
                 m=m+1;
+            end
+        end
+%% conversion to BIDS
+        if localsettings
+            if localsettings.convert2bids
+                for i = 1:height(MetaT)
+                    cfg=struct();
+                    load(fullfile(hdr.fpath,MetaT.perceiveFilename{i}),'data')
+                    entities = splitBIDSfilename(MetaT.perceiveFilename{i});
+                    cfg.method                  = 'convert';
+                    cfg.bidsroot                = fullfile(pwd);
+                    cfg.suffix                  = 'ieeg';
+                    cfg.sub                     = entities.sub;
+                    cfg.ses                     = entities.ses;
+                    cfg.task                    = entities.task;
+                    cfg.acq                     = entities.acq;
+                    cfg.mod                     = entities.mod;
+                    cfg.run                     = entities.run;
+
+                    cfg.ieeg.ElectricalStimulationParameters = data.hdr.js.Groups;
+                    cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalFrequencies');
+                    cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalPsdValues');
+
+                    %% save data
+                    if strcmp(cfg.mod,'BrainSenseBip')
+                        data.label=data.label(:,end-1:end);
+                        data.trial=data.trial{:}(end-1:end,:)';
+                        data.hdr.chantype={'LFP','LFP'};
+                    end
+                    data2bids(cfg, data);
+                end
             end
         end
     end
@@ -1816,8 +1919,14 @@ if contains(fname, ["LMTD","BrainSense","ISRing","EI","ES"])
         med = 'm9';
     elseif contains(splitted_fname{2}, 'MedOn')
         med = 'm1';
+    elseif contains(splitted_fname{2}, 'MedDaily')
+        med = 'm3';
+    elseif contains(splitted_fname{2}, 'Unknown')
+        med = 'm5';
     elseif contains(splitted_fname{2}, 'MedOff')
         med = 'm0';
+    else
+        error('unknown Med status')
     end
     if contains(splitted_fname{4}, ["StimOn","Burst"])
         stim = 's1';
