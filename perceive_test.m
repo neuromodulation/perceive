@@ -72,7 +72,7 @@ end
 % ADD Lead DBS Integration for electrode location
 
 %ubersichtzeit = table('Size',[1 8],'VariableNames',{'fname','FirstPackagetime','TicksMSecStart','TicksMSecEnd','TDTimeStart','TDTimeEnd','SumGlobalPackages','Triallength'},'VariableTypes',{'string','string','double','double','double','double','double','double'}) 
-
+%% perceive input
 if exist('datafields','var') && ischar(datafields) && ~isempty(datafields)
     datafields = {datafields};
 end
@@ -712,27 +712,27 @@ for a = 1:length(files)
                         % TODO: set if needed:
                         %d.keepfig = false; % do not keep figure with this signal open
 
-                        %%%Gaetanon pseudocode
+                        %%%Gaetano pseudocode
                         
-                        tmp = strsplit(data(i(1),:).TicksInMses, ',');
-                        tmp(end)=[];
-                        TicksInMses= cellfun(@(x)str2double(x), tmp);
-                       
-                        tmp = strsplit(data(i(1),:).GlobalPacketSizes, ',');
-                        tmp(end)=[];
-                        GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
-
-                        TDtime = (TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample) : 1/fsample : TicksInMses(end);
-                        for m=length(GlobalPacketSize):-1:2
-                            if TicksInMses(m)-TicksInMses(m-1) > (1 + GlobalPacketSize(m))/ fsample
-                                Prev_packet = (TicksInMses(m-1)- (GlobalPacketSize(m-1)-1)/ fsample) : 1/fsample : TicksInMses(m-1);
-                                TDtime = [Prev_packet,TDtime];
-                            else
-                                Prev_packet = (TDtime(1)- GlobalPacketSize(m-1)/ fsample): 1/fsample : TDtime(1) - 1/fsample;
-                                TDtime = [Prev_packet,TDtime];
-                            end
-                        end
-                        d.TDtime = TDtime;
+                        % tmp = strsplit(data(i(1),:).TicksInMses, ',');
+                        % tmp(end)=[];
+                        % TicksInMses= cellfun(@(x)str2double(x), tmp);
+                        % 
+                        % tmp = strsplit(data(i(1),:).GlobalPacketSizes, ',');
+                        % tmp(end)=[];
+                        % GlobalPacketSize= cellfun(@(x)str2double(x), tmp);
+                        % 
+                        % TDtime = (TicksInMses(end)- (GlobalPacketSize(end)-1)/fsample) : 1/fsample : TicksInMses(end);
+                        % for m=length(GlobalPacketSize):-1:2
+                        %     if TicksInMses(m)-TicksInMses(m-1) > (1 + GlobalPacketSize(m))/ fsample
+                        %         Prev_packet = (TicksInMses(m-1)- (GlobalPacketSize(m-1)-1)/ fsample) : 1/fsample : TicksInMses(m-1);
+                        %         TDtime = [Prev_packet,TDtime];
+                        %     else
+                        %         Prev_packet = (TDtime(1)- GlobalPacketSize(m-1)/ fsample): 1/fsample : TDtime(1) - 1/fsample;
+                        %         TDtime = [Prev_packet,TDtime];
+                        %     end
+                        % end
+                        % d.TDtime = TDtime;
                         d.sampleinfo(1,:) = [firstsample lastsample];
                         %%% track time
                         %ubersichtzeit.fname(end+1)=d.fname;
@@ -1463,6 +1463,7 @@ for a = 1:length(files)
     %nfile = fullfile(hdr.fpath,[hdr.fname '.jsoncopy']);
     %copyfile(files{a},nfile)
 
+    %% count BrainSense files
     counterBrainSense=0;
     % check counterBSL
     counterBSL=0;
@@ -1765,7 +1766,7 @@ for a = 1:length(files)
                 m=m+1;
             end
         end
-%% convertion to BIDS
+%% conversion to BIDS
         if localsettings
             if localsettings.convert2bids
                 for i = 1:height(MetaT)
