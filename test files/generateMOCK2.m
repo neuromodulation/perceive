@@ -13,8 +13,6 @@ replaceImplausibleTimes(outputFilename, outputFilename)
 ReplaceFracTimestamps(outputFilename, outputFilename)
 %%
 updateIndividualFields(outputFilename, outputFilename)
-%% 
-IndefiniteStreaming
 %%
 function s = updateFieldWithSubkey(s, key, subkey, newValue)
     if isstruct(s)
@@ -24,7 +22,17 @@ function s = updateFieldWithSubkey(s, key, subkey, newValue)
             
             % Check if the current field matches the key and contains the subkey
             if strcmp(fields{i}, key) && isstruct(fieldValue) && isfield(fieldValue, subkey)
-                s.(fields{i}).(subkey) = newValue; % Update subkey value
+                if strcmp(key, 'IndefiniteStreaming')
+                for a = 1:length(s.(fields{i}))/6
+                    b=(6*(a-1)+1);
+                    s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                    s.(fields{i})(b+2).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                    s.(fields{i})(b+3).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                    s.(fields{i})(b+4).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                    s.(fields{i})(b+5).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+
+                end
+                end
             elseif isstruct(fieldValue) % Handle nested structures
                 if numel(fieldValue) > 1 % If it's a struct array
                     for j = 1:numel(fieldValue)
