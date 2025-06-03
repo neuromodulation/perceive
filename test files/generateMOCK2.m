@@ -1,45 +1,221 @@
+%%
+inputFilename='Report_Json_Session_Report_20241013T153341.json';
+outputFilename='Report_Json_Session_Report_MOCK5.json';
+
 %% First, deidentify original
-js = jsondecode(fileread(filename));
+js = jsondecode(fileread(inputFilename));
+pseudonymize(js,'Report_Json_Session_Report_PSEUDO41.json');
+%%
+replaceDigitsOnly('Report_Json_Session_Report_PSEUDO41.json', outputFilename)
+%%
+replaceImplausibleTimes(outputFilename, outputFilename)
+%%
+ReplaceFracTimestamps(outputFilename, outputFilename)
+%%
+updateIndividualFields(outputFilename, outputFilename)
+%% 
 
-function js=pseudonymize(js)
-try
-    js.PatientInformation.Initial.PatientFirstName ='';
-    js.PatientInformation.Initial.PatientLastName ='';
-    js.PatientInformation.Initial.PatientDateOfBirth ='';
-    js.PatientInformation.Final.PatientFirstName ='';
-    js.PatientInformation.Final.PatientLastName ='';
-    js.PatientInformation.Final.PatientDateOfBirth ='';
-catch
-    js = rmfield(js,'PatientInformation');
-    js.PatientInformation.Initial.PatientFirstName ='';
-    js.PatientInformation.Initial.PatientLastName ='';
-    js.PatientInformation.Initial.PatientDateOfBirth ='';
-    js.PatientInformation.Initial.Diagnosis ='';
-    js.PatientInformation.Final.PatientFirstName ='';
-    js.PatientInformation.Final.PatientLastName ='';
-    js.PatientInformation.Final.PatientDateOfBirth ='';
-    js.PatientInformation.Final.Diagnosis = '';
-end
-
-jsonText = jsonencode(js, 'PrettyPrint', true);
+%%
+function updateIndividualFields(inputFile, outputFile)
+    % Read JSON file
+    jsonText = fileread(inputFile);
     
-    % Write JSON to file
-    fid = fopen([filename, 'PSEUDO'], 'w');
+    % Decode JSON to MATLAB struct
+    dataStruct = jsondecode(jsonText);
+    
+    % Modify key-value pairs recursively
+    dataStruct = updateThisField(dataStruct, 'SampleInHz', 250);
+    dataStruct = updateThisField(dataStruct, 'DataVersion', '1.2');
+    dataStruct = updateThisField(dataStruct, 'RateInHertz', 125);
+    dataStruct = updateTicksInMses(dataStruct);
+    [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
+
+    % Encode back to JSON (pretty formatting)
+    jsonText = jsonencode(dataStruct, 'PrettyPrint', true);
+    
+    % Write to output file
+    fid = fopen(outputFile, 'w');
     if fid == -1
-        error('Could not open file for writing.');
+        error('Could not open output file.');
     end
     fwrite(fid, jsonText);
     fclose(fid);
+    
+    fprintf('Modified JSON saved to %s\n', outputFile);
+end
 
+function s = updateThisField(s, key, value)
+    if isstruct(s)
+        fields = fieldnames(s);
+        for i = 1:numel(fields)
+            fieldValue = s.(fields{i});
+            
+            if strcmp(fields{i}, key)
+                s.(fields{i}) = value; % Update value
+            elseif isstruct(fieldValue) % Handle nested structures
+                if numel(fieldValue) > 1 % If it's a struct array
+                    for j = 1:numel(fieldValue)
+                        fieldValue(j) = updateThisField(fieldValue(j),key,value); % Process each struct separately
+                    end
+                    s.(fields{i}) = fieldValue; % Assign back
+                else
+                    s.(fields{i}) = updateThisField(fieldValue,key,value); % Recursively process scalar structs
+                end
+            elseif iscell(fieldValue) % Handle cell arrays containing structs
+                for j = 1:numel(fieldValue)
+                    if isstruct(fieldValue{j})
+                        fieldValue{j} = updateThisField(fieldValue{j},key,value);
+                    end
+                end
+                s.(fields{i}) = fieldValue;
+            end
+        end
+    end
+end
+
+function s = updateTicksInMses(s)
+    if isstruct(s)
+        fields = fieldnames(s);
+        for i = 1:numel(fields)
+            fieldValue = s.(fields{i});
+            
+            if strcmp(fields{i}, 'TicksInMses')
+                parts = strsplit(s.(fields{i}), ',');
+                len = size(parts,2);
+                newNums=str2num(parts{1}) + (0:(len-1))*250 ;
+                s.(fields{i}) = strjoin(string(newNums), ','); % Update value
+            elseif isstruct(fieldValue) % Handle nested structures
+                if numel(fieldValue) > 1 % If it's a struct array
+                    for j = 1:numel(fieldValue)
+                        fieldValue(j) = updateTicksInMses(fieldValue(j)); % Process each struct separately
+                    end
+                    s.(fields{i}) = fieldValue; % Assign back
+                else
+                    s.(fields{i}) = updateTicksInMses(fieldValue); % Recursively process scalar structs
+                end
+            elseif iscell(fieldValue) % Handle cell arrays containing structs
+                for j = 1:numel(fieldValue)
+                    if isstruct(fieldValue{j})
+                        fieldValue{j} = updateTicksInMses(fieldValue{j});
+                    end
+                end
+                s.(fields{i}) = fieldValue;
+            end
+        end
+    end
+end
+
+function [s,oldmtick] = updateTicksInMs(s, oldmtick)
+    if isstruct(s)
+        fields = fieldnames(s);
+        for i = 1:numel(fields)
+            fieldValue = s.(fields{i});
+            
+            if strcmp(fields{i}, 'TicksInMs')
+                s.(fields{i}) = oldmtick; % Update value
+                oldmtick = oldmtick +250;
+            elseif isstruct(fieldValue) % Handle nested structures
+                if numel(fieldValue) > 1 % If it's a struct array
+                    for j = 1:numel(fieldValue)
+                        [fieldValue(j),oldmtick] = updateTicksInMs(fieldValue(j),oldmtick); % Process each struct separately
+                    end
+                    s.(fields{i}) = fieldValue; % Assign back
+                else
+                    [s.(fields{i}),oldmtick] = updateTicksInMs(fieldValue,oldmtick); % Recursively process scalar structs
+                end
+            elseif iscell(fieldValue) % Handle cell arrays containing structs
+                for j = 1:numel(fieldValue)
+                    if isstruct(fieldValue{j})
+                        [fieldValue{j},oldmtick] = updateTicksInMs(fieldValue{j},oldmtick);
+                    end
+                end
+                s.(fields{i}) = fieldValue;
+            end
+        end
+    end
+end
+
+
+%%
+function firstsample = set_firstsample(string_of_TicksInMses)
+    parts = strsplit(string_of_TicksInMses, ',');
+    % Extract the first part and convert it to a number, divide by 50ms
+    firstsample = str2num(parts{1})/50;
+    if isempty(firstsample)
+        firstsample=1;
+    end
 end
 %%
-
-inputFilename='Report_Json_Session_Report_PSEUDO47.json';
-outputFilename='Report_Json_Session_Report_MOCK1.json';
-replaceDigitsOnly(inputFilename, outputFilename)
+function ReplaceFracTimestamps(inputFilename, outputFilename)
+%REPLACEFRACTIMESTAMPS  Read text (e.g. JSON), find all ISO‐style timestamps
+% with fractional seconds (“YYYY-MM-DDThh:mm:ss.xxxZ”), replace each with a
+% strictly increasing 2019-based timestamp that also contains fractional seconds,
+% and write the modified text to a new file.
+%
+% Usage:
+%   ReplaceFracTimestamps('in.json','out.json');
+%
+%   – Matches only timestamps of the form:
+%       4+ digits-2 digits-2 digits 'T' 2 digits:2 digits:2 digits '.' 1+ digits 'Z'
+%   – Builds a sequence in UTC starting at a random time on Jan 1, 2019, and for
+%     each subsequent timestamp adds a random [0.001 s, 3600 s] increment so that
+%     each new timestamp > previous.
+%   – Formats each replacement with exactly three fractional digits (milliseconds).
+    % Read entire file
+    fid = fopen(inputFilename,'r');
+    if fid < 0
+        error('Cannot open input file: %s', inputFilename);
+    end
+    txt = fread(fid,'*char')';
+    fclose(fid);
+    % Regex: YYYY-MM-DDThh:mm:ss.xxxZ  (xxx = one-or-more digits)
+    fracPattern = '\d{4,}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z';
+    % Find matches with start/end indices
+    [oldTimes, starts, ends] = regexp(txt, fracPattern, 'match', 'start', 'end');
+    N = numel(oldTimes);
+    if N == 0
+        % No fractional-second timestamps → copy input to output
+        fid = fopen(outputFilename,'w');
+        fwrite(fid, txt);
+        fclose(fid);
+        return
+    end
+    % Preallocate datetime array with UTC timezone
+    newDT = NaT(N,1,'TimeZone','UTC');
+    % Initialize first timestamp: random offset in (0, 86400) seconds after 2019-01-01
+    t0 = datetime(2019,1,1,0,0,0,'TimeZone','UTC');
+    firstOffset = seconds(rand() * (86400 - eps));  % rand in [0,1), avoid exact 86400
+    newDT(1) = t0 + firstOffset;
+    % Each subsequent: add a random increment between 0.001 s and 3600 s
+    tprev = newDT(1);
+    for k = 2:N
+        delta = rand() * (3600 - 0.001) + 0.001;  % ∈ [0.001, 3600)
+        tprev = tprev + seconds(delta);
+        newDT(k) = tprev;
+    end
+    % Format with three-digit milliseconds: “yyyy-MM-ddTHH:mm:ss.SSSZ”
+    newStr = string(newDT, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    % Reconstruct text by splicing in replacements
+    parts = strings(1, 2*N+1);
+    idxPrev = 1;
+    for k = 1:N
+        sIdx = starts(k);
+        eIdx = ends(k);
+        parts(2*k-1) = txt(idxPrev:sIdx-1);
+        parts(2*k)   = newStr(k);
+        idxPrev = eIdx + 1;
+    end
+    parts(end) = txt(idxPrev:end);
+    outTxt = strjoin(parts, '');
+    % Write out modified text
+    fid = fopen(outputFilename,'w');
+    if fid < 0
+        error('Cannot open output file: %s', outputFilename);
+    end
+    fwrite(fid, outTxt);
+    fclose(fid);
+end
 %%
-replaceImplausibleTimes("Report_Json_Session_Report_MOCK1.json", "Report_Json_Session_Report_MOCK2.json")
-
 function replaceImplausibleTimes(inputFilename, outputFilename)
 %REPLACEIMPLAUSIBLETIMES  Read a JSON‐formatted text, replace all ISO‐style
 % timestamps (even if fields are invalid) with plausible, strictly increasing
@@ -120,6 +296,7 @@ function replaceImplausibleTimes(inputFilename, outputFilename)
     fclose(fid);
 end
 
+%%
 function replaceDigitsOnly(inputFile, outputFile)
     % Read the file content
     fileContent = fileread(inputFile);
@@ -143,5 +320,38 @@ function replaceDigitsOnly(inputFile, outputFile)
     fclose(fid);
     
     fprintf('Modified content saved to %s\n', outputFile);
+end
+
+%%
+function js=pseudonymize(js, outputfilename)
+try
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+catch
+    js = rmfield(js,'PatientInformation');
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Initial.Diagnosis ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+    js.PatientInformation.Final.Diagnosis = '';
+end
+
+jsonText = jsonencode(js, 'PrettyPrint', true);
+    
+    % Write JSON to file
+    fid = fopen([outputfilename], 'w');
+    if fid == -1
+        error('Could not open file for writing.');
+    end
+    fwrite(fid, jsonText);
+    fclose(fid);
+
 end
 
