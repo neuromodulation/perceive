@@ -14,7 +14,37 @@ ReplaceFracTimestamps(outputFilename, outputFilename)
 %%
 updateIndividualFields(outputFilename, outputFilename)
 %% 
-
+IndefiniteStreaming
+%%
+function s = updateFieldWithSubkey(s, key, subkey, newValue)
+    if isstruct(s)
+        fields = fieldnames(s);
+        for i = 1:numel(fields)
+            fieldValue = s.(fields{i});
+            
+            % Check if the current field matches the key and contains the subkey
+            if strcmp(fields{i}, key) && isstruct(fieldValue) && isfield(fieldValue, subkey)
+                s.(fields{i}).(subkey) = newValue; % Update subkey value
+            elseif isstruct(fieldValue) % Handle nested structures
+                if numel(fieldValue) > 1 % If it's a struct array
+                    for j = 1:numel(fieldValue)
+                        fieldValue(j) = updateFieldWithSubkey(fieldValue(j), key, subkey, newValue); % Process each struct separately
+                    end
+                    s.(fields{i}) = fieldValue; % Assign back
+                else
+                    s.(fields{i}) = updateFieldWithSubkey(fieldValue, key, subkey, newValue); % Recursively process scalar structs
+                end
+            elseif iscell(fieldValue) % Handle cell arrays containing structs
+                for j = 1:numel(fieldValue)
+                    if isstruct(fieldValue{j})
+                        fieldValue{j} = updateFieldWithSubkey(fieldValue{j}, key, subkey, newValue);
+                    end
+                end
+                s.(fields{i}) = fieldValue;
+            end
+        end
+    end
+end
 %%
 function updateIndividualFields(inputFile, outputFile)
     % Read JSON file
@@ -29,6 +59,7 @@ function updateIndividualFields(inputFile, outputFile)
     dataStruct = updateThisField(dataStruct, 'RateInHertz', 125);
     dataStruct = updateTicksInMses(dataStruct);
     [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
+    dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime', "2019-01-01T12:12:12");
 
     % Encode back to JSON (pretty formatting)
     jsonText = jsonencode(dataStruct, 'PrettyPrint', true);
@@ -134,6 +165,8 @@ function [s,oldmtick] = updateTicksInMs(s, oldmtick)
         end
     end
 end
+
+
 
 
 %%
