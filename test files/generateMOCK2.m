@@ -71,7 +71,7 @@ function updateIndividualFields(inputFile, outputFile)
     dataStruct = updateThisField(dataStruct, 'SampleInHz', 250);
     dataStruct = updateThisField(dataStruct, 'DataVersion', '1.2');
     dataStruct = updateThisField(dataStruct, 'RateInHertz', 125);
-    dataStruct = updateThisField(dataStruct, 'SampleRateInHz', 125);
+    dataStruct = updateThisField(dataStruct, 'SampleRateInHz', 250);
     dataStruct = updateTicksInMses(dataStruct);
     [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
     dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime', "2019-01-01T12:12:12");
@@ -128,7 +128,8 @@ function s = updateTicksInMses(s)
             if strcmp(fields{i}, 'TicksInMses')
                 parts = strsplit(s.(fields{i}), ',');
                 len = size(parts,2);
-                newNums=str2num(parts{1}) + (0:(len-1))*250 ;
+                idx=0:(len-1);
+                newNums = str2num(parts{1})+floor(idx/2)*250;
                 s.(fields{i}) = strjoin(string(newNums), ','); % Update value
             elseif isstruct(fieldValue) % Handle nested structures
                 if numel(fieldValue) > 1 % If it's a struct array
