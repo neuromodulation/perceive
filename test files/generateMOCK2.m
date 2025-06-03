@@ -32,7 +32,11 @@ function s = updateFieldWithSubkey(s, key, subkey, newValue)
                     s.(fields{i})(b+3).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
                     s.(fields{i})(b+4).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
                     s.(fields{i})(b+5).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-
+                    s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    s.(fields{i})(b+2).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    s.(fields{i})(b+3).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    s.(fields{i})(b+4).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    s.(fields{i})(b+5).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
                 end
                 end
             elseif isstruct(fieldValue) % Handle nested structures
@@ -67,6 +71,7 @@ function updateIndividualFields(inputFile, outputFile)
     dataStruct = updateThisField(dataStruct, 'SampleInHz', 250);
     dataStruct = updateThisField(dataStruct, 'DataVersion', '1.2');
     dataStruct = updateThisField(dataStruct, 'RateInHertz', 125);
+    dataStruct = updateThisField(dataStruct, 'SampleRateInHz', 125);
     dataStruct = updateTicksInMses(dataStruct);
     [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
     dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime', "2019-01-01T12:12:12");
