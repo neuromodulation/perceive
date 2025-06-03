@@ -4,9 +4,9 @@ outputFilename='Report_Json_Session_Report_MOCK5.json';
 
 %% First, deidentify original
 js = jsondecode(fileread(inputFilename));
-pseudonymize(js,'Report_Json_Session_Report_PSEUDO41.json');
+pseudonymize(js,outputFilename);
 %%
-replaceDigitsOnly('Report_Json_Session_Report_PSEUDO41.json', outputFilename)
+replaceDigitsOnly(outputFilename, outputFilename)
 %%
 replaceImplausibleTimes(outputFilename, outputFilename)
 %%
