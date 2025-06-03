@@ -139,7 +139,7 @@
         "Mode": "LimitModeDef.AdvanceEdit",
         "AdjustableParameter": "LimitTypeDef.Amplitude",
         "ProgramSettings": {
-          "RateInHertz": 697,
+          "RateInHertz": 250,
           "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
           "LeftHemisphere": {
             "Programs": [
@@ -239,7 +239,7 @@
         "Mode": "LimitModeDef.AdvanceEdit",
         "AdjustableParameter": "LimitTypeDef.Amplitude",
         "ProgramSettings": {
-          "RateInHertz": 181,
+          "RateInHertz": 250,
           "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
           "LeftHemisphere": {
             "Programs": [
@@ -320,7 +320,7 @@
         "Mode": "LimitModeDef.AdvanceEdit",
         "AdjustableParameter": "LimitTypeDef.Amplitude",
         "ProgramSettings": {
-          "RateInHertz": 171,
+          "RateInHertz": 250,
           "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
           "SensingChannel": [
             {
@@ -351,7 +351,7 @@
                 }
               ],
               "PulseWidthInMicroSecond": 52,
-              "RateInHertz": 894,
+              "RateInHertz": 250,
               "BrainSensingStatus": "SensingStatusDef.ENABLED",
               "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
               "UpperLfpThreshold": 417,
@@ -616,7 +616,7 @@
                 }
               ],
               "PulseWidthInMicroSecond": 72,
-              "RateInHertz": 217,
+              "RateInHertz": 250,
               "GangedToHemisphere": "HemisphereLocationDef.Left",
               "BrainSensingStatus": "SensingStatusDef.ENABLED",
               "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
@@ -874,7 +874,7 @@
         "Mode": "LimitModeDef.AdvanceEdit",
         "AdjustableParameter": "LimitTypeDef.Amplitude",
         "ProgramSettings": {
-          "RateInHertz": 463,
+          "RateInHertz": 250,
           "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
           "SensingChannel": [
             {
