@@ -1,5 +1,5 @@
 {
-  "DataVersion": "3.3",
+  "DataVersion": "1.2",
   "AbnormalEnd": false,
   "FullyReadForSession": true,
   "ReadAllStatus": "NOT_STARTED",
@@ -8,9 +8,9 @@
   "SessionEndDate": "2019-01-02T00:15:05Z",
   "ProgrammerTimezone": "Mitteleuropäische Sommerzeit",
   "ProgrammerTimezoneId": "Europe/Berlin",
-  "ProgrammerUtcOffset": "+96:84",
+  "ProgrammerUtcOffset": "+02:00",
   "ProgrammerLocale": "de_DE",
-  "ProgrammerVersion": "4.9.418",
+  "ProgrammerVersion": "5.0.676",
   "PatientInformation": {
     "Initial": {
       "PatientFirstName": "",
