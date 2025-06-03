@@ -1,6 +1,4 @@
-%%
-inputFilename='Report_Json_Session_Report_20241013T153341.json';
-outputFilename='Report_Json_Session_Report_MOCK5.json';
+function generateMOCK2(inputFilename,outputFilename)
 
 %% First, deidentify original
 js = jsondecode(fileread(inputFilename));
@@ -14,7 +12,10 @@ ReplaceFracTimestamps(outputFilename, outputFilename)
 %%
 updateIndividualFields(outputFilename, outputFilename)
 %%
-function s = updateFieldWithSubkey(s, key, subkey, newValue)
+end
+
+%% list of functions
+function s = updateFieldWithSubkey(s, key, subkey)
     if isstruct(s)
         fields = fieldnames(s);
         for i = 1:numel(fields)
@@ -25,33 +26,40 @@ function s = updateFieldWithSubkey(s, key, subkey, newValue)
                 % Indefinite Streaming: special case where six first
                 % Timestamps should be equal, next six should be equal etc.
                 if strcmp(key, 'IndefiniteStreaming')
-                for a = 1:length(s.(fields{i}))/6
-                    b=(6*(a-1)+1);
-                    s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                    s.(fields{i})(b+2).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                    s.(fields{i})(b+3).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                    s.(fields{i})(b+4).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                    s.(fields{i})(b+5).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                    s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                    s.(fields{i})(b+2).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                    s.(fields{i})(b+3).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                    s.(fields{i})(b+4).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                    s.(fields{i})(b+5).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                end
+                    for a = 1:length(s.(fields{i}))/6
+                        b=(6*(a-1)+1);
+                        s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+2).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+3).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+4).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+5).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                        s.(fields{i})(b+2).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                        s.(fields{i})(b+3).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                        s.(fields{i})(b+4).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                        s.(fields{i})(b+5).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    end
+                elseif strcmp(key, 'BrainSenseTimeDomain')
+                    for a = 1:length(s.(fields{i}))/2
+                        b=(2*(a-1)+1);
+                        s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                        s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                        
+                    end
                 end
             elseif isstruct(fieldValue) % Handle nested structures
                 if numel(fieldValue) > 1 % If it's a struct array
                     for j = 1:numel(fieldValue)
-                        fieldValue(j) = updateFieldWithSubkey(fieldValue(j), key, subkey, newValue); % Process each struct separately
+                        fieldValue(j) = updateFieldWithSubkey(fieldValue(j), key, subkey); % Process each struct separately
                     end
                     s.(fields{i}) = fieldValue; % Assign back
                 else
-                    s.(fields{i}) = updateFieldWithSubkey(fieldValue, key, subkey, newValue); % Recursively process scalar structs
+                    s.(fields{i}) = updateFieldWithSubkey(fieldValue, key, subkey); % Recursively process scalar structs
                 end
             elseif iscell(fieldValue) % Handle cell arrays containing structs
                 for j = 1:numel(fieldValue)
                     if isstruct(fieldValue{j})
-                        fieldValue{j} = updateFieldWithSubkey(fieldValue{j}, key, subkey, newValue);
+                        fieldValue{j} = updateFieldWithSubkey(fieldValue{j}, key, subkey);
                     end
                 end
                 s.(fields{i}) = fieldValue;
@@ -74,7 +82,8 @@ function updateIndividualFields(inputFile, outputFile)
     dataStruct = updateThisField(dataStruct, 'SampleRateInHz', 250);
     dataStruct = updateTicksInMses(dataStruct);
     [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
-    dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime', "2019-01-01T12:12:12");
+    dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime');
+    dataStruct = updateFieldWithSubkey(dataStruct, 'BrainSenseTimeDomain', 'FirstPacketDateTime');
 
     % Encode back to JSON (pretty formatting)
     jsonText = jsonencode(dataStruct, 'PrettyPrint', true);
@@ -404,4 +413,3 @@ jsonText = jsonencode(js, 'PrettyPrint', true);
     fclose(fid);
 
 end
-
