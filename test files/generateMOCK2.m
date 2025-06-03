@@ -1,5 +1,38 @@
 %% First, deidentify original
+js = jsondecode(fileread(filename));
 
+function js=pseudonymize(js)
+try
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+catch
+    js = rmfield(js,'PatientInformation');
+    js.PatientInformation.Initial.PatientFirstName ='';
+    js.PatientInformation.Initial.PatientLastName ='';
+    js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Initial.Diagnosis ='';
+    js.PatientInformation.Final.PatientFirstName ='';
+    js.PatientInformation.Final.PatientLastName ='';
+    js.PatientInformation.Final.PatientDateOfBirth ='';
+    js.PatientInformation.Final.Diagnosis = '';
+end
+
+jsonText = jsonencode(js, 'PrettyPrint', true);
+    
+    % Write JSON to file
+    fid = fopen([filename, 'PSEUDO'], 'w');
+    if fid == -1
+        error('Could not open file for writing.');
+    end
+    fwrite(fid, jsonText);
+    fclose(fid);
+
+end
+%%
 
 inputFilename='Report_Json_Session_Report_PSEUDO47.json';
 outputFilename='Report_Json_Session_Report_MOCK1.json';
