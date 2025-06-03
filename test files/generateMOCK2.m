@@ -138,9 +138,11 @@ function s = updateTicksInMses(s)
                 parts = strsplit(s.(fields{i}), ',');
                 parts(end)=[];
                 len = size(parts,2);
-                idx=0:(len-1);
-                newNums = str2num(parts{1})+floor(idx/2)*250;
+                if len
+                    idx=0:(len-1);
+                    newNums = str2num(parts{1})+floor(idx/2)*250;
                 s.(fields{i}) = strjoin(string(newNums), ','); % Update value
+                end
             elseif isstruct(fieldValue) % Handle nested structures
                 if numel(fieldValue) > 1 % If it's a struct array
                     for j = 1:numel(fieldValue)
