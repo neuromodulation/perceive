@@ -22,6 +22,8 @@ function s = updateFieldWithSubkey(s, key, subkey, newValue)
             
             % Check if the current field matches the key and contains the subkey
             if strcmp(fields{i}, key) && isstruct(fieldValue) && isfield(fieldValue, subkey)
+                % Indefinite Streaming: special case where six first
+                % Timestamps should be equal, next six should be equal etc.
                 if strcmp(key, 'IndefiniteStreaming')
                 for a = 1:length(s.(fields{i}))/6
                     b=(6*(a-1)+1);
