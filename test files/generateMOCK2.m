@@ -40,12 +40,26 @@ function s = updateFieldWithSubkey(s, key, subkey)
                         s.(fields{i})(b+5).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
                     end
                 elseif strcmp(key, 'BrainSenseTimeDomain')
-                    for a = 1:length(s.(fields{i}))/2
-                        b=(2*(a-1)+1);
-                        s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
-                        s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
-                        
+                    % read the timedomaindata
+                    timedomaindata = zeros(length(s.(fields{i})));
+                    for j = 1:length(s.(fields{i}))
+                        timedomaindata(j) = size(s.(fields{i})(j).('TimeDomainData'),1);
                     end
+                    for a = 2:length(s.(fields{i}))
+                        thistime = timedomaindata(a);
+                        if (thistime == timedomaindata(a-1))
+                            % if this recording length is the same as the 
+                            % previous one: copy TicksinMses and FirstPacketDateTime
+                            s.(fields{i})(a).('FirstPacketDateTime') = s.(fields{i})(a-1).('FirstPacketDateTime');
+                            s.(fields{i})(a).('TicksInMses') = s.(fields{i})(a-1).('TicksInMses');
+                        end
+                    end
+                    % for a = 1:length(s.(fields{i}))/2
+                    %     b=(2*(a-1)+1);
+                    %     s.(fields{i})(b+1).(subkey) = (s.(fields{i})(b).(subkey)); % Update subkey value
+                    %     s.(fields{i})(b+1).('TicksInMses') = (s.(fields{i})(b).('TicksInMses')); % Update subkey value
+                    % 
+                    % end
                 end
             elseif isstruct(fieldValue) % Handle nested structures
                 if numel(fieldValue) > 1 % If it's a struct array
