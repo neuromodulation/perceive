@@ -389,18 +389,25 @@ try
     js.PatientInformation.Initial.PatientFirstName ='';
     js.PatientInformation.Initial.PatientLastName ='';
     js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Initial.PatientGender='';
+    js.PatientInformation.Initial.Diagnosis ='';
     js.PatientInformation.Final.PatientFirstName ='';
     js.PatientInformation.Final.PatientLastName ='';
     js.PatientInformation.Final.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientGender='';
+    js.PatientInformation.Final.Diagnosis ='';
+
 catch
     js = rmfield(js,'PatientInformation');
     js.PatientInformation.Initial.PatientFirstName ='';
     js.PatientInformation.Initial.PatientLastName ='';
     js.PatientInformation.Initial.PatientDateOfBirth ='';
+    js.PatientInformation.Initial.PatientGender='';
     js.PatientInformation.Initial.Diagnosis ='';
     js.PatientInformation.Final.PatientFirstName ='';
     js.PatientInformation.Final.PatientLastName ='';
     js.PatientInformation.Final.PatientDateOfBirth ='';
+    js.PatientInformation.Final.PatientGender='';
     js.PatientInformation.Final.Diagnosis = '';
 end
 
