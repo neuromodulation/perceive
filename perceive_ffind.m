@@ -1,98 +1,78 @@
-function [files,folder,fullfname] = perceive_ffind(string,cell,rec)
-if ~exist('cell','var')
-    cell = 1;
-end
+function [files, folder, fullfname] = perceive_ffind(string, cellmode, rec)
+% perceive_ffind - cross-platform file finder
+% 
+% Inputs:
+%   string   - pattern to match, e.g., '*.mat' or fullfile(folder, '*BSL*.mat')
+%   cellmode - 1 (default): return cell array; 0: return char if only one file
+%   rec      - 1: recursive search; 0 (default): current folder only
+%
+% Outputs:
+%   files      - list of filenames
+%   folder     - corresponding folder(s)
+%   fullfname  - full path(s)
 
-if ~exist('rec','var')
-    rec = 0;
-end
+% --- defaults ---
+if ~exist('cellmode','var') || isempty(cellmode), cellmode = 1; end
+if ~exist('rec','var') || isempty(rec), rec = 0; end
 
-
+% --- non-recursive mode ---
 if ~rec
-    x = ls(string);
-    if size(x,1)>1
-        files = cellstr(ls(string));
-    else
-        % On unix, the output of 'ls' is a rich text, see the help for LS:
-        %  >> On UNIX, LS returns a character row vector of filenames
-        %  >> separated by tab and space characters.
-        % On top of that, the text terminates with a newline.
-        % Therefore, we can't split only on spaces, but also on tabs and newlines:
-        files = strsplit(x);
-        % On unix, splitting on newlines can result in the last entry being empty,
-        % so we remove empty entries:
-        if ~isempty(files)
-            nonempty=repmat(true,1,length(files));
-            for i=1:length(files)
-                if isempty(files{i})
-                    nonempty(i)=false;
-                end
-            end
-            files=files(nonempty);
-        end
+    % handle relative paths
+    if startsWith(string, './') || startsWith(string, '.\')
+        string = fullfile(pwd, string(3:end));
+    elseif startsWith(string, '*') || startsWith(string, filesep)
+        string = fullfile(pwd, string);
     end
+
+    % use dir (instead of ls)
+    d = dir(string);
+    if isempty(d)
+        files = {};
+        folder = {};
+        fullfname = {};
+        return
+    end
+
+    files = {d.name}';
+    folder = {d.folder}';
     
-    for a =1:length(files)
-        ff = fileparts(string);
-        if ~isempty(ff)
-            folder{a} = ff;
-        else
-            folder{a} = cd;
-        end
-
-    end
-
-
+% --- recursive search ---
 else
-    
-    rdirs=find_folders;
-    outfiles=ffind(string,1,0);
+    rdirs = find_folders;
+    outfiles = {};
     outfolders = {};
-    folders = {};
-    for a = 1:length(outfiles)
-        outfolders{a} = cd;
-    end
-    for a=1:length(rdirs)
-        files=ffind([rdirs{a} filesep string],1,0);
-        if ~isempty(files)
-            for b = 1:length(files)
-                folders{b,1} = [rdirs{a}];
-            end
-            outfiles = [outfiles;files];
-            outfolders = [outfolders;folders];
+    for i = 1:length(rdirs)
+        d = dir(fullfile(rdirs{i}, string));
+        if ~isempty(d)
+            outfiles = [outfiles; {d.name}'];
+            outfolders = [outfolders; repmat(rdirs(i), numel(d), 1)];
         end
     end
     files = outfiles;
     folder = outfolders;
 end
-ris = logical(sum([ismember(files,'.') ,ismember(files,'..')],2));
-if ris
-    files(ris)=[];
-    folder(ris)=[];
-    [files,x]=unique(files);
-    folder = folder(x);
-end
-% keyboard
-if ~isempty(files)
-    if ~cell && length(files) == 1
-        files = files{1};
-        fullfname = [folder{1} filesep files];
-    elseif iscell(files) && isempty(files{1})
-        files = [];
-        folder = [];
-        fullfname = [];
-    elseif iscell(files)
-        for a=1:length(files)
-            fullfname{a,1} = [folder{a} filesep files{a}];
-        end   
-    end
-else
-    folder = [];
+
+% --- clean results ---
+% remove '.' and '..'
+keep = ~ismember(files, {'.','..'});
+files = files(keep);
+folder = folder(keep);
+
+% remove duplicates
+[files, uniq_idx] = unique(files, 'stable');
+folder = folder(uniq_idx);
+
+% --- full filenames ---
+if isempty(files)
     fullfname = [];
+elseif ~cellmode && numel(files) == 1
+    files = files{1};
+    fullfname = fullfile(folder{1}, files);
+else
+    for a = 1:length(files)
+        fullfname{a,1} = fullfile(folder{a}, files{a});
+    end
 end
-    
+end
 
-
-
-% keyboard
 
