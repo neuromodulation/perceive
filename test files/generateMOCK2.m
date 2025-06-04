@@ -98,6 +98,9 @@ function updateIndividualFields(inputFile, outputFile)
     [dataStruct, ~] = updateTicksInMs(dataStruct, 0);
     dataStruct = updateFieldWithSubkey(dataStruct, 'IndefiniteStreaming', 'FirstPacketDateTime');
     dataStruct = updateFieldWithSubkey(dataStruct, 'BrainSenseTimeDomain', 'FirstPacketDateTime');
+    %% modify symptoms
+    %'Feeling good', 'Feeling off', 'Took Medication', 'überbeweglich', 'unterbeweglich', 'Dyskinesia'
+    dataStruct = updateThisField(dataStruct, 'EventName', 'DummyEvent');
 
     % Encode back to JSON (pretty formatting)
     jsonText = jsonencode(dataStruct, 'PrettyPrint', true);
@@ -404,12 +407,12 @@ try
     js.PatientInformation.Initial.PatientLastName ='';
     js.PatientInformation.Initial.PatientDateOfBirth ='';
     js.PatientInformation.Initial.PatientGender='';
-    js.PatientInformation.Initial.Diagnosis ='';
+    js.PatientInformation.Initial.Diagnosis ='DiagnosisTypeDef.ParkinsonsDisease';
     js.PatientInformation.Final.PatientFirstName ='';
     js.PatientInformation.Final.PatientLastName ='';
     js.PatientInformation.Final.PatientDateOfBirth ='';
     js.PatientInformation.Final.PatientGender='';
-    js.PatientInformation.Final.Diagnosis ='';
+    js.PatientInformation.Final.Diagnosis ='DiagnosisTypeDef.ParkinsonsDisease';
 
 catch
     js = rmfield(js,'PatientInformation');
@@ -417,13 +420,14 @@ catch
     js.PatientInformation.Initial.PatientLastName ='';
     js.PatientInformation.Initial.PatientDateOfBirth ='';
     js.PatientInformation.Initial.PatientGender='';
-    js.PatientInformation.Initial.Diagnosis ='';
+    js.PatientInformation.Initial.Diagnosis ='DiagnosisTypeDef.ParkinsonsDisease';
     js.PatientInformation.Final.PatientFirstName ='';
     js.PatientInformation.Final.PatientLastName ='';
     js.PatientInformation.Final.PatientDateOfBirth ='';
     js.PatientInformation.Final.PatientGender='';
-    js.PatientInformation.Final.Diagnosis = '';
+    js.PatientInformation.Final.Diagnosis = 'DiagnosisTypeDef.ParkinsonsDisease';
 end
+
 
 jsonText = jsonencode(js, 'PrettyPrint', true);
     
