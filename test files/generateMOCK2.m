@@ -100,7 +100,7 @@ function updateIndividualFields(inputFile, outputFile)
     dataStruct = updateFieldWithSubkey(dataStruct, 'BrainSenseTimeDomain', 'FirstPacketDateTime');
     %% modify symptoms
     %'Feeling good', 'Feeling off', 'Took Medication', 'überbeweglich', 'unterbeweglich', 'Dyskinesia'
-    dataStruct = updateThisField(dataStruct, 'EventName', 'DummyEvent');
+    dataStruct = updateThisField(dataStruct, 'EventName', "DummyEvent");
 
     % Encode back to JSON (pretty formatting)
     jsonText = jsonencode(dataStruct, 'PrettyPrint', true);
