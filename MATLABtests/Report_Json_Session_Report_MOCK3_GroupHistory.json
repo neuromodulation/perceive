@@ -1,0 +1,1194 @@
+[
+  {
+    "Sessiondate": "2019-01-01T10:49:46Z",
+    "Settings": {
+      "GroupId": "GroupIdDef.GROUP_C",
+      "ActiveGroup": true,
+      "ProgramSettings": {
+        "RateInHertz": 125,
+        "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+        "SensingChannel": [
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Left",
+            "ProgramId": "ProgramIdDef.FIRST_LEFT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_5a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_9b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_9c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 95,
+            "RateInHertz": 125,
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 668,
+            "LowerLfpThreshold": 914,
+            "UpperCaptureAmplitudeInMilliAmps": 9,
+            "LowerCaptureAmplitudeInMilliAmps": 9,
+            "MeasuredUpperLfp": 521,
+            "MeasuredLowerLfp": 17,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 135735,
+            "TransitionDownInMilliSeconds": 126133,
+            "SuspendAmplitudeInMilliAmps": 9.3,
+            "SensingSetup": {
+              "FrequencyInHertz": 72.2,
+              "AveragingDurationInMilliSeconds": 4241,
+              "ChannelSignalResult": {}
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 3727,
+              "LowerThresholdOnsetInMilliSeconds": 3839,
+              "DetectionBlankingDurationInMilliSeconds": 3948,
+              "AdaptiveStartupDelayInMilliSeconds": 22114
+            }
+          },
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Right",
+            "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_9a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_1b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_2c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 66,
+            "RateInHertz": 125,
+            "GangedToHemisphere": "HemisphereLocationDef.Left",
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 869,
+            "LowerLfpThreshold": 264,
+            "UpperCaptureAmplitudeInMilliAmps": 1,
+            "LowerCaptureAmplitudeInMilliAmps": 8,
+            "MeasuredUpperLfp": 545,
+            "MeasuredLowerLfp": 81,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 279955,
+            "TransitionDownInMilliSeconds": 913357,
+            "SuspendAmplitudeInMilliAmps": 3.8,
+            "SensingSetup": {
+              "FrequencyInHertz": 14.1,
+              "AveragingDurationInMilliSeconds": 6211,
+              "ChannelSignalResult": {}
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 4759,
+              "LowerThresholdOnsetInMilliSeconds": 7697,
+              "DetectionBlankingDurationInMilliSeconds": 9286,
+              "AdaptiveStartupDelayInMilliSeconds": 13288
+            }
+          }
+        ]
+      },
+      "GroupSettings": {
+        "SoftStartStop": {
+          "Enabled": false
+        },
+        "Cycling": {
+          "Enabled": false
+        },
+        "HighPassFilterInHertz": 6,
+        "SensingBlankingDurationInMicroseconds": 8996
+      }
+    }
+  },
+  {
+    "Sessiondate": "2019-01-01T10:54:45Z",
+    "Settings": {
+      "GroupId": "GroupIdDef.GROUP_C",
+      "ActiveGroup": true,
+      "ProgramSettings": {
+        "RateInHertz": 125,
+        "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+        "SensingChannel": [
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Left",
+            "ProgramId": "ProgramIdDef.FIRST_LEFT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_6a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_2b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_6c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 25,
+            "RateInHertz": 125,
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 458,
+            "LowerLfpThreshold": 717,
+            "UpperCaptureAmplitudeInMilliAmps": 5,
+            "LowerCaptureAmplitudeInMilliAmps": 7,
+            "MeasuredUpperLfp": 786,
+            "MeasuredLowerLfp": 82,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 461367,
+            "TransitionDownInMilliSeconds": 423816,
+            "SuspendAmplitudeInMilliAmps": 8.1,
+            "SensingSetup": {
+              "FrequencyInHertz": 23.7,
+              "AveragingDurationInMilliSeconds": 8659,
+              "ChannelSignalResult": {}
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 3365,
+              "LowerThresholdOnsetInMilliSeconds": 1835,
+              "DetectionBlankingDurationInMilliSeconds": 5918,
+              "AdaptiveStartupDelayInMilliSeconds": 82315
+            }
+          },
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Right",
+            "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_2a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_5b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_7c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 97,
+            "RateInHertz": 125,
+            "GangedToHemisphere": "HemisphereLocationDef.Left",
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 984,
+            "LowerLfpThreshold": 717,
+            "UpperCaptureAmplitudeInMilliAmps": 4,
+            "LowerCaptureAmplitudeInMilliAmps": 6,
+            "MeasuredUpperLfp": 855,
+            "MeasuredLowerLfp": 85,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 471719,
+            "TransitionDownInMilliSeconds": 349815,
+            "SuspendAmplitudeInMilliAmps": 7.6,
+            "SensingSetup": {
+              "FrequencyInHertz": 71.9,
+              "AveragingDurationInMilliSeconds": 7949,
+              "ChannelSignalResult": {}
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 8122,
+              "LowerThresholdOnsetInMilliSeconds": 5973,
+              "DetectionBlankingDurationInMilliSeconds": 4439,
+              "AdaptiveStartupDelayInMilliSeconds": 93654
+            }
+          }
+        ]
+      },
+      "GroupSettings": {
+        "SoftStartStop": {
+          "Enabled": false
+        },
+        "Cycling": {
+          "Enabled": false
+        },
+        "HighPassFilterInHertz": 9,
+        "SensingBlankingDurationInMicroseconds": 8334
+      }
+    }
+  },
+  {
+    "Sessiondate": "2019-01-01T11:30:44Z",
+    "Settings": {
+      "GroupId": "GroupIdDef.GROUP_D",
+      "ActiveGroup": true,
+      "ProgramSettings": {
+        "RateInHertz": 125,
+        "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+        "SensingChannel": [
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Left",
+            "ProgramId": "ProgramIdDef.FIRST_LEFT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_8a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_2b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_6c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 22,
+            "RateInHertz": 125,
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 996,
+            "LowerLfpThreshold": 814,
+            "UpperCaptureAmplitudeInMilliAmps": 7,
+            "LowerCaptureAmplitudeInMilliAmps": 6,
+            "MeasuredUpperLfp": 457,
+            "MeasuredLowerLfp": 46,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 241151,
+            "TransitionDownInMilliSeconds": 542169,
+            "SuspendAmplitudeInMilliAmps": 6.2,
+            "SensingSetup": {
+              "FrequencyInHertz": 55.4,
+              "AveragingDurationInMilliSeconds": 4931,
+              "ChannelSignalResult": {
+                "Channel": "SensingChannelDef.ONE_THREE_LEFT",
+                "ArtifactStatus": "ArtifactStatusDef.CT_ARTIFACT_PRESENT",
+                "SignalFrequencies": [
+                  2,
+                  7.47,
+                  7.71,
+                  1.81,
+                  9.45,
+                  8.53,
+                  7.12,
+                  4.33,
+                  6.68,
+                  4.21,
+                  1.99,
+                  35.86,
+                  43.25,
+                  77.3,
+                  43.56,
+                  91.17,
+                  68.65,
+                  61.5,
+                  44.44,
+                  74.73,
+                  25.97,
+                  81.31,
+                  57.38,
+                  14.27,
+                  18.53,
+                  11.16,
+                  91.15,
+                  59.59,
+                  68.17,
+                  37.45,
+                  32.7,
+                  48.37,
+                  51.24,
+                  33.42,
+                  41.4,
+                  35.98,
+                  88.79,
+                  59.56,
+                  46.97,
+                  82.11,
+                  83.59,
+                  55.79,
+                  82.57,
+                  48.94,
+                  47.15,
+                  59.11,
+                  13.12,
+                  46.9,
+                  24.24,
+                  46.56,
+                  17.33,
+                  23.5,
+                  62.44,
+                  83.28,
+                  94.12,
+                  69.21,
+                  86.57,
+                  62.55,
+                  38.52,
+                  14.47,
+                  46.63,
+                  57.95,
+                  53.49,
+                  79.84,
+                  79.4,
+                  42.67,
+                  58.17,
+                  34.39,
+                  76.75,
+                  43.23,
+                  62.42,
+                  41.34,
+                  85.88,
+                  71.27,
+                  58.32,
+                  71.65,
+                  85.42,
+                  32.8,
+                  13.71,
+                  83.64,
+                  17.77,
+                  28.9,
+                  11.98,
+                  72.46,
+                  74.93,
+                  52.94,
+                  85.41,
+                  72.53,
+                  52.47,
+                  33.12,
+                  17.53,
+                  11.23,
+                  66.18,
+                  87.72,
+                  87.4,
+                  73.46,
+                  34.44,
+                  61.92,
+                  34.7,
+                  34.48
+                ],
+                "SignalPsdValues": [
+                  8.8185179,
+                  2.53495,
+                  6.868269722,
+                  6.696471498,
+                  9.924416462,
+                  7.2964325,
+                  8.154371211,
+                  7.8266797,
+                  1.7577238143,
+                  7.9838263333,
+                  5.5213148185,
+                  5.76182989,
+                  4.99864367432,
+                  9.55333652899,
+                  9.646489544,
+                  2.192794464,
+                  3.831359958,
+                  8.4823972698,
+                  4.7964337962,
+                  6.1394538132,
+                  2.1878747834,
+                  2.1839796689,
+                  5.342382887,
+                  9.266417649,
+                  8.33466426954,
+                  2.832998824,
+                  1.78842618145,
+                  2.71546519597,
+                  6.83659716881,
+                  9.62686264487,
+                  1.7848962945,
+                  7.58674142557,
+                  6.36924876438,
+                  4.1826528842,
+                  9.33425892494,
+                  7.4289672473,
+                  1.4515973896,
+                  6.59453541371,
+                  1.9751473734,
+                  8.623513965459,
+                  2.24813572716,
+                  2.21212268396,
+                  3.5379151199,
+                  4.985419774116,
+                  2.85174959672,
+                  7.284254757,
+                  1.95873598554,
+                  8.56244556362,
+                  1.337829873,
+                  4.18666786222,
+                  8.424896131949,
+                  3.26343985441,
+                  6.21568182993,
+                  4.135165373278,
+                  3.4227624372,
+                  5.867812339983,
+                  2.9154842441,
+                  8.5214488596,
+                  3.2518343637,
+                  8.86679826118,
+                  9.382346479449,
+                  4.987816351817,
+                  5.26942513467,
+                  1.184716161823,
+                  1.7152631776,
+                  4.4132578171,
+                  2.747526422685,
+                  9.457134175654,
+                  9.5511187826,
+                  3.384561267918,
+                  5.1819128674,
+                  8.6957589277,
+                  2.8735956144,
+                  8.6791651221,
+                  3.2111423941518,
+                  9.7538282673982,
+                  1.3125763352617,
+                  5.751219997288,
+                  6.177166165315,
+                  3.9552997575517,
+                  7.1748169183,
+                  2.6523335516753,
+                  3.687878234467,
+                  6.2786559944138,
+                  9.4586297275546,
+                  7.135142483995,
+                  4.2956433759382,
+                  8.9343471455413,
+                  4.146139362549,
+                  5.2543157843168,
+                  6.9517777681388,
+                  3.6735929419526,
+                  3.462367576522,
+                  2.176948986418,
+                  5.3312365416858,
+                  4.519381415584,
+                  9.759589932618,
+                  6.3171115366937,
+                  5.7663135232457,
+                  3.393996926681
+                ],
+                "PeakFrequencies": [],
+                "PeakValues": []
+              }
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 1465,
+              "LowerThresholdOnsetInMilliSeconds": 2917,
+              "DetectionBlankingDurationInMilliSeconds": 1932,
+              "AdaptiveStartupDelayInMilliSeconds": 87823
+            }
+          },
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Right",
+            "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_6a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_8b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_3c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 15,
+            "RateInHertz": 125,
+            "GangedToHemisphere": "HemisphereLocationDef.Left",
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 293,
+            "LowerLfpThreshold": 937,
+            "UpperCaptureAmplitudeInMilliAmps": 4,
+            "LowerCaptureAmplitudeInMilliAmps": 9,
+            "MeasuredUpperLfp": 119,
+            "MeasuredLowerLfp": 76,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+            "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+            "TransitionUpInMilliSeconds": 466975,
+            "TransitionDownInMilliSeconds": 981527,
+            "SuspendAmplitudeInMilliAmps": 3.8,
+            "SensingSetup": {
+              "FrequencyInHertz": 42.9,
+              "AveragingDurationInMilliSeconds": 7929,
+              "ChannelSignalResult": {
+                "Channel": "SensingChannelDef.ONE_THREE_LEFT",
+                "ArtifactStatus": "ArtifactStatusDef.CT_ARTIFACT_PRESENT",
+                "SignalFrequencies": [
+                  9,
+                  2.16,
+                  5.72,
+                  2.75,
+                  9.74,
+                  1.18,
+                  5.92,
+                  4.44,
+                  9.57,
+                  4.74,
+                  6.26,
+                  12.87,
+                  34.11,
+                  47.7,
+                  53.52,
+                  72.39,
+                  91.72,
+                  14.2,
+                  24.83,
+                  56.68,
+                  94.36,
+                  56.62,
+                  81.98,
+                  87.43,
+                  64.46,
+                  72.96,
+                  43.43,
+                  17.97,
+                  36.11,
+                  49.31,
+                  14.6,
+                  92.37,
+                  33.74,
+                  67.91,
+                  69.9,
+                  74.18,
+                  44.56,
+                  26.51,
+                  45.62,
+                  22.82,
+                  63.44,
+                  68.43,
+                  77.51,
+                  95.95,
+                  69.23,
+                  96.57,
+                  57.92,
+                  56.6,
+                  64.11,
+                  32.71,
+                  12.16,
+                  22.1,
+                  96.99,
+                  25.36,
+                  81.82,
+                  55.66,
+                  77.35,
+                  51.99,
+                  74.15,
+                  57.84,
+                  52.13,
+                  73.44,
+                  87.26,
+                  27.46,
+                  78.3,
+                  66.76,
+                  31.95,
+                  52.41,
+                  59.55,
+                  72.61,
+                  74.58,
+                  28.74,
+                  77.36,
+                  53.44,
+                  56.46,
+                  78.62,
+                  82.45,
+                  64.8,
+                  23.39,
+                  38.84,
+                  77.22,
+                  13.9,
+                  75.31,
+                  41.66,
+                  56.86,
+                  37.29,
+                  62.17,
+                  18.44,
+                  52.71,
+                  43.68,
+                  81.59,
+                  79.22,
+                  91.29,
+                  73.82,
+                  21.3,
+                  97.15,
+                  24.53,
+                  87.73,
+                  62.3,
+                  66.42
+                ],
+                "SignalPsdValues": [
+                  5.4757449,
+                  5.34338,
+                  7.439133672,
+                  6.696259128,
+                  8.552885981,
+                  3.2794896,
+                  3.891939338,
+                  8.3856448,
+                  8.4116293394,
+                  5.5856337163,
+                  2.8554855736,
+                  1.95328415,
+                  2.53577545877,
+                  9.61297351123,
+                  4.789364317,
+                  6.751677147,
+                  6.727818366,
+                  2.3936693758,
+                  2.1256141267,
+                  4.9346325399,
+                  9.7235855289,
+                  3.6741532671,
+                  6.756788811,
+                  8.997959341,
+                  7.32559547347,
+                  2.874563479,
+                  7.61219787587,
+                  8.83434971586,
+                  3.43389956389,
+                  1.13932378768,
+                  8.3957665371,
+                  9.23619614573,
+                  6.67238393328,
+                  6.2129845872,
+                  5.54298956371,
+                  1.5717144629,
+                  8.8377988935,
+                  9.59982633364,
+                  8.1577572282,
+                  6.877839653447,
+                  6.74456589192,
+                  5.95696126339,
+                  3.5886539914,
+                  5.796721533741,
+                  4.92332849317,
+                  8.623532717,
+                  5.63469139164,
+                  1.76485741549,
+                  5.846939332,
+                  6.39692894616,
+                  7.531484281677,
+                  4.49673886286,
+                  7.78463878174,
+                  6.656468396933,
+                  9.3697557712,
+                  4.388369674736,
+                  8.2817266769,
+                  7.3932432344,
+                  6.3125388878,
+                  5.87464113229,
+                  3.419915618932,
+                  8.265255322842,
+                  4.64533651744,
+                  7.784173271716,
+                  5.4564915771,
+                  3.5946987129,
+                  8.424794729133,
+                  6.191144951413,
+                  8.1424681391,
+                  3.465135617814,
+                  7.7428533478,
+                  9.6834953497,
+                  2.2258633675,
+                  3.4537758958,
+                  1.2196524799955,
+                  4.9375791616215,
+                  1.9455551942471,
+                  2.485517575148,
+                  2.458465719345,
+                  5.6897545864178,
+                  3.1257356549,
+                  9.3577167739248,
+                  1.819119586251,
+                  9.2718278317432,
+                  9.1783659691721,
+                  9.164393268697,
+                  7.8843672147562,
+                  1.1967574627349,
+                  1.862799833216,
+                  3.4324784129427,
+                  2.2582398831251,
+                  2.8834785129132,
+                  9.726115611354,
+                  9.354738786855,
+                  9.2581575323148,
+                  7.217992286299,
+                  2.423389822363,
+                  7.1677427637539,
+                  2.4439686799819,
+                  4.336665566949
+                ],
+                "PeakFrequencies": [],
+                "PeakValues": []
+              }
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 7933,
+              "LowerThresholdOnsetInMilliSeconds": 3991,
+              "DetectionBlankingDurationInMilliSeconds": 7164,
+              "AdaptiveStartupDelayInMilliSeconds": 39461
+            }
+          }
+        ]
+      },
+      "GroupSettings": {
+        "SoftStartStop": {
+          "Enabled": false
+        },
+        "Cycling": {
+          "Enabled": false
+        },
+        "HighPassFilterInHertz": 3,
+        "SensingBlankingDurationInMicroseconds": 1561
+      }
+    }
+  },
+  {
+    "Sessiondate": "2019-01-01T12:16:38Z",
+    "Settings": {
+      "GroupId": "GroupIdDef.GROUP_D",
+      "ActiveGroup": true,
+      "ProgramSettings": {
+        "RateInHertz": 125,
+        "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+        "SensingChannel": [
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Left",
+            "ProgramId": "ProgramIdDef.FIRST_LEFT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_9a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_2b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_4c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 62,
+            "RateInHertz": 125,
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 37,
+            "LowerLfpThreshold": 42,
+            "UpperCaptureAmplitudeInMilliAmps": 1,
+            "LowerCaptureAmplitudeInMilliAmps": 7,
+            "MeasuredUpperLfp": 6,
+            "MeasuredLowerLfp": 1,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.NOT_CONFIGURED",
+            "TransitionUpInMilliSeconds": 4,
+            "TransitionDownInMilliSeconds": 1,
+            "SuspendAmplitudeInMilliAmps": 4.8,
+            "SensingSetup": {
+              "FrequencyInHertz": 33.2,
+              "AveragingDurationInMilliSeconds": 6656,
+              "ChannelSignalResult": {
+                "Channel": "SensingChannelDef.ONE_THREE_LEFT",
+                "ArtifactStatus": "ArtifactStatusDef.CT_ARTIFACT_PRESENT",
+                "SignalFrequencies": [
+                  9,
+                  3.26,
+                  6.79,
+                  9.27,
+                  4.78,
+                  8.16,
+                  7.81,
+                  6.12,
+                  1.59,
+                  5.61,
+                  6.97,
+                  68.42,
+                  16.76,
+                  47.9,
+                  51.46,
+                  49.82,
+                  52.36,
+                  36.6,
+                  85.63,
+                  77.28,
+                  46.75,
+                  88.66,
+                  67.53,
+                  31.43,
+                  96.92,
+                  41.62,
+                  73.63,
+                  51.84,
+                  84.22,
+                  35.65,
+                  24.2,
+                  75.65,
+                  94.23,
+                  65.49,
+                  25.6,
+                  17.14,
+                  34.46,
+                  83.54,
+                  91.88,
+                  53.75,
+                  68.26,
+                  97.59,
+                  96.76,
+                  88.99,
+                  74.43,
+                  56.97,
+                  22.71,
+                  39.9,
+                  84.36,
+                  37.46,
+                  49.81,
+                  16.3,
+                  32.26,
+                  32.44,
+                  17.15,
+                  66.89,
+                  76.44,
+                  61.98,
+                  85.64,
+                  93.63,
+                  86.55,
+                  91.21,
+                  82.98,
+                  77.53,
+                  31.3,
+                  73.37,
+                  85.14,
+                  48.54,
+                  78.27,
+                  56.28,
+                  64.13,
+                  81.53,
+                  88.35,
+                  63.22,
+                  64.42,
+                  42.46,
+                  74.89,
+                  43.5,
+                  17.85,
+                  57.78,
+                  65.79,
+                  52.2,
+                  63.62,
+                  98.99,
+                  98.71,
+                  38.41,
+                  52.64,
+                  86.74,
+                  15.52,
+                  86.28,
+                  88.95,
+                  71.67,
+                  15.27,
+                  73.45,
+                  12.1,
+                  11.78,
+                  72.78,
+                  21.43,
+                  86.9,
+                  26.62
+                ],
+                "SignalPsdValues": [
+                  5.9956544,
+                  8.83752,
+                  1.492193149,
+                  6.895963411,
+                  6.453781295,
+                  5.3279676,
+                  9.969116451,
+                  5.1579954,
+                  1.5582835854,
+                  4.8121381721,
+                  5.2832823271,
+                  9.87219893,
+                  3.43891523535,
+                  8.65769319966,
+                  1.688161754,
+                  6.435979973,
+                  6.162386829,
+                  3.6288957932,
+                  5.9218259243,
+                  3.7986584765,
+                  4.1354348389,
+                  3.7255646539,
+                  6.917958356,
+                  7.748865197,
+                  5.21869658146,
+                  6.258763125,
+                  8.49791979746,
+                  3.23828774862,
+                  7.15328112776,
+                  6.57212369855,
+                  6.8214425176,
+                  8.51472871879,
+                  7.96581235297,
+                  1.1951283952,
+                  3.81552822512,
+                  8.5314153628,
+                  2.8875167657,
+                  1.25557484242,
+                  6.7179852282,
+                  1.942449638552,
+                  9.65921653158,
+                  4.57598673891,
+                  1.9189943714,
+                  4.424431157923,
+                  8.42333768971,
+                  8.596152277,
+                  9.23865599178,
+                  2.81468984666,
+                  5.918817628,
+                  1.67762751349,
+                  8.459323197361,
+                  4.87591221884,
+                  9.39734829152,
+                  6.363989363544,
+                  5.1146469273,
+                  1.329787383399,
+                  9.1293254443,
+                  9.7451299993,
+                  2.3842756976,
+                  8.85745977326,
+                  8.936464158362,
+                  4.241373995457,
+                  9.79243935843,
+                  5.987586688784,
+                  4.9127751743,
+                  5.1568579961,
+                  8.679543467451,
+                  4.111915693741,
+                  3.1912368868,
+                  5.623568834126,
+                  2.1559221931,
+                  1.5362447572,
+                  8.7464111654,
+                  6.3888581582,
+                  2.8926982143833,
+                  8.2287657518889,
+                  3.1432159831485,
+                  1.386217819321,
+                  8.969959648135,
+                  9.2966144963289,
+                  7.4219352393,
+                  7.7763812879239,
+                  2.385768527539,
+                  7.8475628882921,
+                  8.2546378176876,
+                  2.462874129189,
+                  7.3338883492397,
+                  8.5492953425412,
+                  8.494985922491,
+                  3.7722953252937,
+                  7.7582674795596,
+                  8.8946266433143,
+                  4.256275214276,
+                  1.576269834197,
+                  4.2423264384336,
+                  7.187342431634,
+                  6.632569568164,
+                  7.6289838822724,
+                  7.3887512653735,
+                  4.631999682134
+                ],
+                "PeakFrequencies": [],
+                "PeakValues": []
+              }
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 8342,
+              "LowerThresholdOnsetInMilliSeconds": 3749,
+              "DetectionBlankingDurationInMilliSeconds": 561,
+              "AdaptiveStartupDelayInMilliSeconds": 4
+            }
+          },
+          {
+            "HemisphereLocation": "HemisphereLocationDef.Right",
+            "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+            "ElectrodeState": [
+              {
+                "Electrode": "ElectrodeDef.SenSight_3a",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_3b",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Sensight_4c",
+                "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+              },
+              {
+                "Electrode": "ElectrodeDef.Case",
+                "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+              }
+            ],
+            "PulseWidthInMicroSecond": 85,
+            "RateInHertz": 125,
+            "BrainSensingStatus": "SensingStatusDef.ENABLED",
+            "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+            "UpperLfpThreshold": 75,
+            "LowerLfpThreshold": 75,
+            "UpperCaptureAmplitudeInMilliAmps": 8,
+            "LowerCaptureAmplitudeInMilliAmps": 1,
+            "MeasuredUpperLfp": 1,
+            "MeasuredLowerLfp": 1,
+            "AdaptiveTherapyStatus": "ADBSStatusDef.NOT_CONFIGURED",
+            "TransitionUpInMilliSeconds": 3,
+            "TransitionDownInMilliSeconds": 9,
+            "SuspendAmplitudeInMilliAmps": 7.7,
+            "SensingSetup": {
+              "FrequencyInHertz": 23.3,
+              "AveragingDurationInMilliSeconds": 1476,
+              "ChannelSignalResult": {}
+            },
+            "AdaptiveTherapy": {
+              "UpperThresholdOnsetInMilliSeconds": 8113,
+              "LowerThresholdOnsetInMilliSeconds": 6934,
+              "DetectionBlankingDurationInMilliSeconds": 315,
+              "AdaptiveStartupDelayInMilliSeconds": 7
+            }
+          }
+        ]
+      },
+      "GroupSettings": {
+        "SoftStartStop": {
+          "Enabled": false
+        },
+        "Cycling": {
+          "Enabled": false
+        },
+        "HighPassFilterInHertz": 7,
+        "SensingBlankingDurationInMicroseconds": 9215
+      }
+    }
+  },
+  {
+    "Sessiondate": "2019-01-01T13:00:18Z",
+    "Settings": {
+      "GroupId": "GroupIdDef.GROUP_A",
+      "ActiveGroup": true,
+      "ProgramSettings": {
+        "RateInHertz": 125,
+        "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+        "LeftHemisphere": {
+          "Programs": [
+            {
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_5",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 1.5,
+              "PulseWidthInMicroSecond": 94
+            },
+            {
+              "ProgramId": "ProgramIdDef.SECOND_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_4",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 1.5,
+              "PulseWidthInMicroSecond": 68
+            }
+          ]
+        },
+        "RightHemisphere": {
+          "Programs": [
+            {
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_8",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 4.6,
+              "PulseWidthInMicroSecond": 98
+            },
+            {
+              "ProgramId": "ProgramIdDef.SECOND_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_9",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 3.7,
+              "PulseWidthInMicroSecond": 11
+            }
+          ]
+        }
+      },
+      "GroupSettings": {
+        "SoftStartStop": {
+          "Enabled": true,
+          "DurationInSeconds": 1
+        },
+        "Cycling": {
+          "Enabled": false
+        }
+      }
+    }
+  }
+]
