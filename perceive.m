@@ -404,7 +404,7 @@ for a = 1:length(files)
 
                                     d=[];
                                     d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
-                                    d.trial{1} = [clfp;cstim];
+                                    d.trial{1} = [clfp(i);cstim(i)];
                                     d.label = {'LFP_RIGHT','STIM_RIGHT'};
                                     d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
                                     d.realtime{1} = cdt;
