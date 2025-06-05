@@ -14,4 +14,4 @@ jobs:
       - name: Run script
         uses: matlab-actions/run-command@v2
         with:
-          command: results = myscript, assertSuccess(results);
+          command: results = runtests('testAddNumbers'), assertSuccess(results);
