@@ -103,14 +103,76 @@ config.gui = strcmp(gui, 'yes');
 % -----------------------------
 % datafields
 % -----------------------------
+% -----------------------------
+% datafields
+% -----------------------------
+legalDatafields = {
+    ''
+    'BrainSenseLfp'
+    'BrainSenseSurvey'
+    'BrainSenseTimeDomain'
+    'CalibrationTests'
+    'DiagnosticData'
+    'EventSummary'
+    'Impedance'
+    'IndefiniteStreaming'
+    'LfpMontageTimeDomain'
+    'MostRecentInSessionSignalCheck'
+    'PatientEvents'
+};
+
 if isempty(datafields)
     config.datafields = {};
-else
-    if ischar(datafields)
-        config.datafields = {datafields};
+elseif ischar(datafields)
+    if strcmpi(datafields, 'all')
+        config.datafields = setdiff(legalDatafields, {''});  % all valid, excluding ''
     else
-        config.datafields = datafields;
+        config.datafields = {datafields};
+    end
+else
+    config.datafields = datafields;
+end
+
+% Validate contents of datafields
+% -----------------------------
+% datafields
+% -----------------------------
+legalDatafields = {
+    ''
+    'BrainSenseLfp'
+    'BrainSenseSurvey'
+    'BrainSenseTimeDomain'
+    'CalibrationTests'
+    'DiagnosticData'
+    'EventSummary'
+    'Impedance'
+    'IndefiniteStreaming'
+    'LfpMontageTimeDomain'
+    'MostRecentInSessionSignalCheck'
+    'PatientEvents'
+};
+
+if isempty(datafields)
+    config.datafields = {};
+elseif ischar(datafields)
+    if strcmpi(datafields, 'all')
+        config.datafields = setdiff(legalDatafields, {''});  % all valid, excluding ''
+    else
+        config.datafields = {datafields};
+    end
+else
+    config.datafields = datafields;
+end
+
+% validate contents of datafields
+if ~isempty(config.datafields)
+    assert(iscellstr(config.datafields), 'datafields must be a cell array of strings.');
+    invalid = setdiff(config.datafields, legalDatafields);
+    if ~isempty(invalid)
+        error(['Invalid datafield(s): %s\nValid options are:\n  %s'], ...
+            strjoin(invalid, ', '), strjoin(legalDatafields, '\n  '));
     end
 end
+
 
 end

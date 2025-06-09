@@ -143,231 +143,37 @@ for idxFile = 1:length(files)
                 case 'DiagnosticData'
                     if config.extended
                         hdr.fname = strrep(hdr.fname,'StimOff','StimX');
-                        if isfield(data,'LFPTrendLogs')
-                            LFPL=[];STIML=[];DTL=datetime([],[],[]);
-                            LFPR=[];STIMR=[];DTR=datetime([],[],[]);
-                            if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
-                                data.left=data.LFPTrendLogs.HemisphereLocationDef_Left;
-                                runs = fieldnames(data.left);
-                                for c=1:length(runs)
-                                    clfp = [data.left.(runs{c}).LFP];
-                                    cstim = [data.left.(runs{c}).AmplitudeInMilliAmps];
-                                    cdt = datetime({data.left.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''');
-                                    [cdt,i] = sort(cdt);
-                                    LFPL=[LFPL,clfp(i)];
-                                    STIML=[STIML,cstim(i)];
-                                    DTL=[DTL,cdt];
 
-                                    d=[];
-                                    d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
-                                    d.fsample = 0.00166666666;
-                                    d.trial{1} = [clfp(i);cstim(i)];
-                                    d.label = {'LFP_LEFT','STIM_LEFT'};
-                                    d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
-                                    d.realtime{1} = cdt;
-                                    if length(d.time{1})>1
-                                        d.fsample = abs(1/diff(d.time{1}(1:2)));
-                                    else
-                                        warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
-                                        d.fsample = 1/600; % 10*60 sec = 10 minutes
-                                    end
-                                    d.hdr.Fs = d.fsample; d.hdr.label = d.label;
-                                    firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
-                                    lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
-                                    mod= 'mod-ChronicLeft';
-                                    hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
-                                    d.fname = [hdr.fname '_' mod];
-                                    d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                    d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
-                                    alldata{length(alldata)+1} = d;
+                        % handle LFPTrendLogs
+                        if isfield(data, 'LFPTrendLogs')
+                            alldata_diag = perceive_extract_diagnostic_lfptrend(data, hdr);
+                            alldata = [alldata, alldata_diag];
+
+                            % plot combined LFP trend (L/R stim and LFP)
+                            for k = 1:length(alldata_diag)
+                                if strcmp(alldata_diag{k}.datatype, 'DiagnosticData.LFPTrends') && ...
+                                        isfield(alldata_diag{k}, 'label') && numel(alldata_diag{k}.label) == 4
+                                    perceive_plot_diagnostic_lfptrend(alldata_diag{k});
+                                    break; % plot only once
                                 end
                             end
+                        end
 
+                        % handle LfpFrequencySnapshotEvents
+                        if isfield(data, 'LfpFrequencySnapshotEvents')
+                            alldata_diag_lfpsnap = perceive_extract_diagnostic_lfpsnapshot(data.LfpFrequencySnapshotEvents, hdr);
+                            
+                            % nothing is appended to alldata in current version
+                            % maybe for future: append to alldata container
+                            % alldata = [alldata, alldata_diag_lfpsnap];
 
-
-                            if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Right')
-                                data.right=data.LFPTrendLogs.HemisphereLocationDef_Right;
-                                runs = fieldnames(data.right);
-                                for c=1:length(runs)
-                                    clfp = [data.right.(runs{c}).LFP];
-                                    cstim = [data.right.(runs{c}).AmplitudeInMilliAmps];
-                                    cdt = datetime({data.right.(runs{c}).DateTime},'InputFormat','yyyy-MM-dd''T''HH:mm:ss''Z''');
-
-                                    [cdt,i] = sort(cdt);
-                                    LFPR=[LFPR,clfp(i)];
-                                    STIMR=[STIMR,cstim(i)];
-                                    DTR=[DTR,cdt];
-
-
-                                    d=[];
-                                    d.hdr = hdr;d.datatype = 'DiagnosticData.LFPTrends';
-                                    d.trial{1} = [clfp;cstim];
-                                    d.label = {'LFP_RIGHT','STIM_RIGHT'};
-                                    d.time{1} = linspace(seconds(cdt(1)-hdr.d0),seconds(cdt(end)-hdr.d0),size(d.trial{1},2));
-                                    d.realtime{1} = cdt;
-                                    if length(d.time{1})>1
-                                        d.fsample = abs(1/diff(d.time{1}(1:2)))
-                                    else
-                                        warning('Only one data point recorded, assuming a sampling frequency of 1 / 10 minutes ~ 0.0017 Hz');
-                                        d.fsample = 1/600; % 10*60 sec = 10 minutes
-                                    end
-                                    d.hdr.Fs = d.fsample; d.hdr.label = d.label;
-                                    firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
-                                    lastsample = d.time{1}(end);d.sampleinfo(1,:) = [firstsample lastsample];
-                                    mod = 'mod-ChronicRight';
-                                    hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
-                                    d.fname = [hdr.fname '_' mod];
-                                    d.fnamedate = [char(datetime(cdt(1),'format','yyyyMMddhhmmss'))];
-                                    d.keepfig = false; % do not keep figure with this signal open (the number of LFPTrendLogs can be high)
-                                    alldata{length(alldata)+1} = d;
-                                end
+                            % plot every snapshot
+                            for idxSnapshot = 1:length(alldata_diag_lfpsnap)
+                                perceive_plot_diagnostic_lfpsnapshot(alldata_diag_lfpsnap{idxSnapshot});
                             end
-
-
-                            LFP=[];
-                            STIM=[];
-                            if isempty(DTL)
-                                DT = sort(DTR);
-                            elseif isempty(DTR)
-                                DT = sort(DTL);
-                            else
-                                DT=sort([DTL,setdiff(DTR,DTL)]);
-                            end
-                            for c = 1:length(DT)
-                                if ismember(DT(c),DTL)
-                                    i = find(DTL==DT(c));
-                                    LFP(1,c) = LFPL(i);
-                                    STIM(1,c) = STIML(i);
-                                else
-                                    LFP(1,c) = nan;
-                                    STIM(1,c) = nan;
-                                end
-                                if ismember(DT(c),DTR)
-                                    i = find(DTR==DT(c));
-                                    LFP(2,c) = LFPR(i);
-                                    STIM(2,c) = STIMR(i);
-                                else
-                                    LFP(2,c) = nan;
-                                    STIM(2,c) = nan;
-                                end
-                            end
-                            d=[];
-                            d.hdr = hdr;
-                            d.datatype = 'DiagnosticData.LFPTrends';
-                            d.trial{1} = [LFP;STIM];
-                            d.label = {'LFP_LEFT','LFP_RIGHT','STIM_LEFT','STIM_RIGHT'};
-                            d.time{1} = DT;
-                            d.fsample = diff(DT);
-                            firstsample = d.time{1}(1); warning('firstsample is not exactly computed for chronic recordings')
-                            lastsample = d.time{1}(end);
-                            d.sampleinfo(1,:) = [firstsample lastsample];
-                            mod = 'mod-Chronic';
-                            hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
-                            d.fname = [hdr.fname '_' mod];
-                            d.fnamedate = [char(datetime(DT(1),'format','yyyyMMddhhmmss'))];
-                            % TODO: set if needed::
-                            %d.keepfig = false; % do not keep figure with this signal open
-                            alldata{length(alldata)+1} = d;
-
-
-                            figure('Units','centimeters','PaperUnits','centimeters','Position',[1 1 40 20])
-                            subplot(2,1,1)
-                            title({strrep(hdr.fname,'_',' '),'CHRONIC LEFT'})
-                            yyaxis left
-
-                            scatter(DT,LFP(1,:),20,'filled','Marker','o')
-                            ylabel('LFP Amplitude')
-                            yyaxis right
-                            scatter(DT,STIM(1,:),20,'filled','Marker','s')
-                            ylabel('STIM Amplitude')
-                            xlabel('Time')
-                            subplot(2,1,2)
-                            yyaxis left
-                            scatter(DT,LFP(2,:),20,'filled','Marker','o')
-                            ylabel('LFP Amplitude')
-                            yyaxis right
-                            scatter(DT,STIM(2,:),20,'filled','Marker','s')
-                            title('RIGHT')
-                            xlabel('Time')
-                            ylabel('STIM Amplitude')
-                            %savefig(fullfile(hdr.fpath,[hdr.fname '_CHRONIC.fig']))
-                            perceive_print(fullfile(hdr.fpath,[hdr.fname '_CHRONIC']))
 
                         end
-                        if isfield(data,'LfpFrequencySnapshotEvents')
-                            cdata= data.LfpFrequencySnapshotEvents;
-                            Tpow=table;Trpow=table;Tlfit=table;pow=[];rpow=[];lfit=[];lfp=struct;
-                            for c = 1:length(cdata)
-                                try
-                                    lfp=cdata{c};
-                                catch
-                                    lfp=cdata(c);
-                                end
-                                if lfp.LFP && isfield(lfp,'LfpFrequencySnapshotEvents')
-                                    ids(c) = lfp.EventID;
-                                    DT(c) = datetime(lfp.DateTime(1:end-1),'InputFormat','yyyy-MM-dd''T''HH:mm:ss');
-                                    events{c} = lfp.EventName;
-                                    if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
-                                        tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.SenseID,'_AND',''),'.');
-                                        if isempty(tmp{1}) || isscalar(tmp)
-                                            tmp = {'','unknown'};
-                                        end
-                                        ch1 = strcat(hdr.chan,'_L_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
-                                    else
-                                        ch1 = 'n/a';
-                                    end
-                                    if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
-                                        tmp = strsplit(strrep(lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.SenseID,'_AND',''),'.');
-                                        if isempty(tmp{1}) || isscalar(tmp)
-                                            tmp = {'','unknown'};
-                                        end
-                                        ch2 = strcat(hdr.chan,'_R_',strrep(strrep(strrep(strrep(strrep(tmp{2},'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'),'_',''));
-                                    else
-                                        ch2 = 'n/a';
-                                    end
-                                    chanlabels{c} = {ch1 ch2};
-                                    if ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && ~isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
-                                        error('none of HemisphereLocationDef_Left / HemisphereLocationDef_Right appear in LfpFrequencySnapshotEvents');
-                                    end
-                                    if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
-                                        stimgroups{c} = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.GroupId(end);
-                                        freq = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.Frequency;
-                                    else
-                                        stimgroups{c} = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.GroupId(end);
-                                        freq = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.Frequency;
-                                    end
-                                    if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left') && isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Right')
-                                        pow(:,1) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
-                                        pow(:,2) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
-                                    else
-                                        if isfield(lfp.LfpFrequencySnapshotEvents,'HemisphereLocationDef_Left')
-                                            pow(:,1) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Left.FFTBinData;
-                                            pow(:,2) = 0*pow(:,1);
-                                        else
-                                            pow(:,2) = lfp.LfpFrequencySnapshotEvents.HemisphereLocationDef_Right.FFTBinData;
-                                            pow(:,1) = 0*pow(:,2);
-                                        end
-                                    end
-                                    Tpow.Frequency = freq;
-                                    Tpow.(strrep([events{c} '_' num2str(c) '_' ch1 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,1);
-                                    Tpow.(strrep([events{c} '_' num2str(c) '_' ch2 '_' char(datetime(DT(c),'Format','yyyMMddHHmmss'))],' ','')) = pow(:,2);
-
-
-                                    figure
-                                    plot(freq,pow,'linewidth',2)
-                                    legend(strrep(chanlabels{c},'_',' '))
-                                    title({strrep(hdr.fname,'_',' ');char(DT(c));events{c};['STIM GROUP ' stimgroups{c}]})
-                                    xlabel('Frequency [Hz]')
-                                    ylabel('Power spectral density [uV^2/Hz]')
-                                    %savefig(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c) '.fig']))
-                                    perceive_print(fullfile(hdr.fpath,[hdr.fname '_LFPSnapshot_' events{c} '-' num2str(c)]))
-                                else
-                                    % keyboard
-                                    warning('LFP Snapshot Event without LFP data present.')
-                                end
-                            end
-                            writetable(Tpow,fullfile(hdr.fpath,[hdr.fname '_LFPSnapshotEvents.csv']))
-                        end
+                      
                     end
 
                 case 'BrainSenseTimeDomain'
@@ -383,13 +189,15 @@ for idxFile = 1:length(files)
 
                     % loop over bsl files
                     for idxBSL = 1:numel(alldata_bsl)
-                        % d = alldata_bsl{idxBSL};
                         perceive_plot_bsl_bipolar(alldata_bsl{idxBSL})
                         perceive_export_bsl_csv(alldata_bsl{idxBSL})
                     end
 
 
                 case 'LfpMontageTimeDomain'
+
+                    % alldata_lmtd = perceive_extract_lfp_montage_time_domain(data, hdr, config, idxDatafield);
+                    % alldata = [alldata, alldata_lmtd];
                     %% add perceive ecg add figures cleaning
 
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');

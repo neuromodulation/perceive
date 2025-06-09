@@ -110,11 +110,12 @@ hdr.acq = config.acq;
 hdr.mod = config.mod;
 hdr.run = config.run;
 
-% hdr.fullname = sprintf('%s_%s_task-%s_acq-%s_mod-%s_run-%d', ...
-%     hdr.subject, hdr.session, hdr.task, hdr.acq, hdr.mod, hdr.run);
+hdr.fname = sprintf('%s_%s_task-%s_acq-%s', ...
+    hdr.subject, hdr.session, hdr.task, hdr.acq);
 
-hdr.fname = sprintf('%s_%s_task-%s_acq-%s_run-%d', ...
-    hdr.subject, hdr.session, hdr.task, hdr.acq, hdr.run);
+% run not included in old code, maybe change later to default run 0
+% hdr.fname = sprintf('%s_%s_task-%s_acq-%s_run-%d', ...
+%     hdr.subject, hdr.session, hdr.task, hdr.acq, hdr.run);
 
 % channel label
 hdr.chan = ['LFP_' hdr.LeadLocation];
