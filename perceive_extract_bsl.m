@@ -122,7 +122,7 @@ for c = 1:length(runs)
         RAmp = 0;
     end
 
-    acq = check_stim(LAmp, RAmp, d.hdr);
+    acq = perceive_check_stim(LAmp, RAmp, d.hdr);
     if ~strcmp(acq,'StimOff')
         acq = [acq, acq_stimcontact, acq_freq, acq_pulse];
     end
@@ -132,6 +132,8 @@ for c = 1:length(runs)
     d.fnamedate = char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss'));
 
     alldata{end+1} = d;
+
 end
+
 end
 

@@ -1,4 +1,5 @@
 function perceive_plot_bsl_bipolar(d)
+
 % plots LFP and stimulation amplitude for BrainSense LFP bipolar recordings (BSL)
 %
 % input:
@@ -38,7 +39,7 @@ legend([lp sp], strrep(d.label([2 4]), '_', ' '), 'Location', 'northoutside')
 xlabel('Time')
 xlim([d.realtime(1) d.realtime(end)])
 
-% Title for entire figure
+% title for entire figure
 sgtitle(strrep(d.fname, '_', '-'))
 
 end

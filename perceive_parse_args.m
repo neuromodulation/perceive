@@ -103,40 +103,6 @@ config.gui = strcmp(gui, 'yes');
 % -----------------------------
 % datafields
 % -----------------------------
-% -----------------------------
-% datafields
-% -----------------------------
-legalDatafields = {
-    ''
-    'BrainSenseLfp'
-    'BrainSenseSurvey'
-    'BrainSenseTimeDomain'
-    'CalibrationTests'
-    'DiagnosticData'
-    'EventSummary'
-    'Impedance'
-    'IndefiniteStreaming'
-    'LfpMontageTimeDomain'
-    'MostRecentInSessionSignalCheck'
-    'PatientEvents'
-};
-
-if isempty(datafields)
-    config.datafields = {};
-elseif ischar(datafields)
-    if strcmpi(datafields, 'all')
-        config.datafields = setdiff(legalDatafields, {''});  % all valid, excluding ''
-    else
-        config.datafields = {datafields};
-    end
-else
-    config.datafields = datafields;
-end
-
-% Validate contents of datafields
-% -----------------------------
-% datafields
-% -----------------------------
 legalDatafields = {
     ''
     'BrainSenseLfp'

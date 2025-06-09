@@ -17,6 +17,12 @@ DT = datetime.empty;
 stimgroups = {};
 hdr.fname = strrep(hdr.fname, 'StimOff', 'StimX');
 
+% TODO: replace simple StimX replacement with code that overwrites from
+% StimOff to StimOn based on actual stim settings. Probably needs to be done
+% through the use of lfptrend data where current stim amp is saved (compare
+% datetime of snapshot with that lfptrend, would need to be an input to
+% this function) - could also be valuable to save the stimAmp
+
 for idxSnap = 1:length(snapshotEvents)
     try
         lfp = snapshotEvents{idxSnap};

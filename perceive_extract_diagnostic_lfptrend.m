@@ -14,14 +14,21 @@ LFPR = []; STIMR = []; DTR = datetime([],[],[]);
 hdr.fname = strrep(hdr.fname,'StimOff','StimX');
 hdr.fname = strrep(hdr.fname, 'task-Rest', 'task-None');
 
+% TODO (not done in the old version, but should be changed):
+% leave StimOff as default but overwrite with the following logic within
+% the if clause for each side:
+% if any(STIML > 0.1)
+%     hdr.fname = strrep(hdr.fname, 'StimOff', 'StimOn');
+% end
+
 % extract LEFT
 if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Left')
     data.left = data.LFPTrendLogs.HemisphereLocationDef_Left;
     runs = fieldnames(data.left);
-    for c = 1:length(runs)
-        clfp = [data.left.(runs{c}).LFP];
-        cstim = [data.left.(runs{c}).AmplitudeInMilliAmps];
-        cdt = datetime({data.left.(runs{c}).DateTime}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss''Z''');
+    for idxRun = 1:length(runs)
+        clfp = [data.left.(runs{idxRun}).LFP];
+        cstim = [data.left.(runs{idxRun}).AmplitudeInMilliAmps];
+        cdt = datetime({data.left.(runs{idxRun}).DateTime}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss''Z''');
         [cdt, i] = sort(cdt);
         LFPL = [LFPL, clfp(i)];
         STIML = [STIML, cstim(i)];
@@ -56,10 +63,10 @@ end
 if isfield(data.LFPTrendLogs,'HemisphereLocationDef_Right')
     data.right = data.LFPTrendLogs.HemisphereLocationDef_Right;
     runs = fieldnames(data.right);
-    for c = 1:length(runs)
-        clfp = [data.right.(runs{c}).LFP];
-        cstim = [data.right.(runs{c}).AmplitudeInMilliAmps];
-        cdt = datetime({data.right.(runs{c}).DateTime}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss''Z''');
+    for idxRun = 1:length(runs)
+        clfp = [data.right.(runs{idxRun}).LFP];
+        cstim = [data.right.(runs{idxRun}).AmplitudeInMilliAmps];
+        cdt = datetime({data.right.(runs{idxRun}).DateTime}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss''Z''');
         [cdt, i] = sort(cdt);
         LFPR = [LFPR, clfp(i)];
         STIMR = [STIMR, cstim(i)];
@@ -100,22 +107,22 @@ else
     DT = sort([DTL, setdiff(DTR, DTL)]);
 end
 
-for c = 1:length(DT)
-    if ismember(DT(c), DTL)
-        i = find(DTL == DT(c), 1, 'first');
-        LFP(1,c) = LFPL(i);
-        STIM(1,c) = STIML(i);
+for idxRun = 1:length(DT)
+    if ismember(DT(idxRun), DTL)
+        i = find(DTL == DT(idxRun), 1, 'first');
+        LFP(1,idxRun) = LFPL(i);
+        STIM(1,idxRun) = STIML(i);
     else
-        LFP(1,c) = nan;
-        STIM(1,c) = nan;
+        LFP(1,idxRun) = nan;
+        STIM(1,idxRun) = nan;
     end
-    if ismember(DT(c), DTR)
-        i = find(DTR == DT(c), 1, 'first');
-        LFP(2,c) = LFPR(i);
-        STIM(2,c) = STIMR(i);
+    if ismember(DT(idxRun), DTR)
+        i = find(DTR == DT(idxRun), 1, 'first');
+        LFP(2,idxRun) = LFPR(i);
+        STIM(2,idxRun) = STIMR(i);
     else
-        LFP(2,c) = nan;
-        STIM(2,c) = nan;
+        LFP(2,idxRun) = nan;
+        STIM(2,idxRun) = nan;
     end
 end
 

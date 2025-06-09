@@ -94,7 +94,7 @@ for idxFile = 1:length(files)
     % load and pseudonymize json
     js = perceive_load_json(config.files{idxFile});
 
-    % build hdr struct containing relevant pateint data
+    % build hdr struct containing relevant patient data
     hdr = perceive_extract_hdr(js, filename, config);
 
     % create metatable %determine
@@ -110,17 +110,26 @@ for idxFile = 1:length(files)
     disp(['SUBJECT ' hdr.subject])
 
     for idxDatafield = 1:length(datafields)
+
         if isfield(js,datafields{idxDatafield})
+
             data = js.(datafields{idxDatafield});
+
             if isempty(data)
                 continue
             end
+
             mod='';
             run=1;
             counterBSL=0;
+
+            % go through different datafields; extract and plot data
             switch datafields{idxDatafield}
-                %% add csv files by default
+
+                % add csv files by default
+
                 case 'Impedance'
+
                     if config.extended
                         T = perceive_extract_impedance(data, hdr);
                         perceive_plot_impedance(T,hdr);
@@ -128,6 +137,7 @@ for idxFile = 1:length(files)
                     end
 
                 case 'PatientEvents'
+
                     disp(fieldnames(data));
 
                 case 'MostRecentInSessionSignalCheck'
@@ -138,9 +148,9 @@ for idxFile = 1:length(files)
                         perceive_plot_signalcheck(signalcheck);
                         perceive_export_signalcheck(signalcheck);
                     end
-                    
 
                 case 'DiagnosticData'
+
                     if config.extended
                         hdr.fname = strrep(hdr.fname,'StimOff','StimX');
 
@@ -150,10 +160,10 @@ for idxFile = 1:length(files)
                             alldata = [alldata, alldata_diag];
 
                             % plot combined LFP trend (L/R stim and LFP)
-                            for k = 1:length(alldata_diag)
-                                if strcmp(alldata_diag{k}.datatype, 'DiagnosticData.LFPTrends') && ...
-                                        isfield(alldata_diag{k}, 'label') && numel(alldata_diag{k}.label) == 4
-                                    perceive_plot_diagnostic_lfptrend(alldata_diag{k});
+                            for idxTrendLog = 1:length(alldata_diag)
+                                if strcmp(alldata_diag{idxTrendLog}.datatype, 'DiagnosticData.LFPTrends') && ...
+                                        isfield(alldata_diag{idxTrendLog}, 'label') && numel(alldata_diag{idxTrendLog}.label) == 4
+                                    perceive_plot_diagnostic_lfptrend(alldata_diag{idxTrendLog});
                                     break; % plot only once
                                 end
                             end
@@ -161,6 +171,7 @@ for idxFile = 1:length(files)
 
                         % handle LfpFrequencySnapshotEvents
                         if isfield(data, 'LfpFrequencySnapshotEvents')
+
                             alldata_diag_lfpsnap = perceive_extract_diagnostic_lfpsnapshot(data.LfpFrequencySnapshotEvents, hdr);
                             
                             % nothing is appended to alldata in current version
@@ -183,7 +194,6 @@ for idxFile = 1:length(files)
 
                 case 'BrainSenseLfp'
                     
-                    
                     [alldata_bsl, ~] = perceive_extract_bsl(data, hdr);
                     alldata = [alldata, alldata_bsl];
 
@@ -193,78 +203,11 @@ for idxFile = 1:length(files)
                         perceive_export_bsl_csv(alldata_bsl{idxBSL})
                     end
 
-
                 case 'LfpMontageTimeDomain'
 
-                    % alldata_lmtd = perceive_extract_lfp_montage_time_domain(data, hdr, config, idxDatafield);
-                    % alldata = [alldata, alldata_lmtd];
-                    %% add perceive ecg add figures cleaning
+                    alldata_lmtd = perceive_extract_lfp_montage_time_domain(data, hdr, config, idxDatafield);
+                    alldata = [alldata, alldata_lmtd];
 
-                    FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
-                    runs = unique(FirstPacketDateTime);
-
-                    Pass = {data(:).Pass};
-                    tmp =  {data(:).GlobalSequences};
-                    for c = 1:length(tmp)
-                        GlobalSequences{c,:} = str2num(tmp{c});
-                    end
-                    tmp =  {data(:).GlobalPacketSizes};
-                    for c = 1:length(tmp)
-                        GlobalPacketSizes{c,:} = str2num(tmp{c});
-                    end
-
-                    fsample = data.SampleRateInHz;
-                    gain=[data(:).Gain]';
-
-                    %if contains()
-                    [tmp1]=split({data(:).Channel}', regexpPattern("(_AND_)|((?<!.*_.*)_(?!.*_AND_.*))"));
-                    %[tmp1,tmp2] = strtok(strrep({data(:).Channel}','_AND',''),'_');
-                    %[tmp1] = split({data(:).Channel}','_AND_'); % tmp1 is a tuple of first str part before AND and second str part after AND
-                    % ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                    ch1 = strrep(strrep(strrep(strrep(tmp1(:,1),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch1 replaces ZERO to int 0 etc of first part before AND (tmp1(:,1))
-
-                    % [tmp1,tmp2] = strtok(tmp2,'_');
-                    % ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-                    ch2 = strrep(strrep(strrep(strrep(tmp1(:,2),'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3'); % ch2 replaces ZERO to int 0 etc of second part after AND (tmp1(:,1))
-
-                    % side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-                    % Channel = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-                    Channel = strcat(hdr.chan,'_', ch1,'_', ch2); % taken out "side" so RIGHT and LEFT will stay the same, no transformation to R and L
-
-                    d=[];
-                    for c = 1:length(runs)
-                        i=perceive_ci(runs{c},FirstPacketDateTime);
-                        d=[];
-                        d.hdr = hdr;
-                        d.datatype = datafields{idxDatafield};
-                        d.hdr.IS.Pass=strrep(strrep(unique(strtok(Pass(i),'_')),'FIRST','1'),'SECOND','2');
-                        d.hdr.IS.GlobalSequences=GlobalSequences(i,:);
-                        d.hdr.IS.GlobalPacketSizes=GlobalPacketSizes(i,:);
-                        d.hdr.IS.FirstPacketDateTime = runs{c};
-                        tmp = [data(i).TimeDomainData]';
-                        d.trial{1} = [tmp];
-                        d.label=Channel(i);
-
-                        d.time{1} = linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
-                        d.fsample = fsample;
-                        %firstsample = 1+round(fsample*seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-datetime(FirstPacketDateTime{1},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')));
-                        firstsample = set_firstsample(data(i(1)).TicksInMses);
-                        lastsample = firstsample+size(d.trial{1},2);
-                        %%fix later%d.sampleinfo(1,:) = [firstsample lastsample];
-                        d.trialinfo(1) = c;
-
-                        d.hdr.label = d.label;
-                        d.hdr.Fs = d.fsample;
-                        mod = 'mod-LMTD';
-                        d.fname = [hdr.fname '_' mod];
-                        d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
-                        % TODO: set if needed:
-                        %d.keepfig = false; % do not keep figure with this signal open
-                        if config.ecg_cleaning
-                            d=call_ecg_cleaning(d,hdr,d.trial{1});
-                        end
-                        alldata{length(alldata)+1} = d;
-                    end
                 case 'BrainSenseSurvey'
 
                     channels={};
@@ -337,14 +280,14 @@ for idxFile = 1:length(files)
                     %savefig(fullfile(hdr.fpath,[hdr.fname '_run-BrainSenseSurvey.fig']))
                     %pause(2)
                     perceive_print(fullfile(hdr.fpath,[hdr.fname '_' mod]))
+
                 case 'BrainSenseSurveys'
                     %continue
                     %
-                    %
-
-
+                    % I suppose this is now handled in'BrainSenseSurveysTimeDomain' and can be removed?
 
                 case 'BrainSenseSurveysTimeDomain'
+
                     ElectrodeSurvey=data{1};
                     ElectrodeIdentifier=data{2};
                     assert(strcmp(ElectrodeSurvey.SurveyMode,'ElectrodeSurvey'))
@@ -381,7 +324,7 @@ for idxFile = 1:length(files)
                                 d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                                 d.time={d.time};
                                 mod = 'mod-ES';
-                                mod_ext=check_mod_ext(d.label);
+                                mod_ext=perceive_check_mod_ext(d.label);
                                 mod = [mod mod_ext];
                                 d.fname = [hdr.fname '_' mod];
                                 d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
@@ -428,22 +371,21 @@ for idxFile = 1:length(files)
                             d.time=linspace(seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0),seconds(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS')-hdr.d0)+size(d.trial{1},2)/fsample,size(d.trial{1},2));
                             d.time={d.time};
                             mod = 'mod-EI';
-                            mod_ext=check_mod_ext(d.label);
+                            mod_ext=perceive_check_mod_ext(d.label);
                             mod = [mod mod_ext];
                             d.fname = [hdr.fname '_' mod];
                             d.fnamedate = [char(datetime(runs{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
                             % TODO: set if needed:
                             %d.keepfig = false; % do not keep figure with this signal open
-                            %d=call_ecg_cleaning(d,hdr,d.trial{1});
+                            %d=perceive_call_ecg_cleaning(d,hdr,d.trial{1});
                             perceive_plot_raw_signals(d);
                             perceive_print(fullfile(hdr.fpath,d.fname));
                             alldata{length(alldata)+1} = d;
                         end
                     end
-                    
-
 
                 case 'IndefiniteStreaming'
+
                     clear TicksInMses
                     FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                     runs = unique(FirstPacketDateTime);
@@ -586,9 +528,8 @@ for idxFile = 1:length(files)
                         alldata{length(alldata)+1} = d;
                     end
 
-
-
                 case 'CalibrationTests'
+
                     if extended
                         FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                         runs = unique(FirstPacketDateTime);
@@ -659,7 +600,9 @@ for idxFile = 1:length(files)
                             alldata{length(alldata)+1} = d;
                         end
                     end
+
                 case 'SenseChannelTests'
+
                     if extended
                         FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime},'T',' '),'Z','');
                         runs = unique(FirstPacketDateTime);
@@ -900,7 +843,7 @@ for idxFile = 1:length(files)
                     disp(['WRITING ' fullname '.mat as FieldTrip file.'])
                     save([fullname '.mat'],'data')
                     if sesMedOffOn01
-                        MetaT= metadata_to_table(MetaT,data);
+                        MetaT= perceive_metadata_to_table(MetaT,data);
                     end
                 end
             end
@@ -909,7 +852,7 @@ for idxFile = 1:length(files)
 
             %% create plot for LMTD and change name
             if contains(fullname,'LMTD')
-                mod_ext=check_mod_ext(data.label);
+                mod_ext=perceive_check_mod_ext(data.label);
                 fullname = strrep(fullname,'mod-LMTD',['mod-LMTD' mod_ext]);
                 data.fname = strrep(data.fname,'mod-LMTD',['mod-LMTD' mod_ext]);
                 perceive_plot_raw_signals(data); % for LMTD
@@ -931,7 +874,7 @@ for idxFile = 1:length(files)
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data');
             if sesMedOffOn01
-                MetaT= metadata_to_table(MetaT,data);
+                MetaT= perceive_metadata_to_table(MetaT,data);
             end
             %savefig([fullname '.fig'])
             % close the figure if should not be kept open
@@ -1063,257 +1006,4 @@ for idxFile = 1:length(files)
 end
 disp('all done!')
 %ubersichtzeit
-end
-
-
-function acq=check_stim(LAmp, RAmp, hdr)
-% check stim whether the recording was stim OFF or stim ON based on the amplitude
-% expand the acquisition to Burst
-
-% check Burst settings
-Cycling_mode = false;
-if isfield(hdr.Groups, 'Initial')
-    for i=1:length(hdr.Groups.Initial)
-        if hdr.Groups.Initial(i).GroupSettings.Cycling.Enabled
-            if Cycling_mode
-                warning('Two different cycling modes: Settings Initial do not match Settings Final. Select no-cycling mode.')
-                Cycling_mode = 'Contradiction';
-            else
-                Cycling_mode = true;
-                Cycling_OnDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
-                Cycling_OffDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
-                Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.RateInHertz;
-            end
-        end
-    end
-end
-if isfield(hdr.Groups, 'Final')
-    for i=1:length(hdr.Groups.Final)
-        if hdr.Groups.Final(i).GroupSettings.Cycling.Enabled
-            if Cycling_mode
-                warning('Two different cycling modes: Settings Initial do not match Settings Final. Select no-cycling mode.')
-                Cycling_mode = 'Contradiction';
-            else
-                Cycling_mode = true;
-                Cycling_OnDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
-                Cycling_OffDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
-                Cycling_Rate = hdr.Groups.Final(i).ProgramSettings.RateInHertz;
-            end
-        end
-    end
-end
-if strcmp(Cycling_mode, 'Contradiction')
-    Cycling_mode = false;
-end
-
-LAmp(isnan(LAmp))=0;
-RAmp(isnan(RAmp))=0;
-LAmp=abs(LAmp);
-RAmp=abs(RAmp);
-if Cycling_mode
-    if (sum(LAmp>0.1)) > (0.1*sum(LAmp==0)) && (sum(RAmp>0.1)) > (0.5*sum(RAmp==0))
-        acq=['BurstB' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
-    elseif (sum(LAmp>0.1)) > (0.1*sum(LAmp==0))
-        acq=['BurstL' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
-    elseif (sum(RAmp>0.1)) > (0.1*sum(RAmp==0))
-        acq=['BurstR' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
-    end
-end
-if ~exist('acq','var')
-    if (mean(LAmp) > 0.5) && (mean(RAmp) > 0.5)
-        acq='StimOnB';
-    elseif (mean(LAmp) > 1)
-        acq='StimOnL';
-    elseif (mean(RAmp) > 1)
-        acq='StimOnR';
-    else
-        acq='StimOff';
-    end
-end
-end
-
-function mod_ext=check_mod_ext(labels)
-%03, 13, 02, 12 are Ring contacts
-%1A_2A, 1B_2B, 1C_2C LEFT are SegmInter
-%1A_1B, 1A_1C, 1B_1C, 2A_2B, 2B_2C are SegmIntraL
-if sum(contains(labels,'LEFT_RING'))>3 %usually 6 or 4
-    mod_ext = 'RingL';
-elseif sum(contains(labels,'LEFT_SEGMENT'))==6
-    mod_ext = 'SegmIntraL';
-elseif sum(contains(labels,'LEFT_SEGMENT'))==3
-    mod_ext = 'SegmInterL';
-elseif sum(contains(labels,'RIGHT_RING'))>3 %usually 6 or 4
-    mod_ext = 'RingR';
-elseif sum(contains(labels,'RIGHT_SEGMENT'))==6
-    mod_ext = 'SegmIntraR';
-elseif sum(contains(labels,'RIGHT_SEGMENT'))==3
-    mod_ext = 'SegmInterR';
-else
-    if any(contains(labels,'0'))
-        mod_ext = 'Ring';
-    elseif sum(contains(labels,'A'))==3
-        mod_ext = 'SegmIntra';
-    elseif sum(contains(labels,'A'))==1
-        mod_ext = 'SegmInter';
-    elseif sum(contains(labels,'1'))==3 && sum(contains(labels,'2'))==3
-        mod_ext = 'Segm';
-    else
-        mod_ext = 'notspec';
-        warning('the LMTD/ES has no known modus, it needs to be: Bip,RingL,RingR,SegmInterL,SegmInterR,SegmIntraL,SegmIntraR,Ring\n the EI needs to be Segm or Ring.')
-    end
-    if any(contains(labels,'LEFT')) && ~contains(mod_ext,'notspec')
-        mod_ext = [mod_ext , 'L'];
-    else
-        mod_ext = [mod_ext , 'R'];
-    end
-end
-end
-
-function MetaT =  metadata_to_table(MetaT, data)
-fname=data.fname;
-if contains(fname, ["LMTD","BrainSense","ISRing","EI","ES"])
-    splitted_fname=split(fname,'_');
-    ses = lower(splitted_fname{2}(5:9));
-    if contains(splitted_fname{2}, 'MedOnOff')
-        med = 'm9';
-    elseif contains(splitted_fname{2}, 'MedOn')
-        med = 'm1';
-    elseif contains(splitted_fname{2}, 'MedDaily')
-        med = 'm3';
-    elseif contains(splitted_fname{2}, 'Unknown')
-        med = 'm5';
-    elseif contains(splitted_fname{2}, 'MedOff')
-        med = 'm0';
-    else
-        error('unknown Med status')
-    end
-    if contains(splitted_fname{4}, ["StimOn","Burst"])
-        stim = 's1';
-    elseif contains(splitted_fname{4}, 'StimOff')
-        stim = 's0';
-    else
-        stim = 's9';
-    end
-    cond = [med stim];
-    acq = splitted_fname{4}(5:end);
-    task = splitted_fname{3}(6:end);
-    nomatch = true;
-    i=0;
-    tobefound = ["Bip","RingL","RingR","SegmInterL","SegmInterR","SegmIntraL","SegmIntraR", "Ring", "SegmR", "SegmL", "notspec"];
-    while nomatch
-        i=i+1;
-        if contains(fname, tobefound(i))
-            contacts = tobefound(i);
-            nomatch = false;
-        end
-    end
-    [~, ori, ~] = fileparts(data.hdr.OriginalFile);
-    cellarr = {[ori '.json'], fname,  ses, cond, task, contacts, fname(end-4), '', acq, 'keep'}; %add parts and stim settings
-    MetaT = [MetaT; cellarr];
-end
-end
-
-function d=call_ecg_cleaning(d,hdr,raw)
-d.ecg=[];
-d.ecg_cleaned=[];
-for e = 1:size(raw,1)
-    d.ecg{e} = perceive_ecg(raw(e,:));
-    title(strrep(d.label{e},'_',' '))
-    xlabel(strrep(d.fname,'_',' '))
-    %savefig(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e} '.fig']))
-    perceive_print(fullfile(hdr.fpath,[d.fname '_ECG_' d.label{e}]))
-    d.ecg_cleaned(e,:) = d.ecg{e}.cleandata;
-end
-end
-
-
-function new_lfp_arr = check_and_correct_lfp_missingData_in_json(data,select, hdr)
-    % from Jeroen Habets
-    % https://github.com/jgvhabets/PyPerceive/blob/dev/code/PerceiveImport/methods/load_rawfile.py
-    disp('check_and_correct_lfp_missingData by Jeroen Habets')
-    % Function checks missing packets based on start and endtime
-    % of first and last received packets, and the time-differences
-    % between consecutive packets. In case of a missing packet,
-    % the missing time window is filled with NaNs.
-    % 
-    % TODO: debug for BRAINSENSELFP OR SURVEY, STREAMING?
-    % BRAINSENSETIMEDOMAIN DATA STRUCTURE works?
-   
-    try
-   
-    Fs= data(select).SampleRateInHz; %Fs = data.hdr.Fs;
-    GlobalPacketSizes=str2num(hdr.js.BrainSenseTimeDomain(select).GlobalPacketSizes);
-    ticksMsec=str2num(hdr.js.BrainSenseTimeDomain(select).TicksInMses);
-    TicksInS = (ticksMsec - ticksMsec(1))/1000;
-    ticksDiffs = -(ticksMsec(1:end-1)-ticksMsec(2:end));
-    data_is_missing = logical(1);
-    packetSizes = GlobalPacketSizes;
-    lfp_data = data(select).TimeDomainData; %data.trial{:,:}(1,:);
-
-    if data_is_missing
-        disp('LFP Data is missing!! perform function to fill NaNs in')
-    else
-        disp('No LFP data missing based on timestamp differences between data-packets')
-    end
-
-    data_length_ms = ticksMsec(end) + 250 - ticksMsec(1);  % length of a pakcet in milliseconds is always 250
-    data_length_samples = round(data_length_ms / 1000 * Fs) + 1 ; % add one to calculate for 63 packet at end
-    new_lfp_arr = nan(data_length_samples,1);
-
-    % fill nan array with real LFP values, use tickDiffs to decide start-points (and where to leave NaN)
-
-    % Add first packet (data always starts with present packet)
-    current_packetSize = round(packetSizes(1));
-    if current_packetSize > 63
-        disp('UNKNOWN TOO LARGE DATAPACKET IS CUTDOWN BY {current_packetSize - 63} samples')
-        current_packetSize = 63 ; % if there is UNKNOWN TOO MANY DATA, only the first 63 samples of the too large packets are included
-    end
-    new_lfp_arr(1:current_packetSize) = lfp_data(1:current_packetSize);
-    % loop over every distance (index for packetsize is + 1 because first difference corresponds to seconds packet)
-    i_lfp = current_packetSize;  % index to track which lfp values are already used
-    i_arr = current_packetSize;  % index to track of new array index
-    
-    i_packet = 1;
-
-    for diff = ticksDiffs
-        if diff == 250
-            % only lfp values, no nans if distance was 250 ms
-            current_packetSize = round(packetSizes(i_packet));
-
-            % in case of very rare TOO LARGE packetsize (there is MORE DATA than expected based on the first and last timestamps)
-            if current_packetSize > 63
-                disp('UNKNOWN TOO LARGE DATAPACKET IS CUTDOWN BY {current_packetSize - 63} samples')
-                current_packetSize = 63;
-            end
-            new_lfp_arr(i_arr:round(i_arr + current_packetSize)) = lfp_data(i_lfp:round(i_lfp + current_packetSize));
-            i_lfp = i_lfp + current_packetSize;
-            i_arr = i_arr + current_packetSize;
-            i_packet = i_packet + 1;
-        else
-            disp('add NaNs by skipping')
-            msecs_missing = (diff - 250);  % difference if one packet is missing is 500 ms
-
-            secs_missing = msecs_missing / 1000;
-            samples_missing = round(secs_missing * Fs);
-            % no filling with NaNs, bcs array is created full with NaNs
-            i_arr = i_arr + samples_missing;  % shift array index up by number of NaNs left in the array
-        end
-    end
-    
-    % correct in case one sample too many was in array shape
-    if isnan(new_lfp_arr(end))
-        new_lfp_arr = new_lfp_arr(1:end);
-    end
-    % plot the correction
-    % plot(1:length(new_lfp_arr),new_lfp_arr)
-    % na=double(isnan(new_lfp_arr));
-    % na(na==0)=NaN;
-    % hold on
-    % plot(1:length(na),na,"r*")
-    % title(data.fname, "Interpreter","none")
-    hold off
-    catch
-        new_lfp_arr=size((i_lfp + current_packetSize),1);
-    end
-    new_lfp_arr=new_lfp_arr';
 end

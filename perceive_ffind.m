@@ -1,12 +1,13 @@
 function [files, folder, fullfname] = perceive_ffind(string, cellmode, rec)
+
 % perceive_ffind - cross-platform file finder
 % 
-% Inputs:
+% inputs:
 %   string   - pattern to match, e.g., '*.mat' or fullfile(folder, '*BSL*.mat')
 %   cellmode - 1 (default): return cell array; 0: return char if only one file
 %   rec      - 1: recursive search; 0 (default): current folder only
 %
-% Outputs:
+% outputs:
 %   files      - list of filenames
 %   folder     - corresponding folder(s)
 %   fullfname  - full path(s)
