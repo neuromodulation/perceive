@@ -1,4 +1,4 @@
-function perceiveModular(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings)
+function perceiveModular(files, sub, sesMedOffOn01, extended, gui, localsettings)
 % HACKATHON
 % https://github.com/neuromodulation/perceive
 % Toolbox by Wolf-Julian Neumann
@@ -71,7 +71,7 @@ function perceiveModular(files, sub, sesMedOffOn01, extended, gui, datafields, l
 %% perceive input
 
 % creates a config struct that contains all files, subjectIDs and further settings
-config = perceive_parse_args(files, sub, sesMedOffOn01, extended, gui, datafields, localsettings);
+config = perceive_parse_args(files, sub, sesMedOffOn01, extended, gui, localsettings);
 
 % to avoid changing rest of the code, let us define files etc. (change later)
 files         = config.files;
@@ -79,12 +79,15 @@ sub           = config.subject;
 sesMedOffOn01 = config.session;
 extended      = config.extended;
 gui           = config.gui;
-datafields    = config.datafields;
 localsettings = config.localsettings;
 task          = config.task;
 acq           = config.acq;
 mod           = config.mod;
 run           = config.run;
+
+%% set local settings
+localsettings=perceive_localsettings(localsettings);
+datafields=localsettings.datafields;
 
 %% iterate over files
 for idxFile = 1:length(files)
@@ -100,12 +103,6 @@ for idxFile = 1:length(files)
     % create metatable %determine
     MetaT = cell2table(cell(0,10),'VariableNames', {'report','perceiveFilename','session','condition','task','contacts','run','part','acq','remove'});
     
-    if isempty(datafields)
-        datafields = sort({'EventSummary','Impedance','MostRecentInSessionSignalCheck','BrainSenseLfp','BrainSenseTimeDomain','LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents','DiagnosticData','BrainSenseSurveysTimeDomain','BrainSenseSurveys'});
-        %if DataVersion
-        %    datafields = sort({'BrainSenseSurveysTimeDomain','BrainSenseSurveys'});
-        %end
-    end
     alldata = {};
     disp(['SUBJECT ' hdr.subject])
 
@@ -899,7 +896,7 @@ for idxFile = 1:length(files)
             app.delete;
         else
             %%
-            if check_gui_tasks
+            if localsettings.check_gui_tasks
                 if height(MetaT)==length(localsettings.mod)
                 
                     for i = 1:height(MetaT) %update the task name
@@ -917,7 +914,7 @@ for idxFile = 1:length(files)
                     assert( height(MetaT)==length(localsettings.mod), 'Tasks and mods not listed the same as in json file')
                 end
             end
-            if check_gui_med %remove the recordings with different medication settings
+            if localsettings.check_gui_med %remove the recordings with different medication settings
                 if any(localsettings.remove_med)
                     assert( height(MetaT)==length(localsettings.remove_med))
                     for i = 1:height(MetaT)
@@ -968,34 +965,33 @@ for idxFile = 1:length(files)
             end
         end
 %% conversion to BIDS
-        if localsettings
-            if localsettings.convert2bids
-                for i = 1:height(MetaT)
-                    cfg=struct();
-                    load(fullfile(hdr.fpath,MetaT.perceiveFilename{i}),'data')
-                    entities = splitBIDSfilename(MetaT.perceiveFilename{i});
-                    cfg.method                  = 'convert';
-                    cfg.bidsroot                = fullfile(pwd);
-                    cfg.suffix                  = 'ieeg';
-                    cfg.sub                     = entities.sub;
-                    cfg.ses                     = entities.ses;
-                    cfg.task                    = entities.task;
-                    cfg.acq                     = entities.acq;
-                    cfg.mod                     = entities.mod;
-                    cfg.run                     = entities.run;
-
-                    cfg.ieeg.ElectricalStimulationParameters = data.hdr.js.Groups;
-                    cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalFrequencies');
-                    cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalPsdValues');
-
-                    %% save data
-                    if strcmp(cfg.mod,'BrainSenseBip')
-                        data.label=data.label(:,end-1:end);
-                        data.trial=data.trial{:}(end-1:end,:)';
-                        data.hdr.chantype={'LFP','LFP'};
-                    end
-                    data2bids(cfg, data);
+         
+        if localsettings.convert2bids
+            for i = 1:height(MetaT)
+                cfg=struct();
+                load(fullfile(hdr.fpath,MetaT.perceiveFilename{i}),'data')
+                entities = splitBIDSfilename(MetaT.perceiveFilename{i});
+                cfg.method                  = 'convert';
+                cfg.bidsroot                = fullfile(pwd);
+                cfg.suffix                  = 'ieeg';
+                cfg.sub                     = entities.sub;
+                cfg.ses                     = entities.ses;
+                cfg.task                    = entities.task;
+                cfg.acq                     = entities.acq;
+                cfg.mod                     = entities.mod;
+                cfg.run                     = entities.run;
+        
+                cfg.ieeg.ElectricalStimulationParameters = data.hdr.js.Groups;
+                cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalFrequencies');
+                cfg.ieeg.ElectricalStimulationParameters = removeField(cfg.ieeg.ElectricalStimulationParameters, 'SignalPsdValues');
+        
+                %% save data
+                if strcmp(cfg.mod,'BrainSenseBip')
+                    data.label=data.label(:,end-1:end);
+                    data.trial=data.trial{:}(end-1:end,:)';
+                    data.hdr.chantype={'LFP','LFP'};
                 end
+                data2bids(cfg, data);
             end
         end
     end
