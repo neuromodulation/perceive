@@ -1,4 +1,4 @@
-classdef testProcessData < matlab.unittest.TestCase
+classdef testProcessData %< matlab.unittest.TestCase
     properties
         testFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d.json', x), 2:3, 'UniformOutput', false);
         expectedFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d_GroupHistory.mat', x), 2:3, 'UniformOutput', false);
