@@ -18,4 +18,4 @@ jobs:
       - name: Run MATLAB Tests
         uses: matlab-actions/run-tests@v2
         with:
-          source-folder: tests
+          source-folder: perceive
