@@ -1,4 +1,4 @@
-function generateMOCK2(inputFilename,outputFilename)
+function generateMOCK(inputFilename,outputFilename)
 
 %% First, deidentify original
 js = jsondecode(fileread(inputFilename));
