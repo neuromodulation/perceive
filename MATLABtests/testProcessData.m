@@ -6,7 +6,9 @@ classdef testProcessData < matlab.unittest.TestCase
 
     methods (Test)
         function testMultipleFiles(tc)
-            addpath('..\test files\')
+            parentDir = fileparts(fileparts(mfilename('fullpath'))); % Move one level up
+            targetDir = fullfile(parentDir, 'test files'); % Move one level down
+            addpath(targetDir)
             for i = 1:numel(tc.testFiles)
                 % Load input file
                 actualData = perceive_GroupHistory(tc.testFiles{i});
