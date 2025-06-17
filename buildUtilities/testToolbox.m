@@ -25,7 +25,7 @@ function testToolbox(options)
         mkdir(outputDirectory)
     end
     
-    suite = TestSuite.fromClass(?smokeTest);
+    suite = TestSuite.fromClass(?testProcessData); %adapt here
     if options.ConnectToServer
         suite = suite.selectIf(~HasTag('RequiresMock'));
         cdsapi_Factory.useMocks(false);

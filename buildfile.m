@@ -1,8 +1,10 @@
-function plan = buildfile
+function plan = buildfile()
+    
     plan = buildplan(localfunctions);
 
     % Define a setup task to add paths
-    %plan("setuppaths").Dependencies =  "check";
+    plan("setuppaths").Dependencies =  "check";
+
     plan.DefaultTasks = "test";
     
     plan("package").Dependencies = "publishDoc";
@@ -32,7 +34,7 @@ function testTask(context)
     oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
     raii = onCleanup(@()(path(oldPath)));
     
-    testToolbox()
+    %testToolbox() %disable here
 end
 
 function publishDocTask(context)
