@@ -2,7 +2,7 @@ function plan = buildfile
     plan = buildplan(localfunctions);
 
     % Define a setup task to add paths
-    plan("setuppaths").Dependencies =  "check";
+    %plan("setuppaths").Dependencies =  "check";
     plan.DefaultTasks = "test";
     
     plan("package").Dependencies = "publishDoc";
