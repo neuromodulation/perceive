@@ -16,7 +16,7 @@ function plan = buildfile()
 end
 
 function setupPaths(~)
-    toolboxPath = fileparts(mfilename('perceive')); % Get toolbox folder
+    toolboxPath = fileparts(mfilename('fullpath')); % Get toolbox folder
     addpath(genpath(toolboxPath)); % Add all subfolders
     disp("Perceive Toolbox paths added.");
 end
