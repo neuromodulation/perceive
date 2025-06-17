@@ -5,6 +5,11 @@ classdef testProcessData < matlab.unittest.TestCase
     end
 
     methods (Test)
+    %         methods (TestMethodSetup)
+    %     function setupPath(testCase)
+    %         testCase.applyFixture(matlab.unittest.fixtures.PathFixture('path/to/toolbox'));
+    %     end
+    % end
         function testMultipleFiles(tc)
             %parentDir = fileparts(fileparts(mfilename('fullpath'))); % Move one level up
             %addpath(genpath(parentDir)); % Add parent folder and all its subfolders

@@ -1,10 +1,8 @@
-function plan = buildfile()
-
+function plan = buildfile
     plan = buildplan(localfunctions);
 
     % Define a setup task to add paths
-    plan("setup") = buildtask(@setupPaths);
-    
+    plan("setuppaths").Dependencies =  "check";
     plan.DefaultTasks = "test";
     
     plan("package").Dependencies = "publishDoc";
@@ -15,7 +13,7 @@ function plan = buildfile()
     
 end
 
-function setupPaths(~)
+function setuppathsTask(context)
     toolboxPath = fileparts(mfilename('fullpath')); % Get toolbox folder
     addpath(genpath(toolboxPath)); % Add all subfolders
     disp("Perceive Toolbox paths added.");
