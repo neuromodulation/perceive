@@ -1,6 +1,9 @@
 function plan = buildfile()
 
     plan = buildplan(localfunctions);
+
+    % Define a setup task to add paths
+    plan("setup") = buildtask(@setupPaths);
     
     plan.DefaultTasks = "test";
     
@@ -9,6 +12,13 @@ function plan = buildfile()
     plan("publishDoc").Dependencies = "test";
     
     plan("test").Dependencies = "check";
+    
+end
+
+function setupPaths(~)
+    toolboxPath = fileparts(mfilename('perceive')); % Get toolbox folder
+    addpath(genpath(toolboxPath)); % Add all subfolders
+    disp("Perceive Toolbox paths added.");
 end
 
 function checkTask(context)
