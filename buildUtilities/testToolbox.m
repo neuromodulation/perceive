@@ -17,7 +17,7 @@ function testToolbox(options)
     import matlab.unittest.plugins.codecoverage.CoberturaFormat;
     import matlab.unittest.selectors.HasTag;
     
-    oldpath  = addpath("tests",genpath("toolbox"));
+    oldpath  = addpath("tests",genpath("toolbox"),genpath("MockData"));
     finalize = onCleanup(@()(path(oldpath)));
 
     outputDirectory = fullfile("reports",options.ReportSubdirectory);
@@ -29,10 +29,11 @@ function testToolbox(options)
     if options.ConnectToServer
         suite = suite.selectIf(~HasTag('RequiresMock'));
         cdsapi_Factory.useMocks(false);
-    else
+    %else
         suite = suite.selectIf(HasTag('SupportsMock'));
         cdsapi_Factory.useMocks(true);
     end
+   % cdsapi_Factory.useMocks(false); % add here the setting to set to false
     
     runner = TestRunner.withTextOutput('OutputDetail', Verbosity.Detailed);
 
@@ -48,7 +49,7 @@ function testToolbox(options)
     end
     
     results = runner.run(suite);
-    cdsapi_Factory.useMocks(false);
+   % cdsapi_Factory.useMocks(false); %comment out here
 
     if ~verLessThan('matlab','9.9') && ~isMATLABReleaseOlderThan("R2022a") %#ok<VERLESSMATLAB>
         % This report is only available in R2022a and later.  isMATLABReleaseOlderThan wasn't added until MATLAB 2020b / version 9.9

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<coverage branch-rate="NaN" branches-covered="NaN" branches-valid="NaN" complexity="NaN" line-rate="0.64706" lines-covered="22" lines-valid="34" timestamp="1750249405.6288" version="">
+  <sources>
+    <source>C:\Users\Jonathan\Documents\CODE\perceive\toolbox\</source>
+  </sources>
+  <packages>
+    <package branch-rate="NaN" complexity="NaN" line-rate="0.64706" name="">
+      <classes>
+        <class branch-rate="NaN" complexity="NaN" filename="addNumbers.m" line-rate="0" name="addNumbers">
+          <methods/>
+          <lines>
+            <line hits="0" number="2"/>
+          </lines>
+        </class>
+        <class branch-rate="NaN" complexity="NaN" filename="perceive_GroupHistory.m" line-rate="0.66667" name="perceive_GroupHistory">
+          <methods/>
+          <lines>
+            <line hits="3" number="17"/>
+            <line hits="3" number="33"/>
+            <line hits="0" number="34"/>
+            <line hits="0" number="35"/>
+            <line hits="0" number="36"/>
+            <line hits="0" number="37"/>
+            <line hits="0" number="39"/>
+            <line hits="0" number="40"/>
+            <line hits="0" number="41"/>
+            <line hits="0" number="42"/>
+            <line hits="0" number="44"/>
+            <line hits="3" number="49"/>
+            <line hits="3" number="50"/>
+            <line hits="3" number="54"/>
+            <line hits="3" number="55"/>
+            <line hits="3" number="56"/>
+            <line hits="3" number="58"/>
+            <line hits="3" number="60"/>
+            <line hits="3" number="61"/>
+            <line hits="3" number="62"/>
+            <line hits="3" number="63"/>
+            <line hits="15" number="64"/>
+            <line hits="15" number="65"/>
+            <line hits="15" number="66"/>
+            <line hits="15" number="67"/>
+            <line hits="0" number="69"/>
+            <line hits="15" number="72"/>
+            <line hits="15" number="73"/>
+            <line hits="3" number="76"/>
+            <line hits="3" number="79"/>
+            <line hits="3" number="80"/>
+            <line hits="3" number="81"/>
+            <line hits="0" number="83"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

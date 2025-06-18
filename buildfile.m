@@ -34,7 +34,7 @@ function testTask(context)
     oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
     raii = onCleanup(@()(path(oldPath)));
     
-    %testToolbox() %disable here
+    testToolbox() %disable here
 end
 
 function publishDocTask(context)

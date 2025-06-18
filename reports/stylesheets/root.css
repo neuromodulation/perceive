@@ -1,0 +1,19 @@
+p {
+    font-family: 'Calibri Light', Calibri, Segoe, Optima, Arial, 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Malgun Gothic', Mona, Osaka, 'Hiragino Kaku Gothic Pro', Meiryo, rg-body;
+    font-size: 11pt;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0px;
+}
+div.PageContainer {
+    padding:20pt;
+    margin: auto;
+    min-width:7.5in;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Calibri Light', Calibri, Segoe, Optima, Arial, 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Malgun Gothic', Mona, Osaka, 'Hiragino Kaku Gothic Pro', Meiryo, rg-title;
+    font-weight: normal;
+    white-space: pre;
+    word-break: break-word;
+    margin: 0px;
+}

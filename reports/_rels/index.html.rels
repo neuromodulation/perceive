@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="ImageId1" Target="images/image1.png" Type="http://schemas.mathworks.com/mlreportgen.dom/2013/relationships/htmx/image"/>
+  <Relationship Id="ImageId2" Target="images/image2.svg" Type="http://schemas.mathworks.com/mlreportgen.dom/2013/relationships/htmx/image"/>
+  <Relationship Id="ImageId3" Target="images/image2.svg" Type="http://schemas.mathworks.com/mlreportgen.dom/2013/relationships/htmx/image"/>
+  <Relationship Id="ccss1" Target="stylesheets/combined.css" Type="http://schemas.mathworks.com/mlreportgen.dom/2013/relationships/htmx/css"/>
+  <Relationship Id="rPartId3" Target="stylesheets/root.css" Type="http://schemas.mathworks.com/mlreportgen.dom/2013/relationships/htmx/css"/>
+</Relationships>

@@ -1,0 +1,397 @@
+{
+  "GroupHistory": [
+    {
+      "Sessiondate": "2019-01-02T02:08:10Z",
+      "Settings": {
+        "GroupId": "GroupIdDef.GROUP_C",
+        "ActiveGroup": true,
+        "ProgramSettings": {
+          "RateInHertz": 125,
+          "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+          "SensingChannel": [
+            {
+              "HemisphereLocation": "HemisphereLocationDef.Left",
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_3",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "PulseWidthInMicroSecond": 83,
+              "RateInHertz": 125,
+              "GangedToHemisphere": "HemisphereLocationDef.Right",
+              "BrainSensingStatus": "SensingStatusDef.ENABLED",
+              "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+              "UpperLfpThreshold": 549,
+              "LowerLfpThreshold": 983,
+              "UpperCaptureAmplitudeInMilliAmps": 3,
+              "LowerCaptureAmplitudeInMilliAmps": 6,
+              "MeasuredUpperLfp": 546,
+              "MeasuredLowerLfp": 333,
+              "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+              "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+              "TransitionUpInMilliSeconds": 489231,
+              "TransitionDownInMilliSeconds": 466326,
+              "SuspendAmplitudeInMilliAmps": 5.2,
+              "SensingSetup": {
+                "FrequencyInHertz": 88.67,
+                "AveragingDurationInMilliSeconds": 5478,
+                "ChannelSignalResult": {}
+              },
+              "AdaptiveTherapy": {
+                "UpperThresholdOnsetInMilliSeconds": 5415,
+                "LowerThresholdOnsetInMilliSeconds": 1862,
+                "DetectionBlankingDurationInMilliSeconds": 8438,
+                "AdaptiveStartupDelayInMilliSeconds": 89215
+              }
+            },
+            {
+              "HemisphereLocation": "HemisphereLocationDef.Right",
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_8a",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_2b",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_5c",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "PulseWidthInMicroSecond": 96,
+              "RateInHertz": 125,
+              "BrainSensingStatus": "SensingStatusDef.ENABLED",
+              "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+              "UpperLfpThreshold": 697,
+              "LowerLfpThreshold": 112,
+              "UpperCaptureAmplitudeInMilliAmps": 8,
+              "LowerCaptureAmplitudeInMilliAmps": 1,
+              "MeasuredUpperLfp": 723,
+              "MeasuredLowerLfp": 369,
+              "AdaptiveTherapyStatus": "ADBSStatusDef.RUNNING",
+              "Mode": "AdaptiveModeDef.DUAL_THRESHOLD_DIRECT",
+              "TransitionUpInMilliSeconds": 195273,
+              "TransitionDownInMilliSeconds": 662456,
+              "SuspendAmplitudeInMilliAmps": 9.9,
+              "SensingSetup": {
+                "FrequencyInHertz": 27.15,
+                "AveragingDurationInMilliSeconds": 7523,
+                "ChannelSignalResult": {}
+              },
+              "AdaptiveTherapy": {
+                "UpperThresholdOnsetInMilliSeconds": 2255,
+                "LowerThresholdOnsetInMilliSeconds": 6967,
+                "DetectionBlankingDurationInMilliSeconds": 4477,
+                "AdaptiveStartupDelayInMilliSeconds": 19975
+              }
+            }
+          ]
+        },
+        "GroupSettings": {
+          "SoftStartStop": {
+            "Enabled": true,
+            "DurationInSeconds": 7
+          },
+          "Cycling": {
+            "Enabled": false
+          },
+          "HighPassFilterInHertz": 9,
+          "SensingBlankingDurationInMicroseconds": 8112
+        }
+      }
+    },
+    {
+      "Sessiondate": "2019-01-02T02:22:39Z",
+      "Settings": {
+        "GroupId": "GroupIdDef.GROUP_C",
+        "ActiveGroup": true,
+        "ProgramSettings": {
+          "RateInHertz": 125,
+          "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+          "SensingChannel": [
+            {
+              "HemisphereLocation": "HemisphereLocationDef.Left",
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_4a",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_4b",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_9c",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "PulseWidthInMicroSecond": 26,
+              "RateInHertz": 125,
+              "BrainSensingStatus": "SensingStatusDef.ENABLED",
+              "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+              "UpperLfpThreshold": 73,
+              "LowerLfpThreshold": 14,
+              "UpperCaptureAmplitudeInMilliAmps": 1,
+              "LowerCaptureAmplitudeInMilliAmps": 6,
+              "MeasuredUpperLfp": 1,
+              "MeasuredLowerLfp": 2,
+              "AdaptiveTherapyStatus": "ADBSStatusDef.NOT_CONFIGURED",
+              "TransitionUpInMilliSeconds": 1,
+              "TransitionDownInMilliSeconds": 9,
+              "SuspendAmplitudeInMilliAmps": 6.2,
+              "SensingSetup": {
+                "FrequencyInHertz": 26.93,
+                "AveragingDurationInMilliSeconds": 4738,
+                "ChannelSignalResult": {}
+              },
+              "AdaptiveTherapy": {
+                "UpperThresholdOnsetInMilliSeconds": 5312,
+                "LowerThresholdOnsetInMilliSeconds": 1448,
+                "DetectionBlankingDurationInMilliSeconds": 221,
+                "AdaptiveStartupDelayInMilliSeconds": 5
+              }
+            },
+            {
+              "HemisphereLocation": "HemisphereLocationDef.Right",
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_3a",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_6b",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Sensight_7c",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "PulseWidthInMicroSecond": 47,
+              "RateInHertz": 125,
+              "BrainSensingStatus": "SensingStatusDef.ENABLED",
+              "Channel": "SensingElectrodeConfigDef.ONE_AND_THREE",
+              "UpperLfpThreshold": 18,
+              "LowerLfpThreshold": 32,
+              "UpperCaptureAmplitudeInMilliAmps": 8,
+              "LowerCaptureAmplitudeInMilliAmps": 6,
+              "MeasuredUpperLfp": 8,
+              "MeasuredLowerLfp": 7,
+              "AdaptiveTherapyStatus": "ADBSStatusDef.NOT_CONFIGURED",
+              "TransitionUpInMilliSeconds": 6,
+              "TransitionDownInMilliSeconds": 5,
+              "SuspendAmplitudeInMilliAmps": 9.9,
+              "SensingSetup": {
+                "FrequencyInHertz": 93.89,
+                "AveragingDurationInMilliSeconds": 7925,
+                "ChannelSignalResult": {}
+              },
+              "AdaptiveTherapy": {
+                "UpperThresholdOnsetInMilliSeconds": 6532,
+                "LowerThresholdOnsetInMilliSeconds": 5446,
+                "DetectionBlankingDurationInMilliSeconds": 134,
+                "AdaptiveStartupDelayInMilliSeconds": 8
+              }
+            }
+          ]
+        },
+        "GroupSettings": {
+          "SoftStartStop": {
+            "Enabled": true,
+            "DurationInSeconds": 3
+          },
+          "Cycling": {
+            "Enabled": false
+          },
+          "HighPassFilterInHertz": 6,
+          "SensingBlankingDurationInMicroseconds": 1191
+        }
+      }
+    },
+    {
+      "Sessiondate": "2019-01-02T03:20:42Z",
+      "Settings": {
+        "GroupId": "GroupIdDef.GROUP_B",
+        "ActiveGroup": true,
+        "ProgramSettings": {
+          "RateInHertz": 125,
+          "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+          "LeftHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_5",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 8.9,
+              "PulseWidthInMicroSecond": 21
+            }
+          },
+          "RightHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_4",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 4.3,
+              "PulseWidthInMicroSecond": 64
+            }
+          }
+        },
+        "GroupSettings": {
+          "SoftStartStop": {
+            "Enabled": true,
+            "DurationInSeconds": 5
+          },
+          "Cycling": {
+            "Enabled": false
+          }
+        }
+      }
+    },
+    {
+      "Sessiondate": "2019-01-02T04:03:23Z",
+      "Settings": {
+        "GroupId": "GroupIdDef.GROUP_B",
+        "ActiveGroup": true,
+        "ProgramSettings": {
+          "RateInHertz": 125,
+          "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+          "LeftHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_1",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 7.7,
+              "PulseWidthInMicroSecond": 78
+            }
+          },
+          "RightHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_2",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 4.5,
+              "PulseWidthInMicroSecond": 14
+            }
+          }
+        },
+        "GroupSettings": {
+          "SoftStartStop": {
+            "Enabled": true,
+            "DurationInSeconds": 6
+          },
+          "Cycling": {
+            "Enabled": false
+          }
+        }
+      }
+    },
+    {
+      "Sessiondate": "2019-01-02T04:18:55Z",
+      "Settings": {
+        "GroupId": "GroupIdDef.GROUP_B",
+        "ActiveGroup": true,
+        "ProgramSettings": {
+          "RateInHertz": 125,
+          "AmplitudeControl": "AmplitudeTypeDef.CURRENT",
+          "LeftHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_LEFT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_2",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 3.6,
+              "PulseWidthInMicroSecond": 29
+            }
+          },
+          "RightHemisphere": {
+            "Programs": {
+              "ProgramId": "ProgramIdDef.FIRST_RIGHT",
+              "ElectrodeState": [
+                {
+                  "Electrode": "ElectrodeDef.SenSight_2",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Negative"
+                },
+                {
+                  "Electrode": "ElectrodeDef.Case",
+                  "ElectrodeStateResult": "ElectrodeStateDef.Positive"
+                }
+              ],
+              "AmplitudeInMilliAmps": 7.7,
+              "PulseWidthInMicroSecond": 45
+            }
+          }
+        },
+        "GroupSettings": {
+          "SoftStartStop": {
+            "Enabled": true,
+            "DurationInSeconds": 6
+          },
+          "Cycling": {
+            "Enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

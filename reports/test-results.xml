@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" name="testProcessData" skipped="0" tests="1" time="1.0587">
+    <testcase classname="testProcessData" name="testMultipleFiles" time="1.0587"/>
+  </testsuite>
+</testsuites>

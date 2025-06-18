@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default ContentType="text/css" Extension="css"/>
+  <Default ContentType="application/vnd.mathworks.mlreportgen.dom.htmx.document.main+xml" Extension="html"/>
+  <Default ContentType="image/png" Extension="png"/>
+  <Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>
+  <Default ContentType="image/svg+xml" Extension="svg"/>
+</Types>
