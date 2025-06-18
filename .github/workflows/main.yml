@@ -38,11 +38,11 @@ jobs:
           tasks: test
           
       # Check for MATLAB code issues in the project.
-      #- name: Check for MATLAB code issues
-      #  uses: matlab-actions/run-command@v1
-      #  if: always()
-      #  with:
-      #    command: addpath("buildUtilities"),codecheckToolbox()     
+      - name: Check for MATLAB code issues
+        uses: matlab-actions/run-command@v2
+        if: always()
+        with:
+          command: addpath("buildUtilities"),codecheckToolbox()     
 
       # Commit the JSON for the badge for the issues
       - name: commit code issues badge JSON
@@ -57,13 +57,13 @@ jobs:
           git push || true
           
       # Runs all tests in the project.
-      #- name: Run tests
-      #  uses: matlab-actions/run-command@v1
-      #  if: always()
-      #  with:
-      #    command: addpath("buildUtilities"),testToolbox()     
+      - name: Run tests
+        uses: matlab-actions/run-command@v2
+        if: always()
+        with:
+          command: addpath("buildUtilities"),testToolbox()     
 
-      - name: Upload code coverage report to Codecov (https://app.codecov.io/gh/mathworks/climatedatastore)
+      - name: Upload code coverage report to Codecov (https://app.codecov.io/gh/neuromodulation/perceive)
         uses: codecov/codecov-action@v3
         if: always()
         with:
