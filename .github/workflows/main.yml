@@ -3,7 +3,7 @@
 name: Perceive
 
 # Controls when the workflow will run
-on:
+on: [push]
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     paths-ignore:
@@ -19,7 +19,7 @@ on:
 jobs:
   # This workflow contains a single job called "test"
   test:
-    name: Perceive
+    name: test buildfile
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
