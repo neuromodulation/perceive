@@ -1,3 +1,8 @@
+[![GitHub top language](https://img.shields.io/github/languages/top/neuromodulation/perceive)](https://matlab.mathworks.com/)  [![Perceive CI/CD](https://github.com/neuromodulation/perceive/actions/workflows/main.yml/badge.svg)](https://github.com/neuromodulation/perceive/actions/workflows/main.yml) [![GitHub issues by-label](https://img.shields.io/github/issues-raw/neuromodulation/perceive/bug)](https://github.com/neuromodulation/perceive/issues?q=is%3Aissue+is%3Aopen+label%3Abug) ![GitHub Repo stars](https://img.shields.io/github/stars/neuromodulation/perceive?style=social)
+
+[![Codecov](https://img.shields.io/codecov/c/github/neuromodulation/perceive)](https://app.codecov.io/gh/neuromodulation/perceive) ![MATLAB Code Issues](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fneuromodulation%2Fperceive%2Fmain%2Freports%2Fbadge%2Fcode_issues.json) ![MATLAB Versions Tested](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fneuromodulation%2Fperceive%2Fmain%2Freports%2Fbadge%2Ftested_with.json) 
+
+
 # Perceive (MATLAB)
 
 TUTORIAL:
