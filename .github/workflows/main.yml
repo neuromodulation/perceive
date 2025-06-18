@@ -1,0 +1,87 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Climate Data CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.MD'
+      - '.github/workflows/**'
+      - 'reports/**'
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "test"
+  test:
+    name: Test Climate Data Store
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repo
+        uses: actions/checkout@v3
+      
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
+
+      - name: Run code checks and tests using buildtool
+        uses: matlab-actions/run-build@v1
+        with:
+          tasks: test
+          
+      # Check for MATLAB code issues in the project.
+      #- name: Check for MATLAB code issues
+      #  uses: matlab-actions/run-command@v1
+      #  if: always()
+      #  with:
+      #    command: addpath("buildUtilities"),codecheckToolbox()     
+
+      # Commit the JSON for the badge for the issues
+      - name: commit code issues badge JSON
+        if: always()
+        continue-on-error: true
+        run: |
+          git config user.name "${{ github.workflow }} by ${{ github.actor }}"
+          git config user.email "<>"
+          git commit reports/badge/code_issues.json -m "Update code issues badge"
+          git fetch
+          # git push returns error code 1 if there's nothing to push (which there often isn't in this case)
+          git push || true
+          
+      # Runs all tests in the project.
+      #- name: Run tests
+      #  uses: matlab-actions/run-command@v1
+      #  if: always()
+      #  with:
+      #    command: addpath("buildUtilities"),testToolbox()     
+
+      - name: Upload code coverage report to Codecov (https://app.codecov.io/gh/mathworks/climatedatastore)
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: reports/codecoverage.xml
+          
+      # Publish test results
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: "reports/test-results.xml"
+          
+     # Save the contents of the reports directory as an artifact
+      - name: Save Reports Directory
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: reports
+          path: reports
