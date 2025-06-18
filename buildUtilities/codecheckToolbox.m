@@ -48,7 +48,7 @@ function codecheckToolbox(rootDir)
             % R2022b and later, just display issues
             disp(issues)
         end
-        error("climatedatastore:codeissues","Climate Data Toolbox requires all code check issues be resolved.")
+        error("perceive:codeissues","Perceive Toolbox requires all code check issues be resolved.")
     end
 end
 
