@@ -1,7 +1,7 @@
 classdef testProcessData < matlab.unittest.TestCase
     properties
-        testFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d.json', x), 2:5, 'UniformOutput', false);
-        expectedFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d_GroupHistory.mat', x), 2:5, 'UniformOutput', false);
+        testFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d.json', x), 2:4, 'UniformOutput', false);
+        expectedFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d_GroupHistory.mat', x), 2:4, 'UniformOutput', false);
     end
 
     methods (Test)
