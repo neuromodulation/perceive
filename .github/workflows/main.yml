@@ -71,6 +71,7 @@ jobs:
         with:
           files: reports/codecoverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: neuromodulation/perceive
           
       # Publish test results
       #- name: Publish Test Results
