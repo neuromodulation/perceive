@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <testsuites>
-  <testsuite errors="0" failures="0" name="testProcessData" skipped="0" tests="1" time="1.1162">
-    <testcase classname="testProcessData" name="testMultipleFiles" time="1.1162"/>
+  <testsuite errors="0" failures="0" name="smokeTest" skipped="0" tests="14" time="5.216">
+    <testcase classname="smokeTest" name="unknownErrorTest" time="1.7048"/>
+    <testcase classname="smokeTest" name="externalCancelTest" time="0.55674"/>
+    <testcase classname="smokeTest" name="climateDataStoreDownloadAsyncTest" time="0.36081"/>
+    <testcase classname="smokeTest" name="climateDataStoreDownloadAsyncTestNoUnzip" time="0.045014"/>
+    <testcase classname="smokeTest" name="seaIceTest" time="0.089495"/>
+    <testcase classname="smokeTest" name="cancelTest" time="0.010939"/>
+    <testcase classname="smokeTest" name="timeoutTest" time="0.1315"/>
+    <testcase classname="smokeTest" name="gribAsyncTest" time="2.1107"/>
+    <testcase classname="smokeTest" name="csvTest" time="0.087951"/>
+    <testcase classname="smokeTest" name="badDatasetNameAsyncTest" time="0.040601"/>
+    <testcase classname="smokeTest" name="badDatasetNameTest" time="0.019176"/>
+    <testcase classname="smokeTest" name="unknownPythonErrorTest" time="0.016543"/>
+    <testcase classname="smokeTest" name="badParameterTest" time="0.03433"/>
+    <testcase classname="smokeTest" name="noTandCTest" time="0.0073349"/>
   </testsuite>
 </testsuites>
