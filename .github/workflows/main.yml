@@ -8,7 +8,7 @@ on:
   push:
     paths-ignore:
       - 'README.MD'
-      - '.github/workflows/**'
+      #- '.github/workflows/**'
       - 'reports/**'
   pull_request:
 
@@ -78,7 +78,7 @@ jobs:
           
      # Save the contents of the reports directory as an artifact
       - name: Save Reports Directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: reports
