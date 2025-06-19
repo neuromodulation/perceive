@@ -34,6 +34,7 @@ classdef testProcessData < matlab.unittest.TestCase
                 folder2 = fix2.Folder;
 
                 % Run your functions
+                addpath(pwd);
                 % Go to folder1
                 cd(folder1);
                 disp("Now in folder1: " + pwd);
