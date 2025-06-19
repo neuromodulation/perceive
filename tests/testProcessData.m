@@ -10,18 +10,18 @@ classdef testProcessData < matlab.unittest.TestCase
     %         testCase.applyFixture(matlab.unittest.fixtures.PathFixture('path/to/toolbox'));
     %     end
     % end
-        function testMultipleFiles(tc)
+        function testMultipleFiles(testCase)
             %parentDir = fileparts(fileparts(mfilename('fullpath'))); % Move one level up
             %addpath(genpath(parentDir)); % Add parent folder and all its subfolders
-            for i = 1:numel(tc.testFiles)
+            for i = 1:numel(testCase.testFiles)
                 % Load input file
-                actualData = perceive_GroupHistory(tc.testFiles{i});
+                actualData = perceive_GroupHistory(testCase.testFiles{i});
 
                 % Load expected output
-                expectedData = load(tc.expectedFiles{i});
+                expectedData = load(testCase.expectedFiles{i});
 
                 % Compare actual vs expected data
-                tc.verifyEqual(actualData, expectedData, ...
+                testCase.verifyEqual(actualData, expectedData, ...
                     sprintf('Mismatch in test file %d', i));
 
                 % Create two temporary folders
