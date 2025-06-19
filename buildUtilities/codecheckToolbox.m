@@ -13,7 +13,7 @@ function codecheckToolbox(rootDir)
     filesToCheck = [filesToCheck;fullfile(string({testFileInfo.folder}'),string({testFileInfo.name}'))];
     
     if isempty(filesToCheck)
-        error("climatedatastore:codeissues","No files to check.")
+        error("perceive:codeissues","No files to check.")
     end
 
     if verLessThan('matlab','9.13') %#ok<VERLESSMATLAB>

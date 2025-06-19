@@ -1,58 +1,70 @@
 function plan = buildfile()
-    
-    plan = buildplan(localfunctions);
 
-    % Define a setup task to add paths
-    plan("setuppaths").Dependencies =  "check";
+plan = buildplan(localfunctions);
 
-    plan.DefaultTasks = "test";
-    
-    plan("package").Dependencies = "publishDoc";
+% Define a setup task to add paths
+plan("setuppaths").Dependencies =  "check";
 
-    plan("publishDoc").Dependencies = "test";
-    
-    plan("test").Dependencies = "check";
-    
+plan.DefaultTasks = "test";
+
+plan("package").Dependencies = "publishDoc";
+
+plan("publishDoc").Dependencies = "test";
+
+plan("test").Dependencies = "check";
+
+plan("checkToolboxes") = task(@checkToolboxesTask);
+plan("test").Dependencies = "checkToolboxes";
+
+
+
 end
 
 function setuppathsTask(context)
-    toolboxPath = fileparts(mfilename('fullpath')); % Get toolbox folder
-    addpath(genpath(toolboxPath)); % Add all subfolders
-    disp("Perceive Toolbox paths added.");
+toolboxPath = fileparts(mfilename('fullpath')); % Get toolbox folder
+addpath(genpath(toolboxPath)); % Add all subfolders
+disp("Perceive Toolbox paths added.");
 end
 
 function checkTask(context)
-    % Temporarily add buildUtilities to the path (remove it at the end of the function)
-    oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
-    raii = onCleanup(@()(path(oldPath)));
-    
-    codecheckToolbox(context.Plan.RootFolder);
+% Temporarily add buildUtilities to the path (remove it at the end of the function)
+oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
+raii = onCleanup(@()(path(oldPath)));
+
+codecheckToolbox(context.Plan.RootFolder);
 end
 
 function testTask(context)
-    % Temporarily add buildUtilities to the path (remove it at the end of the function)
-    oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
-    raii = onCleanup(@()(path(oldPath)));
-    
-    testToolbox() %disable here
+% Temporarily add buildUtilities to the path (remove it at the end of the function)
+oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
+raii = onCleanup(@()(path(oldPath)));
+
+testToolbox() %disable here
 end
 
 function publishDocTask(context)
-    % Generate HTML files
+% Generate HTML files
 
-    % Temporarily add buildUtilities to the path (remove it at the end of the function)
-    oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
-    raii = onCleanup(@()(path(oldPath)));
+% Temporarily add buildUtilities to the path (remove it at the end of the function)
+oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
+raii = onCleanup(@()(path(oldPath)));
 
-    gendocToolbox(context.Plan.RootFolder)
+gendocToolbox(context.Plan.RootFolder)
 end
 
 function packageTask(context)
-    % Package the toolbox in an MLTBX, just incrementing build.  Note that GitHub action calls packageToolbox directly.
+% Package the toolbox in an MLTBX, just incrementing build.  Note that GitHub action calls packageToolbox directly.
 
-    % Temporarily add buildUtilities to the path (remove it at the end of the function)
-    oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
-    raii = onCleanup(@()(path(oldPath)));
+% Temporarily add buildUtilities to the path (remove it at the end of the function)
+oldPath = addpath(fullfile(context.Plan.RootFolder,"buildUtilities"));
+raii = onCleanup(@()(path(oldPath)));
 
-    packageToolbox("build")
-end 
+packageToolbox("build")
+end
+
+function checkToolboxesTask(~)
+required = "Statistics and Machine Learning Toolbox";
+installed = string({ver.Name});
+assert(ismember(required, installed), ...
+    "Required toolbox missing: %s", required);
+end
