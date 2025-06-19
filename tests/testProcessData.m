@@ -34,8 +34,14 @@ classdef testProcessData < matlab.unittest.TestCase
                 folder2 = fix2.Folder;
 
                 % Run your functions
-                perceive(folder1);  % Your first function
-                perceiveModular(folder2);  % Your second function
+                % Go to folder1
+                cd(folder1);
+                disp("Now in folder1: " + pwd);
+                perceive(testCase.testFiles{i});  % Perceive
+
+                cd(folder2);
+                disp("Now in folder2: " + pwd);
+                perceiveModular(testCase.testFiles{i});  % Perceive post-hackathon
 
                 % Compare folder contents
                 files1 = dir(fullfile(folder1, '**', '*'));
