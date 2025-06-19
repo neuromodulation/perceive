@@ -105,6 +105,7 @@ jobs:
         run: |
           git config user.name "${{ github.workflow }} by ${{ github.actor }}"
           git config user.email "<>"
+          git checkout hackathonretune
           git add reports/codecoverage.xml reports/images/image1.png reports/stylesheets/root.css reports/test-results.xml reports/testreport.html
           git commit -m "Update full report set"
           git commit reports/badge/tested_with.json -m "Final checkins for release ${{  github.ref_name }}"
@@ -119,6 +120,7 @@ jobs:
         run: |
           git config user.name "${{ github.workflow }} by ${{ github.actor }}"
           git config user.email "<>"
+          git checkout hackathonretune
           git tag -d "${{  github.ref_name }}" 
           git push --delete origin ${{  github.ref_name }}
           git tag -m "Release ${{  github.ref_name }}" ${{  github.ref_name }}
