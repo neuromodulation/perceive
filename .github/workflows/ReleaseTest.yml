@@ -105,6 +105,8 @@ jobs:
         run: |
           git config user.name "${{ github.workflow }} by ${{ github.actor }}"
           git config user.email "<>"
+          git add reports/codecoverage.xml reports/images/image1.png reports/stylesheets/root.css reports/test-results.xml reports/testreport.html
+          git commit -m "Update full report set"
           git commit reports/badge/tested_with.json -m "Final checkins for release ${{  github.ref_name }}"
           git commit ToolboxPackaging.prj -m "Final checkins for release ${{  github.ref_name }}"
           git fetch
