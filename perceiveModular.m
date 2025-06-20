@@ -241,7 +241,7 @@ for idxFile = 1:length(files)
                     perceive_extract_brainsensesurvey(data, hdr);
 
                 case 'BrainSenseSurveys'
-                    assert(Data)
+                    assert(config.DataVersion == 1.2)
                     %continue
 
                 case 'BrainSenseSurveysTimeDomain'
