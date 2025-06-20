@@ -180,7 +180,7 @@ for a = 1:length(files)
 
     % determine session
     if isempty(sesMedOffOn01)
-        ses = ['ses-' char(datetime(hdr.SessionEndDate,'format','yyyyMMddhhmmss'))];
+        ses = ['ses-' char(datetime(hdr.SessionDate,'format','yyyyMMddhhmmss'))];
         hdr.session = ses;
     else
         %% preset session
