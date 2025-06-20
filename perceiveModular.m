@@ -37,7 +37,35 @@ function perceiveModular(files, sub, sesMedOffOn01, extended, gui, localsettings
     % '' means not extended, 'yes' means extended (default no)
 
     % '' means no gui, 'yes' means gui (default yes)
-
+%% INPUT
+arguments
+    files {mustBeA(files,["char","cell"])} = '';
+    % files:
+    % All input is optional, you can specify files as cell or character array
+    % (e.g. files = 'Report_Json_Session_Report_20200115T123657.json')
+    % if files isn't specified or remains empty, it will automatically include
+    % all files in the current working directory
+    % if no files in the current working directory are found, a you can choose
+    % files via the MATLAB uigetdir window.
+    sub {mustBeA(sub,["char","cell","numeric"])} = '';
+    % sub:
+    % you can specify a subject ID for each file in case you want to follow an
+    % IRB approved naming scheme for file export
+    % (e.g. run perceive('Report_Json_Session_Report_20200115T123657.json','Charite_sub-001')
+    % if unspecified or left empy, the subjectID will be created from:
+    % ImplantDate, first letter of disease type and target (e.g. sub-2020110DGpi)
+    sesMedOffOn01 {mustBeMember(sesMedOffOn01,["","MedOff","MedOn","MedDaily","MedOff01","MedOn01","MedOff02","MedOn02","MedOff03","MedOn03","MedOffOn01","MedOffOn02","MedOffOn03","MedOnPostOpIPG","MedOffPostOpIPG","Unknown"])} = '';
+    %task = 'TASK'; %All types of tasks: Rest, RestTap, FingerTapL, FingerTapR, UPDRS, MovArtArms,MovArtStand,MovArtHead,MovArtWalk
+    %acq = ''; %StimOff, StimOnL, StimOnR, StimOnB, Burst
+    %mod = ''; %BrainSense, IS, LMTD, Chronic + Bip Ring RingL RingR SegmIntraL SegmInterL SegmIntraR SegmInterR
+    %run = ''; %numeric
+    extended {mustBeMember(extended,["","yes"])} = '';
+    % '' means not extended, 'yes' means extended (default no)
+    gui {mustBeMember(gui,["","yes"])} = '';
+    % '' means no gui, 'yes' means gui (default yes)
+    %datafields {mustBeMember(datafields,["","BrainSenseLfp","BrainSenseSurvey","BrainSenseTimeDomain","CalibrationTests","DiagnosticData","EventSummary","Impedance","IndefiniteStreaming","LfpMontageTimeDomain","MostRecentInSessionSignalCheck","PatientEvents"])} ='';
+    localsettings ='';
+end
 %% OUTPUT
 % The script generates BIDS inspired subject and session folders with the
 % ieeg format specifier. All time series data are being exported as
