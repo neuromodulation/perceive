@@ -78,7 +78,7 @@ end
 % session handling
 % ----------------------------
 if isempty(config.session)
-    hdr.session = ['ses-' datestr(hdr.SessionEndDate, 'yyyymmddHHMM') num2str(hdr.BatteryPercentage)];
+    hdr.session = ['ses-' datestr(hdr.SessionDate, 'yyyymmddHHMMss')];
 else
     % compute follow-up time if needed
     if isfield(config.localsettings, 'followup')
