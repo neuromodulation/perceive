@@ -33,7 +33,8 @@ jobs:
       
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
-
+        with:
+            products: Statistics_and_Machine_Learning_Toolbox
       - name: Run code checks and tests using buildtool
         uses: matlab-actions/run-build@v2
         with:
