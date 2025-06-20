@@ -1,6 +1,8 @@
-function plan = buildfile()
+function plan = buildfile
 
 plan = buildplan(localfunctions);
+
+plan("checkToolboxes").Dependencies = "check";
 
 % Define a setup task to add paths
 plan("setuppaths").Dependencies =  "check";
@@ -13,7 +15,6 @@ plan("publishDoc").Dependencies = "test";
 
 plan("test").Dependencies = "check";
 
-plan("checkToolboxes") = task(@checkToolboxesTask);
 plan("test").Dependencies = "checkToolboxes";
 
 
@@ -64,7 +65,7 @@ end
 
 function checkToolboxesTask(~)
 required = "Statistics and Machine Learning Toolbox";
-installed = string({ver.Name});
+installed = string({ver().Name});
 assert(ismember(required, installed), ...
     "Required toolbox missing: %s", required);
 end
