@@ -5,15 +5,16 @@ classdef testProcessData < matlab.unittest.TestCase
     end
 
     methods (Test)
-    %         methods (TestMethodSetup)
-    %     function setupPath(testCase)
-    %         testCase.applyFixture(matlab.unittest.fixtures.PathFixture('path/to/toolbox'));
-    %     end
-    % end
-        function testMultipleFiles(testCase)
+
+        %     function setupPath(testCase)
+        %         testCase.applyFixture(matlab.unittest.fixtures.PathFixture('path/to/toolbox'));
+        %     end
+
+        function testExpectedAgainstCurrent(testCase)
             %parentDir = fileparts(fileparts(mfilename('fullpath'))); % Move one level up
             %addpath(genpath(parentDir)); % Add parent folder and all its subfolders
             for i = 1:numel(testCase.testFiles)
+
                 % Load input file
                 actualData = perceive_GroupHistory(testCase.testFiles{i});
 
@@ -23,7 +24,11 @@ classdef testProcessData < matlab.unittest.TestCase
                 % Compare actual vs expected data
                 testCase.verifyEqual(actualData, expectedData, ...
                     sprintf('Mismatch in test file %d', i));
-
+            end
+        end
+        function testPerceiveModularPerceive(testCase)
+            for i = 1:numel(testCase.testFiles)
+                testFile = testCase.testFiles{i};
                 % Create two temporary folders
                 fix1 = matlab.unittest.fixtures.TemporaryFolderFixture;
                 fix2 = matlab.unittest.fixtures.TemporaryFolderFixture;
@@ -38,11 +43,11 @@ classdef testProcessData < matlab.unittest.TestCase
                 % Go to folder1
                 cd(folder1);
                 disp("Now in folder1: " + pwd);
-                perceive(testCase.testFiles{i});  % Perceive
+                perceive(testFile);  % Perceive
 
                 cd(folder2);
                 disp("Now in folder2: " + pwd);
-                perceiveModular(testCase.testFiles{i});  % Perceive post-hackathon
+                perceiveModular(testFile);  % Perceive post-hackathon
 
                 % Compare folder contents
                 files1 = dir(fullfile(folder1, '**', '*'));
@@ -65,7 +70,11 @@ classdef testProcessData < matlab.unittest.TestCase
                         sprintf('File content mismatch: %s', names1{k}));
                 end
 
+
+
             end
         end
     end
 end
+
+
