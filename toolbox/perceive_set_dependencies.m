@@ -1,12 +1,21 @@
 function perceive_set_dependencies()
-    % Get the directory of the current script
-    scriptDir = fileparts(mfilename('fullpath'));
+    % Anchor subfolders on the directory that contains perceive.m
+    toolboxDir = fileparts(which('perceive'));
+    if isempty(toolboxDir)
+        error(['perceive.m must be on the MATLAB path so helper_functions and standalone_scripts ', ...
+               'can be added relative to the toolbox.']);
+    end
 
-    % Define the path to the helper_functions subfolder
-    helperFunctionsPath = fullfile(scriptDir, 'helper_functions');
+    helperFunctionsPath = fullfile(toolboxDir, 'helper_functions');
+    standaloneScriptsPath = fullfile(toolboxDir, 'standalone_scripts');
 
-    % Add the helper_functions subfolder to the MATLAB path
+    if ~exist(helperFunctionsPath, 'dir')
+        error('Expected helper folder at %s (next to perceive.m).', helperFunctionsPath);
+    end
     addpath(helperFunctionsPath);
+    if exist(standaloneScriptsPath, 'dir')
+        addpath(standaloneScriptsPath);
+    end
 
     % List of functions to check
     functionsToCheck = {'set_firstsample', 'check_fullname', 'check_stim', 'onAppClose'};

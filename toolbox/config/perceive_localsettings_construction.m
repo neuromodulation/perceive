@@ -58,10 +58,12 @@ datafields.Default = { ...
     'LfpMontageTimeDomain','IndefiniteStreaming','BrainSenseSurvey','CalibrationTests','PatientEvents', ...
     'DiagnosticData','BrainSenseSurveysTimeDomain','BrainSenseSurveys'};
 
-%% Find the root of the perceive toolbox
-toolboxRoot = fileparts(which('perceive_localsettings_construction'));
-toolboxRoot = fileparts(toolboxRoot);   % now points to perceive\toolbox
-configPath = fullfile(toolboxRoot,'config');
+%% Toolbox root = directory containing perceive.m
+toolboxDir = fileparts(which('perceive'));
+if isempty(toolboxDir)
+    error('Function perceive must be on the MATLAB path to locate toolbox/config.');
+end
+configPath = fullfile(toolboxDir, 'config');
 
 %% Write JSON files
 institutions = {'Default','Charite','Wuerzburg','Duesseldorf'};

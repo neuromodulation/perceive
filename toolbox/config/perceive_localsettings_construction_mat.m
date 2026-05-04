@@ -1,4 +1,4 @@
-function perceive_localsettings_construction()
+function perceive_localsettings_construction_mat()
 
 % Define taskItems per institution
 taskItems = containers.Map;
@@ -117,14 +117,12 @@ datafields('Default') = { ...
     'DiagnosticData','BrainSenseSurveysTimeDomain','BrainSenseSurveys'};
 
 
-% Find the root of the perceive toolbox
-toolboxRoot = fileparts(which('perceive_localsettings_construction'));
-
-% Go one level up (this function lives in perceive\toolbox)
-toolboxRoot = fileparts(toolboxRoot);   % now points to perceive\toolbox
-
-% Build path to config folder with localsettings.mat
-configPath = fullfile(toolboxRoot,'config','localsettings.mat');
+% Toolbox root = directory containing perceive.m; write localsettings.mat under config/
+toolboxDir = fileparts(which('perceive'));
+if isempty(toolboxDir)
+    error('Function perceive must be on the MATLAB path to locate toolbox/config/localsettings.mat.');
+end
+configPath = fullfile(toolboxDir, 'config', 'localsettings.mat');
 
 % Save all maps into one file
 save(configPath, ...

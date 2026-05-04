@@ -130,11 +130,10 @@ function [candidateFiles, available, locations] = findPerceiveLocalsettingsFiles
     available      = {};
     locations      = {};
 
-    % 1) Toolbox config folder
-    toolboxRoot = fileparts(which('perceive'));
-    if ~isempty(toolboxRoot)
-        toolboxRoot = fileparts(toolboxRoot); % go up to perceive\toolbox
-        configPath  = fullfile(toolboxRoot,'toolbox','config');
+    % 1) Toolbox config folder (same directory as perceive.m)
+    toolboxDir = fileparts(which('perceive'));
+    if ~isempty(toolboxDir)
+        configPath = fullfile(toolboxDir, 'config');
         if exist(configPath,'dir')
             files = dir(fullfile(configPath,'perceive_localsettings_*.json'));
             for i = 1:numel(files)

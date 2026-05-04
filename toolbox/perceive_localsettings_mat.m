@@ -5,10 +5,12 @@ function localsettings = perceive_localsettings_from_mat(localsettings_name)
         localsettings_name = 'default';
     end
 
-    % Load maps from localsettings.mat
-    toolboxRoot = fileparts(which('perceive'));
-    toolboxRoot = fileparts(toolboxRoot); % go up to perceive\toolbox
-    configPath  = fullfile(toolboxRoot,'toolbox','config','localsettings.mat');
+    % Load maps from localsettings.mat (config next to perceive.m)
+    toolboxDir = fileparts(which('perceive'));
+    if isempty(toolboxDir)
+        error('Function perceive must be on the MATLAB path to locate toolbox/config/localsettings.mat.');
+    end
+    configPath = fullfile(toolboxDir, 'config', 'localsettings.mat');
     data        = load(configPath);
 
     % Normalize names
