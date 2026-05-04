@@ -1,11 +1,7 @@
 function startup()
-    toolboxPath = fileparts(mfilename('fullpath')); % Get toolbox folder
+    toolboxPath = fileparts(mfilename('perceive')); % Get toolbox folder
     addpath(genpath(toolboxPath)); % Add all subfolders
-    
-    % Do not attempt to persist MATLAB path changes in CI/headless runs.
-    if isempty(getenv("GITHUB_ACTIONS")) && usejava("desktop")
-        savepath; % Save changes persistently for interactive local sessions
-    end
+    savepath; % Save changes persistently
 
     % Set preferences for first-time setup
     if ~ispref('perceive', 'initialized')

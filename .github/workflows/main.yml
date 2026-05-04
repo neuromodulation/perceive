@@ -42,10 +42,10 @@ jobs:
         uses: matlab-actions/setup-matlab@v2
         with:
             products: Statistics_and_Machine_Learning_Toolbox
-      - name: Run tests
-        uses: matlab-actions/run-command@v2
+      - name: Run code checks and tests using buildtool
+        uses: matlab-actions/run-build@v2
         with:
-          command: addpath("buildUtilities"),testToolbox()
+          tasks: test
           
       # Check for MATLAB code issues in the project.
       #- name: Check for MATLAB code issues
