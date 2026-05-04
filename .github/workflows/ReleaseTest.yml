@@ -22,12 +22,11 @@ jobs:
   # Added support for R2025b
   test:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        MATLABVersion: [R2024b, R2025a]
+        MATLABVersion: [R2021a, R2021b, R2022a, R2022b, R2023a, R2023b, R2024a, R2024b, R2025a]
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    timeout-minutes: 25
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -42,7 +41,7 @@ jobs:
       - name: Run tests
         uses: matlab-actions/run-command@v2
         with:
-          command: addpath("buildUtilities"),testToolbox('ReportSubdirectory',"${{ matrix.MATLABVersion }}",'Fast',true)
+          command: addpath("buildUtilities"),testToolbox('ReportSubdirectory',"${{ matrix.MATLABVersion }}")     
 
       # Upload code coverage information to Codecov
       - name: Upload code coverage report to Codecov (https://app.codecov.io/gh/neuromodulation/perceive)
@@ -67,7 +66,6 @@ jobs:
     needs: test
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     
     steps:
       - uses: actions/checkout@v4

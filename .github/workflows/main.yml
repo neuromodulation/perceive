@@ -31,7 +31,6 @@ jobs:
     name: test buildfile
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    timeout-minutes: 20
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -46,7 +45,7 @@ jobs:
       - name: Run tests
         uses: matlab-actions/run-command@v2
         with:
-          command: addpath("buildUtilities"),testToolbox('Fast',true)
+          command: addpath("buildUtilities"),testToolbox()
           
       # Check for MATLAB code issues in the project.
       #- name: Check for MATLAB code issues
