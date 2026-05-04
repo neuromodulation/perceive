@@ -1,4 +1,6 @@
 function perceive(files, sub, sesMedOffOn01, extended, gui, localsettings_name)
+%#function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_init_logging_if_deployed perceive_mcc_dependency_touch perceive_exe_directory_for_logging perceive_localsettings_apply_builtin_default
+% MCC: pragma + perceive_mcc_dependency_touch() force packaging; string-based checks are not traced.
 % Toolbox by Wolf-Julian Neumann
 % Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser, Jennifer Behnke, Mansoureh Fahimi, Jonathan Kaplan, Jojo Vanhoecke (contact to Jojo Vanhoecke)
 % This is an open research tool that is not intended for clinical purposes.
@@ -48,6 +50,8 @@ arguments
     % possible datafields from Medtronic Percept are  ["","BrainSenseLfp","BrainSenseSurvey","BrainSenseTimeDomain","CalibrationTests","DiagnosticData","EventSummary","Impedance","IndefiniteStreaming","LfpMontageTimeDomain","MostRecentInSessionSignalCheck","PatientEvents"])} ='';
 
 end
+perceive_init_logging_if_deployed();
+perceive_mcc_dependency_touch();
 % % %% INPUT use examples:
 % perceiveModular() % run all files in current directory or if none open explorer to select file
 % perceiveModular('Report_Json_Session_Report_20200115T123657.json') % run this file
@@ -814,5 +818,4 @@ for idxFile = 1:length(files)
 end
 disp('all done!')
 end
-
 
