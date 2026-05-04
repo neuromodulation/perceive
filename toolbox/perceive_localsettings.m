@@ -31,7 +31,8 @@ function config = perceive_localsettings(localsettings_name, config)
     [candidateFiles, available, ~] = findPerceiveLocalsettingsFiles();
 
     if isempty(candidateFiles)
-        error('No perceive_localsettings_*.json files found on MATLAB path or config folder.');
+        config = perceive_localsettings_apply_builtin_default(config, institution);
+        return;
     end
 
     % --- Validate availability ---
@@ -130,11 +131,28 @@ function [candidateFiles, available, locations] = findPerceiveLocalsettingsFiles
     available      = {};
     locations      = {};
 
-    % 1) Toolbox config folder
-    toolboxRoot = fileparts(which('perceive'));
-    if ~isempty(toolboxRoot)
-        toolboxRoot = fileparts(toolboxRoot); % go up to perceive\toolbox
-        configPath  = fullfile(toolboxRoot,'toolbox','config');
+    % 0) Compiled app: JSON shipped under ctfroot/config (mcc -a config)
+    if isdeployed
+        try
+            configPath = fullfile(ctfroot, 'config');
+            if exist(configPath, 'dir')
+                files = dir(fullfile(configPath, 'perceive_localsettings_*.json'));
+                for i = 1:numel(files)
+                    fullp = fullfile(configPath, files(i).name);
+                    candidateFiles{end+1} = fullp;
+                    [instName, locPath] = parseInstitutionFromFilename(fullp);
+                    available{end+1} = instName;
+                    locations{end+1} = locPath;
+                end
+            end
+        catch %#ok<CTCH>
+        end
+    end
+
+    % 1) Toolbox config folder (same directory as perceive.m)
+    toolboxDir = fileparts(which('perceive'));
+    if ~isempty(toolboxDir)
+        configPath = fullfile(toolboxDir, 'config');
         if exist(configPath,'dir')
             files = dir(fullfile(configPath,'perceive_localsettings_*.json'));
             for i = 1:numel(files)

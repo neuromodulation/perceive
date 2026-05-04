@@ -3,6 +3,13 @@ name: Manually run tests against MATLAB Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-release-test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:

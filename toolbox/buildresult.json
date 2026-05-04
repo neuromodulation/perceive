@@ -1,0 +1,10 @@
+{
+	"RuntimeDependencies": [
+		{"ID":35000, "DisplayName":"MATLAB Extended Runtime Addon", "Optional":"no"},
+		{"ID":35002, "DisplayName":"MATLAB Graphics Runtime Addon", "Optional":"no"},
+		{"ID":35003, "DisplayName":"MATLAB Standard Runtime Addon", "Optional":"no"},
+		{"ID":35010, "DisplayName":"MATLAB Base Runtime", "Optional":"no"},
+		{"ID":35108, "DisplayName":"Signal Processing Toolbox Runtime Addon", "Optional":"no"},
+		{"ID":35119, "DisplayName":"Statistics and Machine Learning Toolbox Runtime Addon", "Optional":"no"}
+	]
+}
