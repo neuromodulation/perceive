@@ -4,13 +4,17 @@ name: buildfile perceive
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events
+  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
+    branches:
+      - main
     paths-ignore:
       #- 'README.MD'
       #- '.github/workflows/**'
       - 'reports/**'
   pull_request:
+    branches:
+      - main
 
 
 
