@@ -1,0 +1,33 @@
+
+
+======== Session start 2026-05-04 20:04:43.851 ========
+Error using perceive_set_dependencies>perceive_set_dependencies_deployed (line 26)
+Deployed executable cannot resolve 'check_stim' on the MATLAB path.
+Rebuild with perceive.m %#function listing this name, and use mcc -a for folders that hold JSON or other non-M files (e.g. -a config).
+CTF root: C:\Users\Jojo\AppData\Local\MathWorks\MatlabRuntimeCache\R2025b\percei7
+
+Error in perceive_set_dependencies (line 5)
+
+Error in perceive (line 115)
+
+
+
+======== Session start 2026-05-04 20:19:45.842 ========
+Warning: Session not specified — session name will be derived from date + battery.
+> In perceive_parse_args (line 66)
+In perceive (line 122)
+Error using perceive_localsettings (line 34)
+No perceive_localsettings_*.json files found on MATLAB path or config folder.
+
+Error in perceive (line 137)
+
+
+
+======== Session start 2026-05-04 20:26:37.806 ========
+Warning: Session not specified — session name will be derived from date + battery.
+> In perceive_parse_args (line 66)
+In perceive (line 122)
+RUNNING buildresult.json
+Warning: Skipping file buildresult.json because it is not compatible with Percept Medtronic JSON format
+> In perceive (line 153)
+all done!
