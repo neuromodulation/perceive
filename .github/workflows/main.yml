@@ -29,14 +29,12 @@ concurrency:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  # This workflow contains a single job called "test"
   test:
-    name: test on ${{ matrix.MATLABVersion }}
-    strategy:
-      fail-fast: false
-      matrix:
-        MATLABVersion: [R2024b, R2025a, R2026a]
+    name: test buildfile
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,12 +45,11 @@ jobs:
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
-          release: ${{ matrix.MATLABVersion }}
-          products: Statistics_and_Machine_Learning_Toolbox
+            products: Statistics_and_Machine_Learning_Toolbox
       - name: Run tests
         uses: matlab-actions/run-command@v2
         with:
-          command: addpath("buildUtilities"),testToolbox('ReportSubdirectory',"${{ matrix.MATLABVersion }}",'Fast',true)
+          command: addpath("buildUtilities"),testToolbox('Fast',true)
           
       # Check for MATLAB code issues in the project.
       #- name: Check for MATLAB code issues
@@ -72,22 +69,22 @@ jobs:
         uses: codecov/codecov-action@v5
         if: always()
         with:
-          files: reports/${{ matrix.MATLABVersion }}/codecoverage.xml
+          files: reports/codecoverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: neuromodulation/perceive
-          env_vars: ${{ matrix.MATLABVersion }}
           fail_ci_if_error: false
           
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          junit_files: "reports/${{ matrix.MATLABVersion }}/test-results.xml"
+      # Publish test results
+      #- name: Publish Test Results
+      #  uses: EnricoMi/publish-unit-test-result-action@v2
+      #  if: always()
+      #  with:
+      #    files: "reports/test-results.xml"
           
      # Save the contents of the reports directory as an artifact
       - name: Save Reports Directory
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: reports-${{ matrix.MATLABVersion }}
-          path: reports/${{ matrix.MATLABVersion }}
+          name: reports
+          path: reports

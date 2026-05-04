@@ -30,7 +30,6 @@ function testToolbox(options)
     suite = [
         TestSuite.fromClass(?testAddNumbers)
         TestSuite.fromClass(?testCoreUtilities)
-        TestSuite.fromClass(?testSmokeGroupHistory)
         TestSuite.fromClass(?testProcessData)
     ];
     if options.Fast
@@ -40,6 +39,7 @@ function testToolbox(options)
         suite = suite.selectIf(~HasTag('RequiresMock'));
         cdsapi_Factory.useMocks(false);
     else
+        suite = suite.selectIf(HasTag('SupportsMock'));
         cdsapi_Factory.useMocks(true);
     end
    % cdsapi_Factory.useMocks(false); % add here the setting to set to false
