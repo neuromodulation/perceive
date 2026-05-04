@@ -1,4 +1,4 @@
-classdef (TestTags = {'Slow'}) testProcessData < matlab.unittest.TestCase
+classdef testProcessData < matlab.unittest.TestCase
     properties
         testFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d.json', x), 1:16, 'UniformOutput', false);
         expectedFiles = arrayfun(@(x) sprintf('Report_Json_Session_Report_MOCK%d_GroupHistory.mat', x), 1:4, 'UniformOutput', false);
