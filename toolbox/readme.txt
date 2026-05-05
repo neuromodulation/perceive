@@ -5,15 +5,15 @@ Quick start
 1) Run the launcher:
    - Windows: run_perceive_gui_startup.bat
    - macOS/Linux: ./run_perceive_gui_startup.sh
-2) If Runtime is missing, install MATLAB Runtime R2026a.
+2) If Runtime is missing, install MATLAB Runtime R2023a or newer.
 3) Run the same launcher again.
 
 1. Prerequisites
 
 End users do not need a MATLAB license.
-They need MATLAB Runtime R2026a.
+They need MATLAB Runtime R2023a or newer.
 
-Verify that MATLAB Runtime (R2026a) is installed.
+Verify that MATLAB Runtime (R2023a or newer) is installed.
 If not, you can run the MATLAB Runtime installer.
 To find its location, enter
   
@@ -22,7 +22,7 @@ To find its location, enter
 at the MATLAB prompt.
 NOTE: You will need administrator rights to run the MATLAB Runtime installer. 
 
-Alternatively, download and install the MATLAB Runtime for R2026a
+Alternatively, download and install MATLAB Runtime (R2023a or newer)
 from the following link on the MathWorks website:
 
     https://www.mathworks.com/products/compiler/matlab-runtime.html
@@ -59,6 +59,16 @@ https://www.mathworks.com/help and select MATLAB Compiler >
 Getting Started > About Application Deployment >
 Deployment Product Terms in the MathWorks Documentation
 Center.
+
+5. Clean Windows release folder (for maintainers)
+
+In MATLAB, run:
+
+    >> prepare_windows_release_folder
+
+This creates/updates:
+
+    release/windows/perceive_gui_startup
 
 
 
