@@ -3,11 +3,14 @@ setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 set "RUNTIME_URL=https://www.mathworks.com/products/compiler/matlab-runtime.html"
-set "RUNTIME_VERSION=R2026a"
+set "MIN_RUNTIME_YEAR=2023"
+set "RUNTIME_LABEL=R2023a or newer"
 set "MATLAB_RUNTIME_INSTALLED=0"
 set "RUNTIME_FOUND_PATH="
+set "RUNTIME_FOUND_VERSION="
 set "CUSTOM_RUNTIME_PATH="
 set "LOG_FILE=%~dp0runtime_check.log"
+set "DETECT_SCRIPT=%~dp0detect_matlab_runtime_windows.ps1"
 
 :parse_args
 if "%~1"=="" goto args_done
@@ -22,7 +25,7 @@ if /I "%~1"=="--runtime-path" (
     goto parse_args
 )
 if /I "%~1"=="--help" (
-    echo Usage: run_perceive_gui_startup.bat [--runtime-path "C:\Path\To\MATLAB Runtime\R2026a"]
+    echo Usage: run_perceive_gui_startup.bat [--runtime-path "C:\Path\To\MATLAB Runtime\R2023a-or-newer"]
     exit /b 0
 )
 echo [perceive] Unknown argument: %~1
@@ -46,7 +49,7 @@ call :detect_runtime
 
 if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
     echo.
-    echo [perceive] MATLAB Runtime %RUNTIME_VERSION% is required but not detected.
+    echo [perceive] MATLAB Runtime %RUNTIME_LABEL% is required but not detected.
     echo.
     if exist "MCRInstaller.exe" (
         echo A local MATLAB Runtime installer was found: MCRInstaller.exe
@@ -57,8 +60,8 @@ if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
             echo Re-checking MATLAB Runtime installation...
             call :detect_runtime
             if !MATLAB_RUNTIME_INSTALLED! EQU 1 (
-                echo MATLAB Runtime %RUNTIME_VERSION% detected after installer. Continuing...
-                call :log "Runtime detected after local installer: !RUNTIME_FOUND_PATH!"
+                echo MATLAB Runtime !RUNTIME_FOUND_VERSION! detected after installer. Continuing...
+                call :log "Runtime detected after local installer: !RUNTIME_FOUND_VERSION! at !RUNTIME_FOUND_PATH!"
                 goto run_app
             )
             echo Runtime still not detected. You may need to complete installer steps or reboot.
@@ -69,7 +72,7 @@ if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
     echo Opening official MATLAB Runtime download page...
     echo %RUNTIME_URL%
     start "" "%RUNTIME_URL%"
-    echo Install Runtime %RUNTIME_VERSION%, then run this launcher again.
+    echo Install MATLAB Runtime %RUNTIME_LABEL%, then run this launcher again.
     call :log "Runtime missing. Opened download page and exited."
     pause
     exit /b 1
@@ -77,9 +80,9 @@ if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
 
 :: If MATLAB Runtime is installed, run the application
 :run_app
-echo [perceive] MATLAB Runtime %RUNTIME_VERSION% detected. Starting app...
+echo [perceive] MATLAB Runtime !RUNTIME_FOUND_VERSION! detected. Starting app...
 echo [perceive] Runtime location: !RUNTIME_FOUND_PATH!
-call :log "Runtime detected: !RUNTIME_FOUND_PATH!"
+call :log "Runtime detected: !RUNTIME_FOUND_VERSION! at !RUNTIME_FOUND_PATH!"
 perceive_gui_startup.exe
 set EXITCODE=%ERRORLEVEL%
 echo.
@@ -91,41 +94,25 @@ exit /b %EXITCODE%
 :detect_runtime
 set "MATLAB_RUNTIME_INSTALLED=0"
 set "RUNTIME_FOUND_PATH="
+set "RUNTIME_FOUND_VERSION="
+set "DETECT_RESULT="
 
-if defined CUSTOM_RUNTIME_PATH (
-    if exist "%CUSTOM_RUNTIME_PATH%\runtime\win64\mclmcrrt*.dll" (
+if not exist "%DETECT_SCRIPT%" (
+    call :log "Runtime detection script missing: %DETECT_SCRIPT%"
+    exit /b 0
+)
+
+for /f "usebackq delims=" %%A in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%DETECT_SCRIPT%" -MinYear %MIN_RUNTIME_YEAR% -CustomRuntimePath "%CUSTOM_RUNTIME_PATH%"`) do (
+    set "DETECT_RESULT=%%A"
+)
+
+if not defined DETECT_RESULT exit /b 0
+
+for /f "tokens=1,2,3 delims=|" %%A in ("!DETECT_RESULT!") do (
+    if /I "%%A"=="FOUND" (
         set "MATLAB_RUNTIME_INSTALLED=1"
-        set "RUNTIME_FOUND_PATH=%CUSTOM_RUNTIME_PATH%"
-        exit /b 0
-    )
-)
-
-reg query "HKLM\SOFTWARE\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%" >nul 2>&1
-if !ERRORLEVEL! EQU 0 (
-    set "MATLAB_RUNTIME_INSTALLED=1"
-    set "RUNTIME_FOUND_PATH=HKLM\SOFTWARE\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%"
-)
-
-reg query "HKLM\SOFTWARE\WOW6432Node\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%" >nul 2>&1
-if !ERRORLEVEL! EQU 0 (
-    set "MATLAB_RUNTIME_INSTALLED=1"
-    set "RUNTIME_FOUND_PATH=HKLM\SOFTWARE\WOW6432Node\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%"
-)
-
-reg query "HKCU\SOFTWARE\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%" >nul 2>&1
-if !ERRORLEVEL! EQU 0 (
-    set "MATLAB_RUNTIME_INSTALLED=1"
-    set "RUNTIME_FOUND_PATH=HKCU\SOFTWARE\MathWorks\MATLAB Runtime\%RUNTIME_VERSION%"
-)
-
-if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
-    if exist "%ProgramFiles%\MATLAB\MATLAB Runtime\%RUNTIME_VERSION%\runtime\win64\mclmcrrt*.dll" (
-        set "MATLAB_RUNTIME_INSTALLED=1"
-        set "RUNTIME_FOUND_PATH=%ProgramFiles%\MATLAB\MATLAB Runtime\%RUNTIME_VERSION%"
-    )
-    if exist "%ProgramFiles(x86)%\MATLAB\MATLAB Runtime\%RUNTIME_VERSION%\runtime\win64\mclmcrrt*.dll" (
-        set "MATLAB_RUNTIME_INSTALLED=1"
-        set "RUNTIME_FOUND_PATH=%ProgramFiles(x86)%\MATLAB\MATLAB Runtime\%RUNTIME_VERSION%"
+        set "RUNTIME_FOUND_VERSION=%%B"
+        set "RUNTIME_FOUND_PATH=%%C"
     )
 )
 exit /b 0
