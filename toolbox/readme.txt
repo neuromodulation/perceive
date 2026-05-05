@@ -1,8 +1,19 @@
-perceive Executable
+perceive_gui_startup Executable
 
-1. Prerequisites for Deployment 
+Quick start
+-----------
+1) Run the launcher:
+   - Windows: run_perceive_gui_startup.bat
+   - macOS/Linux: ./run_perceive_gui_startup.sh
+2) If Runtime is missing, install MATLAB Runtime R2026a.
+3) Run the same launcher again.
 
-Verify that MATLAB Runtime(R2025b) is installed.   
+1. Prerequisites
+
+End users do not need a MATLAB license.
+They need MATLAB Runtime R2026a.
+
+Verify that MATLAB Runtime (R2026a) is installed.
 If not, you can run the MATLAB Runtime installer.
 To find its location, enter
   
@@ -11,20 +22,21 @@ To find its location, enter
 at the MATLAB prompt.
 NOTE: You will need administrator rights to run the MATLAB Runtime installer. 
 
-Alternatively, download and install the Windows version of the MATLAB Runtime for R2025b 
+Alternatively, download and install the MATLAB Runtime for R2026a
 from the following link on the MathWorks website:
 
-    https://www.mathworks.com/products/compiler/mcr/index.html
+    https://www.mathworks.com/products/compiler/matlab-runtime.html
    
 For more information about the MATLAB Runtime and the MATLAB Runtime installer, see 
 "Distribute Applications" in the MATLAB Compiler documentation  
 in the MathWorks Documentation Center.
 
-2. Files to Deploy and Package
+2. Files to Deploy and Package (Windows)
 
 Files to Package for Standalone 
 ================================
--perceive.exe
+-perceive_gui_startup.exe
+-run_perceive_gui_startup.bat
 -MCRInstaller.exe 
     Note: if end users are unable to download the MATLAB Runtime using the
     instructions in the previous section, include it when building your 
@@ -32,9 +44,15 @@ Files to Package for Standalone
     Deployment Tool.
 -This readme file 
 
+3. Cross-platform note
 
+MATLAB Compiler output is OS-specific.
+To support macOS and Linux, build on each target OS and package the resulting artifacts:
+- Windows -> perceive_gui_startup.exe
+- macOS   -> perceive_gui_startup.app
+- Linux   -> perceive_gui_startup (ELF binary)
 
-3. Definitions
+4. Definitions
 
 For information on deployment terminology, go to
 https://www.mathworks.com/help and select MATLAB Compiler >
