@@ -10,31 +10,92 @@ function alldata_brainsensesurveystimedomain = perceive_extract_brainsensesurvey
 %   alldata
 
 alldata_brainsensesurveystimedomain={};
+%%%%%%%%%%%%%%%%%%%% IMPROVE WITH AI snippet %%%%%%%%%%%%%%%%%%%%%%%
+if length(data)==2
 ElectrodeSurvey=data{1};
 ElectrodeIdentifier=data{2};
 assert(strcmp(ElectrodeSurvey.SurveyMode,'ElectrodeSurvey'))
 assert(strcmp(ElectrodeIdentifier.SurveyMode,'ElectrodeIdentifier'))
+dataiteration={'ElectrodeSurvey','ElectrodeIdentifier'};
+elseif strcmp(data.SurveyMode,'ElectrodeSurvey')
+ElectrodeSurvey=data;
+dataiteration={'ElectrodeSurvey'};
+elseif strcmp(data.SurveyMode,'ElectrodeIdentifier')
+ElectrodeIdentifier=data;
+dataiteration={'ElectrodeIdentifier'};
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+for k = 1:numel(dataiteration)
+    currentItem = dataiteration{k};
+    switch currentItem
 
-for dataiteration = 1:2
-
-    if dataiteration == 1
+        case 'ElectrodeSurvey'
         data=ElectrodeSurvey.ElectrodeSurvey;
         mod_prefix = 'mod-ES';
         if isfield(hdr.js, 'LfpMontageTimeDomain') %ElectrodeSurvey is the same as LMTD
             continue
         end
-    else
+        %%%%%%%%%%%% improve with AI %%%%%%%%%%%%%%%%%%%%
+         remove = [];
+         for n=1:numel(data)
+             if ~(data(n).SampleRateInHz)
+                 remove=[remove, n]
+             end
+         end
+         if ~isempty(remove)
+             data(remove)=[];
+         end
+        %Data is empty
+        if isempty(data)
+            continue
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        case 'ElectrodeIdentifier'
+        
         data=ElectrodeIdentifier.ElectrodeIdentifier;
+        
         mod_prefix = 'mod-EI';
+        
+
+        %%%%%%%%%%%% improve with AI %%%%%%%%%%%%%%%%%%%%
+         remove = [];
+         for n=1:numel(data)
+             if ~(data(n).SampleRateInHz)
+                 remove=[remove, n]
+             end
+         end
+         if ~isempty(remove)
+             data(remove)=[];
+         end
+        %Data is empty
+        if isempty(data)
+            continue
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         for c = 1:length(data)
             str=data(c).Channel;
             str=strrep(str, 'ELECTRODE_', '');
             data(c).Channel = [str '_' upper(data(c).Hemisphere) ];
         end
     end
+
+
     fsample = data.SampleRateInHz;
     runs_FirstPacketDateTime = strrep(strrep({data(:).FirstPacketDateTime}, 'T', ' '), 'Z', '');
+
+    %%% adapt with AI %%%%%%%%%%%%%%%%%%%%%%%%%
+    remove = [];
+    for n=1:numel(runs_FirstPacketDateTime)
+        if isempty(runs_FirstPacketDateTime{n})
+            remove=[remove, n]
+        end
+    end
+    if ~isempty(remove)
+        runs_FirstPacketDateTime(remove)=[];
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     runs = unique(runs_FirstPacketDateTime);
     
 
@@ -134,6 +195,25 @@ for dataiteration = 1:2
         d.hdr = hdr;
         d.datatype = 'BrainSenseSurveysTimeDomain';
         d.fsample = fsample;
+        %%%%%%%%%%%%%%% if TimeDomainDatainMicroVolts have different
+        %%%%%%%%%%%%%%% length, allow for  65 empty bits
+        longest_TimeDomainDatainMicroVolts=0;
+        for ii=i
+            current_length=length(data(ii).TimeDomainDatainMicroVolts);
+            if current_length>longest_TimeDomainDatainMicroVolts
+                longest_TimeDomainDatainMicroVolts=current_length;
+            end
+        end
+        for ii=i
+            current_length=length(data(ii).TimeDomainDatainMicroVolts);
+            
+            if  (current_length+65)<longest_TimeDomainDatainMicroVolts
+                error('length of TimeDomaininMicroVolts across different channels differs with more than 65 samples among each other. This needs manual attention.')
+            elseif current_length<longest_TimeDomainDatainMicroVolts
+                data(ii).TimeDomainDatainMicroVolts=[data(ii).TimeDomainDatainMicroVolts; zeros(longest_TimeDomainDatainMicroVolts-current_length,1)]
+            end
+        end
+        %%%%
         tmp = [data(i).TimeDomainDatainMicroVolts]';
         d.trial{1} = [tmp];
         d.label=Channel(i);
@@ -294,7 +374,7 @@ for dataiteration = 1:2
         mod_ext=perceive_check_mod_ext(d.label);
         mod = [mod_prefix mod_ext];
         d.fname = [hdr.fname '_' mod];
-        d.fnamedate = [char(datetime(runs_FirstPacketDateTime{c},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(c)];
+        d.fnamedate = [char(datetime(runs_FirstPacketDateTime{js_element},'Inputformat','yyyy-MM-dd HH:mm:ss.SSS','format','yyyyMMddhhmmss')), '_',num2str(js_element)];
         % TODO: set if needed:
         %d.keepfig = false; % do not keep figure with this signal open
         %d=call_ecg_cleaning(d,hdr,d.trial{1});
