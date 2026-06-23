@@ -1,4 +1,4 @@
-function alldata_brainsensesurveystimedomain = perceive_extract_brainsensesurveystimedomain(data, hdr)
+function alldata_brainsensesurveystimedomain = perceive_extract_brainsensesurveystimedomain(data, hdr, plotfields)
 
 % extraction of BrainSenseSurveysTimeDomain data (BSTD) into FieldTrip-like format
 %
@@ -378,8 +378,10 @@ for k = 1:numel(dataiteration)
         % TODO: set if needed:
         %d.keepfig = false; % do not keep figure with this signal open
         %d=call_ecg_cleaning(d,hdr,d.trial{1});
-        perceive_plot_raw_signals(d);
-        perceive_print(fullfile(hdr.fpath,d.fname));
+        if any(strcmp(plotfields, 'BrainSenseSurveysTimeDomain'))
+            perceive_plot_raw_signals(d);
+            perceive_print(fullfile(hdr.fpath,d.fname));
+        end
         alldata_brainsensesurveystimedomain{length(alldata_brainsensesurveystimedomain)+1} = d;
     end
     %% end of the iteration over the js streams

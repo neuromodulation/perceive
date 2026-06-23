@@ -80,6 +80,33 @@ function config = perceive_localsettings(localsettings_name, config)
         config_js.devmode = false;
     end
 
+    % --- Handle optional field: plotfields ---
+    if isfield(config_js, 'plotfields')
+        pf = config_js.plotfields;
+        % jsondecode returns [] (double) for empty JSON array []; treat as empty cell
+        if isa(pf, 'double') && isempty(pf)
+            pf = {};
+        elseif isstring(pf)
+            pf = cellstr(pf);
+        elseif ischar(pf)
+            pf = {pf};
+        end
+        if ~iscell(pf) || ~all(cellfun(@ischar, pf))
+            error('Field "plotfields" must be a cell array of strings in %s', fname);
+        end
+        % Validate: each entry must be a valid datafield name
+        if ~isempty(pf)
+            invalid = setdiff(pf, config_js.datafields);
+            if ~isempty(invalid)
+                error('plotfields contains invalid entries not in datafields: %s', strjoin(invalid, ', '));
+            end
+        end
+        config_js.plotfields = pf;
+    else
+        % Default: plot all datafields (backward compatible)
+        config_js.plotfields = config_js.datafields;
+    end
+
     % --- Validate content types ---
     if ~iscell(config_js.taskItems) || ~all(cellfun(@ischar,config_js.taskItems))
         error('Field "taskItems" must be a cell array of strings in %s', fname);
@@ -119,6 +146,7 @@ function config = perceive_localsettings(localsettings_name, config)
     config.check_gui_med       = logical(config_js.check_gui_med);
     config.convert2bids        = logical(config_js.convert2bids);
     config.datafields          = config_js.datafields(:)';   % row cellstr
+    config.plotfields          = config_js.plotfields(:)';   % row cellstr (subset of datafields, empty = no plots)
     % add normalized devmode (optional field)
     config.devmode = logical(config_js.devmode);
 end

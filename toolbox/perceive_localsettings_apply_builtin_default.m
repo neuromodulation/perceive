@@ -19,6 +19,7 @@ function config = perceive_localsettings_apply_builtin_default(config, requested
     config.check_gui_med       = logical(config_js.check_gui_med);
     config.convert2bids        = logical(config_js.convert2bids);
     config.datafields          = config_js.datafields(:)';
+    config.plotfields          = config_js.datafields(:)';   % default: plot all datafields
     config.devmode             = logical(config_js.devmode);
 end
 
@@ -28,6 +29,10 @@ function config_js = perceive_localsettings_normalize_json_types(config_js)
     config_js.datafields = perceive_cellstr_from_json_array(config_js.datafields);
     if ~isfield(config_js, 'devmode') || isempty(config_js.devmode)
         config_js.devmode = false;
+    end
+    % plotfields defaults to all datafields (backward compatible)
+    if ~isfield(config_js, 'plotfields') || isempty(config_js.plotfields)
+        config_js.plotfields = config_js.datafields;
     end
 end
 

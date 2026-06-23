@@ -72,6 +72,7 @@
   "check_gui_med": false,
   "convert2bids": false,
   "datafields": [
+    "BrainSenseLfp",
     "BrainSenseTimeDomain",
     "BrainSenseSurveys",
     "CalibrationTests",
