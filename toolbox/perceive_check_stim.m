@@ -15,7 +15,11 @@ if isfield(hdr.Groups, 'Initial')
                 Cycling_mode = true;
                 Cycling_OnDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
                 Cycling_OffDuration = hdr.Groups.Initial(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
-                Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.RateInHertz;
+                if isfield(hdr.Groups.Initial(i).ProgramSettings, 'RateInHertz')
+                    Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.RateInHertz;
+                elseif isfield(hdr.Groups.Initial(i).ProgramSettings, 'SensingChannel') && ~isempty(hdr.Groups.Initial(i).ProgramSettings.SensingChannel)
+                    Cycling_Rate = hdr.Groups.Initial(i).ProgramSettings.SensingChannel(1).RateInHertz;
+                end
             end
         end
     end
@@ -30,7 +34,11 @@ if isfield(hdr.Groups, 'Final')
                 Cycling_mode = true;
                 Cycling_OnDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OnDurationInMilliSeconds;
                 Cycling_OffDuration = hdr.Groups.Final(i).GroupSettings.Cycling.OffDurationInMilliSeconds;
-                Cycling_Rate = hdr.Groups.Final(i).ProgramSettings.RateInHertz;
+                if isfield(hdr.Groups.Final(i).ProgramSettings, 'RateInHertz')
+                    Cycling_Rate = hdr.Groups.Final(i).ProgramSettings.RateInHertz;
+                elseif isfield(hdr.Groups.Final(i).ProgramSettings, 'SensingChannel') && ~isempty(hdr.Groups.Final(i).ProgramSettings.SensingChannel)
+                    Cycling_Rate = hdr.Groups.Final(i).ProgramSettings.SensingChannel(1).RateInHertz;
+                end
             end
         end
     end
@@ -44,12 +52,17 @@ RAmp(isnan(RAmp))=0;
 LAmp=abs(LAmp);
 RAmp=abs(RAmp);
 if Cycling_mode
+    if exist('Cycling_Rate','var')
+        FreqStr = sprintf('Freq%s', num2str(Cycling_Rate));
+    else
+        FreqStr = '';
+    end
     if (sum(LAmp>0.1)) > (0.1*sum(LAmp==0)) && (sum(RAmp>0.1)) > (0.5*sum(RAmp==0))
-        acq=['BurstB' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+        acq=['BurstB' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) FreqStr];
     elseif (sum(LAmp>0.1)) > (0.1*sum(LAmp==0))
-        acq=['BurstL' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+        acq=['BurstL' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) FreqStr];
     elseif (sum(RAmp>0.1)) > (0.1*sum(RAmp==0))
-        acq=['BurstR' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) 'Freq' num2str(Cycling_Rate) ];
+        acq=['BurstR' 'DurOn' num2str(Cycling_OnDuration) 'DurOff' num2str(Cycling_OffDuration) FreqStr];
     end
 end
 if ~exist('acq','var')
