@@ -1,5 +1,6 @@
 function perceive(files, sub, sesMedOffOn01, extended, gui, localsettings_name)
-%#function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_init_logging_if_deployed perceive_mcc_dependency_touch perceive_exe_directory_for_logging perceive_localsettings_apply_builtin_default
+% perceive(files, sub, sesMedOffOn01, extended, gui, localsettings_name)
+% function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_init_logging_if_deployed perceive_mcc_dependency_touch perceive_exe_directory_for_logging perceive_localsettings_apply_builtin_default
 % MCC: pragma + perceive_mcc_dependency_touch() force packaging; string-based checks are not traced.
 % Toolbox by Wolf-Julian Neumann
 % Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser, Jennifer Behnke, Mansoureh Fahimi, Jonathan Kaplan, Jojo Vanhoecke (contact to Jojo Vanhoecke)
@@ -305,7 +306,7 @@ for idxFile = 1:length(files)
                 case 'CalibrationTests'
 
                     if extended
-                        alldata_ct = perceive_extract_calibrationtests(data, hdr);
+                        alldata_ct = perceive_extract_calibrationtests(data, hdr, plotfields);
                         alldata = [alldata, alldata_ct];
                     end
 

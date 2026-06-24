@@ -1,4 +1,4 @@
-function alldata_ct = perceive_extract_calibrationtests(data, hdr)
+function alldata_ct = perceive_extract_calibrationtests(data, hdr, plotfields)
 
 % perceive_extract_calibrationtests
 % Extracts calibration test runs from Perceive data and returns them as
@@ -26,37 +26,35 @@ for c = 1:length(tmp)
     GlobalPacketSizes{c} = str2num(tmp{c}); %#ok<ST2NM>
 end
 
-%% --- Plot all calibration tests ---
-figure
+%% --- Parse channel names ---
 Channel = strings(1,length(data));
-defaultBlue = [0 0.4470 0.7410]; % MATLAB default blue
-
 for c = 1:length(data)
-    fsample = data(c).SampleRateInHz;
-
     % Parse channel name
     [tmp1,tmp2] = strtok(strrep({data(c).Channel}','_AND',''),'_');
     ch1 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-
     [tmp1,tmp2] = strtok(tmp2,'_');
     ch2 = strrep(strrep(strrep(strrep(tmp1,'ZERO','0'),'ONE','1'),'TWO','2'),'THREE','3');
-
     side = strrep(strrep(strtok(tmp2,'_'),'LEFT','L'),'RIGHT','R');
-
     Channel(c) = strcat(hdr.chan,'_',side,'_', ch1, ch2);
-
-    % Plot with default blue color
-    tdtmp = zscore(data(c).TimeDomainData)./10 + c;
-    ttmp = (1:length(tdtmp)) ./ fsample;
-    plot(ttmp, tdtmp, 'Color', defaultBlue)
-    hold on
 end
 
-xlim([ttmp(1), ttmp(end)])
-set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
-xlabel('Time [s]')
-title(strrep({hdr.subject, hdr.session, 'All CalibrationTests'}, '_', ' '))
-perceive_print(fullfile(hdr.fpath, [hdr.fname '_mod-CalibrationTests']))
+%% --- Plot all calibration tests ---
+if any(strcmp(plotfields, 'CalibrationTests'))
+    figure
+    defaultBlue = [0 0.4470 0.7410]; % MATLAB default blue
+    for c = 1:length(data)
+        fsample = data(c).SampleRateInHz;
+        tdtmp = zscore(data(c).TimeDomainData)./10 + c;
+        ttmp = (1:length(tdtmp)) ./ fsample;
+        plot(ttmp, tdtmp, 'Color', defaultBlue)
+        hold on
+    end
+    xlim([ttmp(1), ttmp(end)])
+    set(gca,'YTick',1:c,'YTickLabel',strrep(Channel,'_',' '),'YTickLabelRotation',45)
+    xlabel('Time [s]')
+    title(strrep({hdr.subject, hdr.session, 'All CalibrationTests'}, '_', ' '))
+    perceive_print(fullfile(hdr.fpath, [hdr.fname '_mod-CalibrationTests']))
+end
 
 
 %% --- Build output structures per run ---
