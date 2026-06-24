@@ -24,7 +24,7 @@ if contains(fname, ["LMTD","BrainSense","ISRing","EI","ES"])
     elseif contains(splitted_fname{2}, 'MedOff')
         med = 'm0';
     else
-        error('unknown Med status')
+        med = '';
     end
     if contains(splitted_fname{4}, ["StimOn","Burst"])
         stim = 's1';

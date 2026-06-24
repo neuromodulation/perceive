@@ -618,9 +618,9 @@ for idxFile = 1:length(files)
                     data.fname = [fname '.mat'];
                     disp(['WRITING ' fullname ' as FieldTrip file.'])
                     save([fullname],'data')
-                    if sesMedOffOn01
+                    %if sesMedOffOn01
                         MetaT= perceive_metadata_to_table(MetaT,data);
-                    end
+                    %end
                 end
             end
             % future to be implemented: removed current BSL from
@@ -656,9 +656,9 @@ for idxFile = 1:length(files)
             data.fname = [fname '.mat'];
             disp(['WRITING ' fullname '.mat as FieldTrip file.'])
             save([fullname '.mat'],'data');
-            if sesMedOffOn01
+            %if sesMedOffOn01
                 MetaT= perceive_metadata_to_table(MetaT,data);
-            end
+            %end
             %savefig([fullname '.fig'])
             % close the figure if should not be kept open
             if isfield(data,'keepfig')
@@ -672,7 +672,7 @@ for idxFile = 1:length(files)
     close all
 
     %% post-labelling
-    if ~isempty(sesMedOffOn01) && height(MetaT)>0
+    if height(MetaT)>0 % && ~isempty(sesMedOffOn01) 
         MetaTOld = MetaT;
 
         if gui
