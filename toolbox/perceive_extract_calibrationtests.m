@@ -38,12 +38,14 @@ for c = 1:length(data)
     Channel(c) = strcat(hdr.chan,'_',side,'_', ch1, ch2);
 end
 
+%% --- Extract fsample for later use (default) ---
+fsample = data(1).SampleRateInHz;
+
 %% --- Plot all calibration tests ---
 if any(strcmp(plotfields, 'CalibrationTests'))
     figure
     defaultBlue = [0 0.4470 0.7410]; % MATLAB default blue
     for c = 1:length(data)
-        fsample = data(c).SampleRateInHz;
         tdtmp = zscore(data(c).TimeDomainData)./10 + c;
         ttmp = (1:length(tdtmp)) ./ fsample;
         plot(ttmp, tdtmp, 'Color', defaultBlue)
