@@ -20,3 +20,6 @@ perceive/toolbox/config/perceive_localsettings*.json
 !perceive/toolbox/config/perceive_localsettings_default.json
 !perceive/toolbox/config/perceive_localsettings_duesseldorf.json
 !perceive/toolbox/config/perceive_localsettings_wuerzburg.json
+
+# ClePy folder (Python conversion)
+ClePy/
