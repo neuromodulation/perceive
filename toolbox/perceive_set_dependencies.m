@@ -1,5 +1,5 @@
 function perceive_set_dependencies()
-%#function set_firstsample check_fullname check_stim onAppClose perceive_check_stim
+%#function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_gui_startup
     % MATLAB Compiler does not trace helpers referenced only as strings in a cell array.
     % perceive.m lists them in a %#function pragma so mcc bundles them.
     if isdeployed

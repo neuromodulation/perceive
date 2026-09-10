@@ -1,4 +1,5 @@
 #!/bin/bash
+# Launcher for perceive on Linux (MATLAB Runtime only; no MATLAB license).
 set -euo pipefail
 
 MIN_RUNTIME_YEAR=2023
@@ -7,14 +8,21 @@ RUNTIME_URL="https://www.mathworks.com/products/compiler/matlab-runtime.html"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="${SCRIPT_DIR}/runtime_check.log"
 CUSTOM_RUNTIME_PATH=""
+OS="Linux"
+APP_PATH="$SCRIPT_DIR/perceive"
 
 log() {
     printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG_FILE"
 }
 
 usage() {
-    echo "Usage: ./run_perceive_gui_startup.sh [--runtime-path /path/to/MATLAB_Runtime_R2023a-or-newer]"
+    echo "Usage: ./perceive_no_license_linux.sh [--runtime-path /path/to/MATLAB_Runtime_R2023a-or-newer]"
 }
+
+if [[ "$OSTYPE" != linux-gnu* ]]; then
+    echo "[perceive] This script is for Linux only. On macOS use perceive_no_license_macOS.sh."
+    exit 1
+fi
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -35,27 +43,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-log "Launcher started"
+log "Launcher started (Linux)"
 [[ -n "$CUSTOM_RUNTIME_PATH" ]] && log "Custom runtime path requested: $CUSTOM_RUNTIME_PATH"
 
-if [[ "$OSTYPE" == darwin* ]]; then
-    OS="macOS"
-    APP_PATH="$SCRIPT_DIR/perceive_gui_startup.app"
-    echo "Detected OS: macOS"
-elif [[ "$OSTYPE" == linux-gnu* ]]; then
-    OS="Linux"
-    APP_PATH="$SCRIPT_DIR/perceive_gui_startup"
-    echo "Detected OS: Linux"
-else
-    echo "Error: Unsupported OS. This script only works on macOS and Linux."
-    exit 1
-fi
-
 if [[ ! -e "$APP_PATH" ]]; then
-    echo "[perceive] Platform app artifact is missing:"
+    echo "[perceive] perceive binary not found:"
     echo "  $APP_PATH"
-    echo "This package may only contain the Windows .exe."
-    echo "Build and package perceive_gui_startup for $OS, then try again."
+    echo "Build perceive for Linux, then try again."
     exit 1
 fi
 
@@ -112,23 +106,14 @@ detect_runtime() {
         if accept_runtime_path "${MCRROOT}"; then return; fi
     fi
 
-    if [[ "$OS" == "macOS" ]]; then
-        scan_root_for_runtime_dirs "/Applications/MATLAB/MATLAB_Runtime"
-        [[ "$runtime_detected" -eq 1 ]] && return
-        scan_root_for_runtime_dirs "/Applications/MATLAB"
-        [[ "$runtime_detected" -eq 1 ]] && return
-        scan_root_for_runtime_dirs "${HOME}/MATLAB"
-        [[ "$runtime_detected" -eq 1 ]] && return
-    else
-        scan_root_for_runtime_dirs "/usr/local/MATLAB/MATLAB_Runtime"
-        [[ "$runtime_detected" -eq 1 ]] && return
-        scan_root_for_runtime_dirs "/usr/local/MATLAB"
-        [[ "$runtime_detected" -eq 1 ]] && return
-        scan_root_for_runtime_dirs "${HOME}/MATLAB"
-        [[ "$runtime_detected" -eq 1 ]] && return
-    fi
+    scan_root_for_runtime_dirs "/usr/local/MATLAB/MATLAB_Runtime"
+    [[ "$runtime_detected" -eq 1 ]] && return
+    scan_root_for_runtime_dirs "/usr/local/MATLAB"
+    [[ "$runtime_detected" -eq 1 ]] && return
+    scan_root_for_runtime_dirs "${HOME}/MATLAB"
 }
 
+echo "Detected OS: Linux"
 echo "Checking for MATLAB Runtime ${RUNTIME_LABEL}..."
 detect_runtime
 if [[ "$runtime_detected" -eq 0 ]]; then
@@ -151,11 +136,7 @@ if [[ "$runtime_detected" -eq 0 ]]; then
 
     if [[ "$runtime_detected" -eq 0 ]]; then
         echo "Opening the official Runtime download page..."
-        if [[ "$OS" == "macOS" ]]; then
-            open "$RUNTIME_URL"
-        elif [[ "$OS" == "Linux" ]]; then
-            xdg-open "$RUNTIME_URL" || sensible-browser "$RUNTIME_URL" || true
-        fi
+        xdg-open "$RUNTIME_URL" || sensible-browser "$RUNTIME_URL" || true
         echo "Install MATLAB Runtime ${RUNTIME_LABEL}, then run this launcher again."
         log "Opened download page and exited (runtime missing)"
         exit 1
@@ -165,15 +146,10 @@ fi
 echo "[perceive] MATLAB Runtime ${runtime_version} detected at: ${runtime_hint}"
 echo "[perceive] Starting app..."
 log "Runtime detected: ${runtime_version} at ${runtime_hint}"
-if [[ "$OS" == "macOS" ]]; then
-    open "$APP_PATH"
-    log "Launched macOS app bundle"
-else
-    chmod +x "$APP_PATH"
-    set +e
-    "$APP_PATH"
-    app_exit=$?
-    set -e
-    log "Linux app exited with code ${app_exit}"
-    exit $app_exit
-fi
+chmod +x "$APP_PATH"
+set +e
+"$APP_PATH"
+app_exit=$?
+set -e
+log "Linux app exited with code ${app_exit}"
+exit $app_exit

@@ -1,0 +1,39 @@
+
+
+======== Session start 2026-05-05 20:21:14.211 ========
+
+
+======== Session start 2026-05-05 20:21:59.944 ========
+Warning: Session not specified — session name will be derived from date + battery.
+> In perceive_parse_args (line 66)
+In perceive (line 130)
+In perceive_gui_startup/processfilesperceiveButtonPushed (line 191)
+In appdesigner.internal.service.AppManagementService/executeCallback (line 13)
+In matlab.apps.AppBase>@(source,event)executeCallback(ams,app,callback,requiresEventData,event) (line 54)
+In appdesservices.internal.interfaces.model/AbstractModel/executeUserCallback (line 282)
+In matlab.ui.control.internal.controller/ComponentController/handleUserInteraction (line 442)
+In matlab.ui.control.internal.controller/PushButtonController/handleEvent (line 96)
+In appdesservices.internal.interfaces.controller.AbstractController>@(varargin)obj.handleEvent(varargin{:}) (line 229)
+In viewmodel.internal.factory.ManagerFactoryProducer>@(src,event)callback(src,viewmodel.internal.factory.ManagerFactoryProducer.convertStructToEventData(event)) (line 76)
+In waitforallfiguresclosed (line 20)
+RUNNING C:\Users\Jojo\Documents\CODE\perceiveCursor\MockData\Report_Json_Session_Report_MOCK1.json
+SUBJECT sub-20190101PStn
+Warning: Exported image displays axes toolbar. To remove axes toolbar from image, export again.
+Error using exportgraphics
+Input was not a valid graphics object.
+
+Error in perceive_print (line 34)
+
+Error in perceive_plot_bsl_bipolar (line 84)
+
+Error in perceive (line 274)
+
+Error in perceive_gui_startup/processfilesperceiveButtonPushed (line 191)
+
+Error in appdesigner.internal.service.AppManagementService/executeCallback (line 13)
+
+Error in matlab.apps.AppBase>@(source,event)executeCallback(ams,app,callback,requiresEventData,event) (line 54)
+
+Error using appdesservices.internal.interfaces.model.AbstractModel/executeUserCallback (line 282)
+Error while evaluating Button PrivateButtonPushedFcn.
+

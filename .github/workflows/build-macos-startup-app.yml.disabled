@@ -1,0 +1,130 @@
+name: Build macOS perceive.app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos-apps:
+    name: Build perceive (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      MLM_LICENSE_TOKEN: ${{ secrets.MLM_LICENSE_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Validate MATLAB batch licensing token is configured
+        shell: bash
+        run: |
+          if [ -z "${MLM_LICENSE_TOKEN:-}" ]; then
+            echo "Missing secret MLM_LICENSE_TOKEN."
+            echo "MATLAB Compiler builds in GitHub Actions require a batch licensing token."
+            echo "Add repository secret: MLM_LICENSE_TOKEN"
+            exit 1
+          fi
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v3
+        with:
+          products: MATLAB_Compiler
+
+      - name: Preflight check MATLAB Compiler availability
+        uses: matlab-actions/run-command@v3
+        with:
+          command: |
+            fprintf('MATLAB version: %s\n', version);
+            v = ver('compiler');
+            if isempty(v)
+                error(['MATLAB Compiler is not installed on this runner. ', ...
+                    'Ensure setup-matlab installs MATLAB_Compiler and, if needed, set MLM_LICENSE_TOKEN.']);
+            end
+            fprintf('MATLAB Compiler installed: %s %s\n', v.Name, v.Version);
+            try
+                tf = license('test','Compiler');
+                fprintf('Compiler license test: %d\n', tf);
+                if ~tf
+                    warning('Compiler license unavailable. You may need MLM_LICENSE_TOKEN in repository secrets.');
+                end
+            catch ME
+                warning('Could not run license test for Compiler: %s', ME.message);
+            end
+
+      - name: Build perceive standalone app
+        uses: matlab-actions/run-command@v3
+        with:
+          command: cd("toolbox"); ci_build_perceive_standalone("macos")
+
+      - name: Upload MATLAB build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perceive-macos-build-logs
+          path: |
+            toolbox/macos_build.log
+            toolbox/macos_build_error.txt
+          if-no-files-found: ignore
+
+      - name: Collect macOS .app artifact
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, shutil
+
+          root = pathlib.Path("toolbox")
+          out = pathlib.Path("artifacts/macos")
+          out.mkdir(parents=True, exist_ok=True)
+
+          apps = sorted(root.rglob("*.app"))
+          if not apps:
+              raise SystemExit("No .app artifact found under toolbox after build.")
+
+          for app in apps:
+              if app.name != "perceive.app":
+                  continue
+              dest = out / app.name
+              if dest.exists():
+                  shutil.rmtree(dest)
+              shutil.copytree(app, dest)
+              print(f"Collected app: {dest}")
+          if not any(p.name == "perceive.app" for p in out.glob("*.app")):
+              raise SystemExit("perceive.app not found after build.")
+          PY
+
+      - name: Place app into install folder
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, shutil
+
+          src_root = pathlib.Path("artifacts/macos")
+          install_dir = pathlib.Path("install")
+          install_dir.mkdir(parents=True, exist_ok=True)
+
+          apps = sorted(src_root.glob("perceive.app"))
+          if not apps:
+              raise SystemExit("No perceive.app in artifacts/macos")
+          for app in apps:
+              dest = install_dir / app.name
+              if dest.exists():
+                  shutil.rmtree(dest)
+              shutil.copytree(app, dest)
+              print(f"Placed app into install folder: {dest}")
+          PY
+
+      - name: Commit updated install app to repository
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update macOS perceive.app"
+          file_pattern: install/*.app/**
+
+      - name: Upload macOS app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perceive-macos-apps
+          path: artifacts/macos/
+          if-no-files-found: error

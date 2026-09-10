@@ -18,4 +18,9 @@ function perceive_mcc_dependency_touch()
         clear fh %#ok<CLFUNC>
     catch %#ok<CTCH>
     end
+    try %#ok<TRYNC>
+        fh = @perceive_gui_startup;
+        clear fh %#ok<CLFUNC>
+    catch %#ok<CTCH>
+    end
 end

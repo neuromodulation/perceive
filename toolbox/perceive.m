@@ -1,6 +1,6 @@
 function perceive(files, sub, sesMedOffOn01, extended, gui, localsettings_name)
 % perceive(files, sub, sesMedOffOn01, extended, gui, localsettings_name)
-% function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_init_logging_if_deployed perceive_mcc_dependency_touch perceive_exe_directory_for_logging perceive_localsettings_apply_builtin_default
+%#function set_firstsample check_fullname check_stim onAppClose perceive_check_stim perceive_init_logging_if_deployed perceive_mcc_dependency_touch perceive_exe_directory_for_logging perceive_localsettings_apply_builtin_default perceive_gui_startup perceive_should_open_startup_gui perceive_launch_gui_startup
 % MCC: pragma + perceive_mcc_dependency_touch() force packaging; string-based checks are not traced.
 % Toolbox by Wolf-Julian Neumann
 % Contributors Wolf-Julian Neumann, Tomas Sieger, Gerd Tinkhauser, Jennifer Behnke, Mansoureh Fahimi, Jonathan Kaplan, Jojo Vanhoecke (contact to Jojo Vanhoecke)
@@ -16,6 +16,8 @@ arguments
     % All input is optional, you can specify files as cell or character array
     % if files isn't specified or remains empty, it will automatically include all files in the current working directory
     % if no files in the current working directory are found, a you can choose files via the MATLAB uigetdir window.
+    % Use perceive start (or perceive('start')) to open the startup GUI instead of batch processing.
+    % In deployed apps, double-clicking the executable with no arguments opens the same GUI.
 
     sub {mustBeA(sub,["char","cell","numeric"])} = '';
     % subject:
@@ -53,6 +55,16 @@ arguments
 end
 perceive_init_logging_if_deployed();
 perceive_mcc_dependency_touch();
+
+if perceive_should_open_startup_gui(files, sub, sesMedOffOn01, extended, gui, localsettings_name, nargin)
+    if isdeployed
+        fprintf(1, 'Perceive: loading the startup interface (please wait)...\n');
+        drawnow update;
+    end
+    perceive_launch_gui_startup();
+    return;
+end
+
 % % %% INPUT use examples:
 % perceiveModular() % run all files in current directory or if none open explorer to select file
 % perceiveModular('Report_Json_Session_Report_20200115T123657.json') % run this file

@@ -25,7 +25,8 @@ if /I "%~1"=="--runtime-path" (
     goto parse_args
 )
 if /I "%~1"=="--help" (
-    echo Usage: run_perceive_gui_startup.bat [--runtime-path "C:\Path\To\MATLAB Runtime\R2023a-or-newer"]
+    echo Usage: perceive_no_license_windows.bat [--runtime-path "C:\Path\To\MATLAB Runtime\R2023a-or-newer"]
+    echo Launches perceive.exe ^(MATLAB Runtime only; startup GUI when run with no arguments^).
     exit /b 0
 )
 echo [perceive] Unknown argument: %~1
@@ -33,12 +34,12 @@ echo Use --help for usage.
 exit /b 2
 :args_done
 
-call :log "Launcher started"
+call :log "Launcher started (Windows)"
 if defined CUSTOM_RUNTIME_PATH call :log "Custom runtime path requested: %CUSTOM_RUNTIME_PATH%"
 
-if not exist "perceive_gui_startup.exe" (
+if not exist "perceive.exe" (
     echo.
-    echo [perceive] App file not found: perceive_gui_startup.exe
+    echo [perceive] App file not found: perceive.exe
     echo Please keep this launcher in the same folder as the app, then try again.
     echo.
     pause
@@ -78,12 +79,11 @@ if !MATLAB_RUNTIME_INSTALLED! EQU 0 (
     exit /b 1
 )
 
-:: If MATLAB Runtime is installed, run the application
 :run_app
 echo [perceive] MATLAB Runtime !RUNTIME_FOUND_VERSION! detected. Starting app...
 echo [perceive] Runtime location: !RUNTIME_FOUND_PATH!
 call :log "Runtime detected: !RUNTIME_FOUND_VERSION! at !RUNTIME_FOUND_PATH!"
-perceive_gui_startup.exe
+perceive.exe
 set EXITCODE=%ERRORLEVEL%
 echo.
 echo [perceive] App exited with code %EXITCODE%.
